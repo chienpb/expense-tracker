@@ -6,6 +6,7 @@ import { SpendingChart } from './_components/spending-chart';
 import { CategoryChart } from './_components/category-chart';
 import { TransactionsTable } from './_components/transactions-table';
 import { ThemeToggle } from './_components/theme-toggle';
+import Link from 'next/link';
 
 export default async function DashboardPage({
   searchParams,
@@ -44,6 +45,12 @@ export default async function DashboardPage({
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/recurring"
+              className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+            >
+              Subscriptions
+            </Link>
             <DateRangeFilter current={range} />
             <ThemeToggle />
           </div>
