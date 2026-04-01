@@ -1,4 +1,5 @@
-import { ToolLoopAgent, generateText } from 'ai';
+import { ToolLoopAgent } from 'ai';
+import { openai } from '@ai-sdk/openai';
 import { authorize } from '@/lib/auth';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
 import { getSupabase } from '@/lib/supabase';
@@ -18,7 +19,7 @@ function dateFilter(range: Range): string {
 }
 
 const summaryAgent = new ToolLoopAgent({
-  model: 'openai/gpt-5.4',
+  model: openai('gpt-5.4'),
   tools: {
     executeSQL: makeExecuteSQLTool(['SELECT']),
   },
