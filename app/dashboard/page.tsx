@@ -1,0 +1,88 @@
+import { getExpenses, getSpendingByDay, getSpendingByCategory, getOverview } from '@/lib/dashboard/queries';
+import { getDateRange, getDayCount, formatVND, type RangeKey, RANGE_LABELS } from '@/lib/dashboard/utils';
+import { DateRangeFilter } from './_components/date-range-filter';
+import { OverviewCards } from './_components/overview-cards';
+import { SpendingChart } from './_components/spending-chart';
+import { CategoryChart } from './_components/category-chart';
+import { TransactionsTable } from './_components/transactions-table';
+import { ThemeToggle } from './_components/theme-toggle';
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const params = await searchParams;
+  const range = (params.range ?? '7d') as RangeKey;
+  const { from, to } = getDateRange(range);
+  const dayCount = getDayCount(from, to);
+
+  const [expenses, dailySpending, categorySpending, overview] = await Promise.all([
+    getExpenses(from, to),
+    getSpendingByDay(from, to),
+    getSpendingByCategory(from, to),
+    getOverview(from, to),
+  ]);
+
+  const dailyAvg = dayCount > 0 ? Math.round(overview.total / dayCount) : 0;
+  const topCategory = categorySpending[0]?.category ?? '—';
+
+  return (
+    <div className="mx-auto max-w-[1200px] px-6 py-12">
+      {/* Hero */}
+      <header className="mb-12">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Total Spent
+            </p>
+            <p className="mt-1 text-6xl font-bold tracking-tighter tabular-nums text-foreground">
+              {formatVND(overview.total)}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {RANGE_LABELS[range]} &middot; {from} — {to}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <DateRangeFilter current={range} />
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+
+      {/* Stat row */}
+      <OverviewCards
+        count={overview.count}
+        dailyAvg={formatVND(dailyAvg)}
+        topCategory={topCategory}
+      />
+
+      {/* Charts */}
+      <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Daily Spending
+          </h2>
+          <SpendingChart data={dailySpending} />
+        </div>
+        <div>
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            By Category
+          </h2>
+          <CategoryChart data={categorySpending} />
+        </div>
+      </div>
+
+      {/* Transactions */}
+      <div className="mt-12">
+        <div className="mb-4 flex items-baseline gap-3">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Transactions
+          </h2>
+          <span className="text-xs text-muted-foreground">{expenses.length} records</span>
+        </div>
+        <TransactionsTable expenses={expenses} />
+      </div>
+    </div>
+  );
+}
