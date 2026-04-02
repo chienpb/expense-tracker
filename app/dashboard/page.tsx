@@ -25,8 +25,9 @@ export default async function DashboardPage({
     getOverview(from, to),
   ]);
 
-  const dailyAvg = dayCount > 0 ? Math.round(overview.total / dayCount) : 0;
+  const dailyAvg = dayCount > 0 ? Math.round(overview.totalSpent / dayCount) : 0;
   const topCategory = categorySpending[0]?.category ?? '—';
+  const net = overview.totalSpent - overview.totalIncome;
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-12">
@@ -38,11 +39,16 @@ export default async function DashboardPage({
               Total Spent
             </p>
             <p className="mt-1 text-6xl font-bold tracking-tighter tabular-nums text-foreground">
-              {formatVND(overview.total)}
+              {formatVND(overview.totalIncome > 0 ? net : overview.totalSpent)}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {RANGE_LABELS[range]} &middot; {from} — {to}
             </p>
+            {overview.totalIncome > 0 && (
+              <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                Before paybacks: {formatVND(overview.totalSpent)} &middot; Got back <span className="text-green-600 dark:text-green-400">{formatVND(overview.totalIncome)}</span>
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Link

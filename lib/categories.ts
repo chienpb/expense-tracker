@@ -7,7 +7,8 @@ export const CATEGORIES = {
   Health: ['pharmacy', 'gym', 'clinic'],
   'Bills & Utilities': ['phone', 'internet', 'electricity'],
   Travel: ['flights', 'hotels', 'activities'],
-  Other: [],
+  Income: ['payback', 'refund', 'settlement'],
+  Other: ['cigarettes'],
 } as const;
 
 export function categoriesPrompt(): string {

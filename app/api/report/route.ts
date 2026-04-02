@@ -25,7 +25,9 @@ const summaryAgent = new ToolLoopAgent({
   },
   instructions: `You are an expense analysis assistant. Use the executeSQL tool to query the expenses table and produce a concise, insightful plain-text summary.
 
-Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, date DATE)
+Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE)
+
+The "type" column distinguishes spending from money received. Include both in your analysis — show total spent, total income, and net spending.
 
 Guidelines:
 - Run whatever SELECT queries you need to gather meaningful data
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
       const supabase = getSupabase();
       const { data, error } = await supabase
         .from('expenses')
-        .select('date, amount, category, subcategory, description')
+        .select('date, amount, category, subcategory, description, type')
         .filter('date', 'gte', rangeStartDate(range))
         .order('date', { ascending: false });
 
@@ -69,20 +71,25 @@ export async function POST(request: Request) {
         category: string;
         subcategory: string | null;
         description: string;
+        type: string;
       }>;
 
       if (rows.length === 0) {
         return Response.json({ status: 'succeeded', report: 'No expenses found for this period.' });
       }
 
+      const totalSpent = rows.filter(r => r.type !== 'income').reduce((s, r) => s + r.amount, 0);
+      const totalIncome = rows.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0);
+
       const lines = [
         `Date        Amount        Category          Description`,
         `----------  ------------  ----------------  ---------------------`,
-        ...rows.map(r =>
-          `${r.date}  ${formatAmount(r.amount).padStart(12)}  ${(r.category).padEnd(16)}  ${r.description}`
-        ),
+        ...rows.map(r => {
+          const prefix = r.type === 'income' ? '+' : ' ';
+          return `${r.date}  ${(prefix + formatAmount(r.amount)).padStart(12)}  ${(r.category).padEnd(16)}  ${r.description}`;
+        }),
         ``,
-        `Total: ${formatAmount(rows.reduce((s, r) => s + r.amount, 0))}  (${rows.length} items)`,
+        `Spent: ${formatAmount(totalSpent)}  |  Income: ${formatAmount(totalIncome)}  |  Net: ${formatAmount(totalSpent - totalIncome)}  (${rows.length} items)`,
       ];
 
       return Response.json({ status: 'succeeded', report: lines.join('\n') });

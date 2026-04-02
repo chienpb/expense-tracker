@@ -33,7 +33,7 @@ export function SpendingChart({ data }: Props) {
 
   const chartData = data.map(d => ({
     ...d,
-    fill: d.total === maxTotal ? 'hsl(0 72% 51%)' : 'hsl(0 0% 72%)',
+    expenseFill: d.total === maxTotal ? 'hsl(0 72% 51%)' : 'hsl(0 0% 72%)',
   }));
 
   return (
@@ -56,7 +56,7 @@ export function SpendingChart({ data }: Props) {
           <Tooltip
             cursor={false}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            formatter={(value: any) => [formatVND(Number(value)), 'Spent']}
+            formatter={(value: any, name: any) => [formatVND(Number(value)), name === 'income' ? 'Got back' : 'Spent']}
             labelFormatter={(label: any) => formatDateLabel(String(label))}
             contentStyle={{
               background: 'var(--card)',
@@ -70,22 +70,24 @@ export function SpendingChart({ data }: Props) {
           />
           <Bar
             dataKey="total"
+            stackId="a"
             maxBarSize={40}
             radius={0}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             fill="hsl(0 0% 72%)"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             shape={(props: any) => {
               const { x, y, width, height, payload } = props;
               return (
-                <rect
-                  x={x}
-                  y={y}
-                  width={width}
-                  height={height}
-                  fill={payload.fill}
-                />
+                <rect x={x} y={y} width={width} height={height} fill={payload.expenseFill} />
               );
             }}
+          />
+          <Bar
+            dataKey="income"
+            stackId="a"
+            maxBarSize={40}
+            radius={0}
+            fill="hsl(142 71% 45%)"
           />
         </BarChart>
       </ResponsiveContainer>

@@ -52,8 +52,8 @@ export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
               {expense.category}
               {expense.subcategory && ` / ${expense.subcategory}`}
             </span>
-            <span className="text-sm font-medium tabular-nums text-foreground text-right">
-              {formatVND(expense.amount)}
+            <span className={`text-sm font-medium tabular-nums text-right ${expense.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-foreground'}`}>
+              {expense.type === 'income' ? '+' : ''}{formatVND(expense.amount)}
             </span>
           </div>
         ))}

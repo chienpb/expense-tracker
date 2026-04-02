@@ -10,7 +10,9 @@ const agent = new ToolLoopAgent({
   },
   instructions: `You are a personal expense analyst. Answer the user's freeform question about their expenses by querying the database.
 
-Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, date DATE, created_at TIMESTAMPTZ)
+Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE, created_at TIMESTAMPTZ)
+
+The "type" column is 'expense' for spending and 'income' for money received (reimbursements, salary, refunds, etc.). Consider both types when answering questions about net spending.
 
 Guidelines:
 - Use SELECT queries to retrieve the data you need

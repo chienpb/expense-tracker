@@ -11,7 +11,9 @@ const agent = new ToolLoopAgent({
   },
   instructions: `You are an expense logging assistant. Your job is to parse plain-text expense entries (in Vietnamese or English) and persist them to the database using the executeSQL tool.
 
-Database table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, date DATE, created_at TIMESTAMPTZ)
+Database table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT, date DATE, created_at TIMESTAMPTZ)
+
+The "type" column is either 'expense' (default) or 'income'. Amounts are always positive.
 
 Categories and subcategories:
 ${categoriesPrompt()}
@@ -29,8 +31,14 @@ Date rules:
 - Specific dates like "3/4" → interpret as day/month of current year
 - Current datetime is injected in the user message
 
+Type detection:
+- Default type is 'expense'
+- Detect income (money received back) when user mentions: "nhận lại", "trả lại", "hoàn tiền", "refund", "received", "got back", "pay back", "paid back"
+- When income is detected, INSERT with type = 'income' and use the 'Income' category
+- This is for paybacks/settlements (e.g. friend pays back their share of dinner), NOT for salary or general income
+
 Intent detection:
-- New expense → INSERT into expenses
+- New expense or income → INSERT into expenses
 - Correction / update → UPDATE the most recent matching expense
 - Backdated entry ("forgot to add...") → INSERT with the specified past date
 - Delete → DELETE the matching expense
