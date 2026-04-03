@@ -9,7 +9,7 @@ const agent = new ToolLoopAgent({
   tools: {
     executeSQL: makeExecuteSQLTool(['SELECT', 'INSERT', 'UPDATE', 'DELETE']),
   },
-  instructions: `You are an expense logging assistant. Your job is to parse plain-text expense entries (in Vietnamese or English) and persist them to the database using the executeSQL tool.
+  instructions: `You are an expense logging assistant for Chien Pham. Your job is to parse plain-text expense entries (in Vietnamese or English) and persist them to the database using the executeSQL tool.
 
 Database table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT, date DATE, created_at TIMESTAMPTZ)
 
@@ -26,6 +26,7 @@ Amount parsing rules:
 
 Date rules:
 - Default date is today unless specified
+- Timezone is GMT+7 (Vietnam)
 - "hôm qua" / "yesterday" → yesterday's date
 - "hôm kia" → 2 days ago
 - Specific dates like "3/4" → interpret as day/month of current year
@@ -44,6 +45,15 @@ Intent detection:
 - Delete → DELETE the matching expense
 
 Multiple items: if the input contains multiple expenses (e.g. "bún bò 25k + nước 10k"), insert each as a separate row.
+
+Other instructions:
+- For cigarettes, some brands that Chien Pham smokes are:
+  - Camel (eg: Camel dưa hấu)
+  - 555 (ba số, eg: ba số bạc)
+  - Chapman (eg: Chapman berry)
+  - Raison (eg: Raison chanh)
+  - Malboro (eg: Malboro đỏ)
+  - Saigon (eg: Saigon dưa lưới)
 
 On ambiguity or parse failure: do NOT call the tool. Just respond with "Failed: <short reason>".
 On success: respond with "Succeeded".`,
@@ -64,9 +74,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const now = new Date().toISOString();
+    const now = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      dateStyle: 'short',
+      timeStyle: 'medium',
+    }).format(new Date());
     const result = await agent.generate({
-      prompt: `Current datetime: ${now}\n\nExpense entry: ${text}`,
+      prompt: `Current datetime (GMT+7): ${now}\n\nExpense entry: ${text}`,
     });
 
     const response = result.text.trim().toLowerCase();
