@@ -5,17 +5,17 @@ import { OverviewCards } from './_components/overview-cards';
 import { SpendingChart } from './_components/spending-chart';
 import { CategoryChart } from './_components/category-chart';
 import { TransactionsTable } from './_components/transactions-table';
-import { ThemeToggle } from './_components/theme-toggle';
+import { HeroAmount } from './_components/hero-amount';
 import Link from 'next/link';
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; from?: string; to?: string }>;
 }) {
   const params = await searchParams;
   const range = (params.range ?? '7d') as RangeKey;
-  const { from, to } = getDateRange(range);
+  const { from, to } = getDateRange(range, params.from, params.to);
   const dayCount = getDayCount(from, to);
 
   const [expenses, dailySpending, categorySpending, overview] = await Promise.all([
@@ -30,19 +30,17 @@ export default async function DashboardPage({
   const net = overview.totalSpent - overview.totalIncome;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-12">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 sm:py-12">
       {/* Hero */}
-      <header className="mb-12">
-        <div className="flex items-start justify-between">
+      <header className="mb-8 sm:mb-12">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Total Spent
             </p>
-            <p className="mt-1 text-6xl font-bold tracking-tighter tabular-nums text-foreground">
-              {formatVND(overview.totalIncome > 0 ? net : overview.totalSpent)}
-            </p>
+            <HeroAmount value={formatVND(overview.totalIncome > 0 ? net : overview.totalSpent)} />
             <p className="mt-2 text-sm text-muted-foreground">
-              {RANGE_LABELS[range]} &middot; {from} — {to}
+              {range === 'custom' ? 'Custom range' : RANGE_LABELS[range]} &middot; {from} — {to}
             </p>
             {overview.totalIncome > 0 && (
               <p className="mt-1 text-sm text-muted-foreground tabular-nums">
@@ -57,8 +55,7 @@ export default async function DashboardPage({
             >
               Subscriptions
             </Link>
-            <DateRangeFilter current={range} />
-            <ThemeToggle />
+            <DateRangeFilter current={range} from={from} to={to} />
           </div>
         </div>
       </header>
@@ -71,7 +68,7 @@ export default async function DashboardPage({
       />
 
       {/* Charts */}
-      <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:mt-12 lg:grid-cols-2">
         <div>
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Daily Spending
@@ -87,7 +84,7 @@ export default async function DashboardPage({
       </div>
 
       {/* Transactions */}
-      <div className="mt-12">
+      <div className="mt-8 sm:mt-12">
         <div className="mb-4 flex items-baseline gap-3">
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Transactions

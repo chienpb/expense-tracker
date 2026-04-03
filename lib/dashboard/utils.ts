@@ -14,9 +14,9 @@ export function formatVNDShort(amount: number): string {
   return String(amount);
 }
 
-export type RangeKey = 'today' | '7d' | 'this_week' | 'this_month' | 'last_month' | '30d';
+export type RangeKey = 'today' | '7d' | 'this_week' | 'this_month' | 'last_month' | '30d' | 'custom';
 
-export function getDateRange(range: RangeKey): { from: string; to: string } {
+export function getDateRange(range: RangeKey, customFrom?: string, customTo?: string): { from: string; to: string } {
   const today = new Date();
   const fmt = (d: Date) => format(d, 'yyyy-MM-dd');
 
@@ -35,6 +35,9 @@ export function getDateRange(range: RangeKey): { from: string; to: string } {
     }
     case '30d':
       return { from: fmt(subDays(today, 29)), to: fmt(today) };
+    case 'custom':
+      if (customFrom && customTo) return { from: customFrom, to: customTo };
+      return { from: fmt(subDays(today, 6)), to: fmt(today) };
     default:
       return { from: fmt(subDays(today, 6)), to: fmt(today) };
   }
@@ -51,4 +54,5 @@ export const RANGE_LABELS: Record<RangeKey, string> = {
   this_month: 'This month',
   last_month: 'Last month',
   '30d': 'Last 30 days',
+  custom: 'Custom',
 };
