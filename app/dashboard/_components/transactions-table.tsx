@@ -1,8 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatVND } from '@/lib/dashboard/utils';
 import type { Expense } from '@/lib/dashboard/queries';
+import { ExpenseEntryForm, type ExpenseEntryValues } from './expense-entry-form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const PAGE_SIZE = 15;
 
@@ -12,7 +20,10 @@ function formatDate(dateStr: string): string {
 }
 
 export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
+  const router = useRouter();
   const [shown, setShown] = useState(PAGE_SIZE);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   if (expenses.length === 0) {
     return (
@@ -24,10 +35,58 @@ export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
 
   const visible = expenses.slice(0, shown);
   const hasMore = shown < expenses.length;
+  const editingExpense = expenses.find((expense) => expense.id === editingId) ?? null;
+
+  async function saveExpense(id: string, values: ExpenseEntryValues) {
+    setLoadingId(id);
+
+    const res = await fetch('/api/expenses', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...values }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setLoadingId(null);
+      return data.error ?? 'Failed to update entry';
+    }
+
+    setEditingId(null);
+    router.refresh();
+    setLoadingId(null);
+  }
+
+  async function deleteExpense(id: string) {
+    if (!window.confirm('Delete this entry?')) {
+      return;
+    }
+
+    setLoadingId(id);
+
+    const res = await fetch('/api/expenses', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      window.alert(data.error ?? 'Failed to delete entry');
+      setLoadingId(null);
+      return;
+    }
+
+    if (editingId === id) {
+      setEditingId(null);
+    }
+
+    router.refresh();
+    setLoadingId(null);
+  }
 
   return (
     <div className="rounded-sm border border-border bg-card">
-      {/* Header — desktop only */}
       <div className="hidden border-b border-border px-6 py-3 sm:grid sm:grid-cols-[5rem_2fr_3fr_7rem]">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</span>
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Description</span>
@@ -35,14 +94,23 @@ export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground text-right">Amount</span>
       </div>
 
-      {/* Rows */}
       <div className="divide-y divide-border">
         {visible.map((expense) => (
           <div
             key={expense.id}
-            className="px-4 py-3 hover:bg-muted/50 sm:grid sm:grid-cols-[5rem_2fr_3fr_7rem] sm:px-6"
+            role="button"
+            tabIndex={0}
+            onClick={() => setEditingId(expense.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setEditingId(expense.id);
+              }
+            }}
+            className={`cursor-pointer px-4 py-3 hover:bg-muted/50 sm:grid sm:grid-cols-[5rem_2fr_3fr_7rem] sm:items-center sm:px-6 ${
+              loadingId === expense.id ? 'pointer-events-none opacity-50' : ''
+            }`}
           >
-            {/* Mobile layout */}
             <div className="flex items-baseline justify-between sm:hidden">
               <div>
                 <span className="text-sm text-foreground">{expense.description}</span>
@@ -55,11 +123,12 @@ export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
                 {expense.type === 'income' ? '+' : ''}{formatVND(expense.amount)}
               </span>
             </div>
-            <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:hidden">
-              {formatDate(expense.date)}
-            </span>
+            <div className="mt-1 flex items-center justify-between sm:hidden">
+              <span className="block text-xs tabular-nums text-muted-foreground">
+                {formatDate(expense.date)}
+              </span>
+            </div>
 
-            {/* Desktop layout */}
             <span className="hidden text-sm tabular-nums text-muted-foreground sm:block">
               {formatDate(expense.date)}
             </span>
@@ -76,6 +145,44 @@ export function TransactionsTable({ expenses }: { expenses: Expense[] }) {
           </div>
         ))}
       </div>
+
+      <Dialog open={Boolean(editingExpense)} onOpenChange={(open) => (!open ? setEditingId(null) : undefined)}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-2xl rounded-sm border border-border bg-card p-6 shadow-none"
+        >
+          <DialogHeader className="gap-1">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Edit Entry
+                </DialogTitle>
+              </div>
+              {editingExpense && (
+                <button
+                  type="button"
+                  onClick={() => deleteExpense(editingExpense.id)}
+                  disabled={loadingId === editingExpense.id}
+                  className="text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </DialogHeader>
+          {editingExpense && (
+            <ExpenseEntryForm
+              key={editingExpense.id}
+              initialValues={editingExpense}
+              onSubmit={(values) => saveExpense(editingExpense.id, values)}
+              onCancel={() => setEditingId(null)}
+              loading={loadingId === editingExpense.id}
+              submitLabel="Save changes"
+              submittingLabel="Saving..."
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {hasMore && (
         <div className="border-t border-border px-6 py-3">

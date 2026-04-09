@@ -6,6 +6,7 @@ import { SpendingChart } from './_components/spending-chart';
 import { CategoryChart } from './_components/category-chart';
 import { TransactionsTable } from './_components/transactions-table';
 import { HeroAmount } from './_components/hero-amount';
+import { AddExpenseForm } from './_components/add-expense-form';
 import Link from 'next/link';
 
 export default async function DashboardPage({
@@ -31,7 +32,6 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 sm:py-12">
-      {/* Hero */}
       <header className="mb-8 sm:mb-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div>
@@ -60,14 +60,12 @@ export default async function DashboardPage({
         </div>
       </header>
 
-      {/* Stat row */}
       <OverviewCards
         count={overview.count}
         dailyAvg={formatVND(dailyAvg)}
         topCategory={topCategory}
       />
 
-      {/* Charts */}
       <div className="mt-8 grid grid-cols-1 gap-6 sm:mt-12 lg:grid-cols-2">
         <div>
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -83,13 +81,15 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* Transactions */}
       <div className="mt-8 sm:mt-12">
-        <div className="mb-4 flex items-baseline gap-3">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Transactions
-          </h2>
-          <span className="text-xs text-muted-foreground">{expenses.length} records</span>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Transactions
+            </h2>
+            <span className="text-xs text-muted-foreground">{expenses.length} records</span>
+          </div>
+          <AddExpenseForm />
         </div>
         <TransactionsTable expenses={expenses} />
       </div>
