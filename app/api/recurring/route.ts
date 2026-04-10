@@ -1,10 +1,4 @@
-import { NextRequest } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
-
-function authorized(request: NextRequest): boolean {
-  const cookie = request.cookies.get('dashboard_session')?.value;
-  return cookie === process.env.DASHBOARD_PASSWORD;
-}
 
 export interface RecurringExpense {
   id: string;
@@ -19,10 +13,7 @@ export interface RecurringExpense {
 }
 
 // GET — list all recurring expenses
-export async function GET(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export async function GET() {
 
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -36,11 +27,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST — create a new recurring expense
-export async function POST(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function POST(request: Request) {
   const body = await request.json();
   const { amount, description, category, subcategory, frequency, next_due } = body;
 
@@ -60,11 +47,7 @@ export async function POST(request: NextRequest) {
 }
 
 // PATCH — update a recurring expense (toggle active, edit fields)
-export async function PATCH(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function PATCH(request: Request) {
   const body = await request.json();
   const { id, ...updates } = body;
 
@@ -85,11 +68,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 // DELETE — remove a recurring expense
-export async function DELETE(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function DELETE(request: Request) {
   const { id } = await request.json();
 
   if (!id) {

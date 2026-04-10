@@ -1,6 +1,5 @@
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { authorize } from '@/lib/auth';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
 
 const agent = new ToolLoopAgent({
@@ -23,10 +22,6 @@ Guidelines:
 });
 
 export async function POST(request: Request) {
-  if (!authorize(request)) {
-    return Response.json({ status: 'failed', error: 'Unauthorized' }, { status: 401 });
-  }
-
   let text: string;
   try {
     const body = await request.json();

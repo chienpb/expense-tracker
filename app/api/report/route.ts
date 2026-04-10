@@ -1,6 +1,5 @@
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { authorize } from '@/lib/auth';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
 import { getSupabase } from '@/lib/supabase';
 
@@ -38,10 +37,6 @@ Guidelines:
 });
 
 export async function POST(request: Request) {
-  if (!authorize(request)) {
-    return Response.json({ status: 'failed', error: 'Unauthorized' }, { status: 401 });
-  }
-
   let range: Range, mode: Mode;
   try {
     const body = await request.json();

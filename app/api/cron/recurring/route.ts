@@ -1,12 +1,6 @@
 import { getSupabase } from '@/lib/supabase';
 
-export async function GET(request: Request) {
-  // Vercel cron sends this header to authenticate
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET() {
   const supabase = getSupabase();
   const today = new Date().toISOString().split('T')[0];
 

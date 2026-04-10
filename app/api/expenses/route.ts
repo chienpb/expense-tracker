@@ -1,12 +1,6 @@
-import { NextRequest } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 
 type ExpenseType = 'expense' | 'income';
-
-function authorized(request: NextRequest): boolean {
-  const cookie = request.cookies.get('dashboard_session')?.value;
-  return cookie === process.env.DASHBOARD_PASSWORD;
-}
 
 function parsePayload(body: unknown):
   | {
@@ -55,11 +49,7 @@ function parsePayload(body: unknown):
   };
 }
 
-export async function POST(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function POST(request: Request) {
   const parsed = parsePayload(await request.json());
   if ('error' in parsed) {
     return Response.json({ error: parsed.error }, { status: 400 });
@@ -79,11 +69,7 @@ export async function POST(request: NextRequest) {
   return Response.json(data, { status: 201 });
 }
 
-export async function PATCH(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function PATCH(request: Request) {
   const body = await request.json();
   const id = String((body as { id?: unknown })?.id ?? '').trim();
   if (!id) {
@@ -110,11 +96,7 @@ export async function PATCH(request: NextRequest) {
   return Response.json(data);
 }
 
-export async function DELETE(request: NextRequest) {
-  if (!authorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function DELETE(request: Request) {
   const { id } = await request.json();
   if (!id || typeof id !== 'string') {
     return Response.json({ error: 'Missing id' }, { status: 400 });

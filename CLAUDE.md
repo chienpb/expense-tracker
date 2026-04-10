@@ -1,18 +1,21 @@
 # Expense Tracker
 
-A personal expense tracker with no UI. Input is plain text via Apple Shortcuts. Hosted on Vercel, backed by Supabase.
+A personal expense tracker with dashboard UI and Apple Shortcuts input. Hosted on Vercel, backed by Supabase.
 
 ## Stack
 
 - **Next.js 16** (App Router) on Vercel
 - **Supabase** (Postgres) for storage
 - **Vercel AI SDK** with `@ai-sdk/openai` provider, model `gpt-5.4`
-- **Auth:** single shared secret in `Authorization: Bearer <token>` header
+- **Auth.js v5** (NextAuth) with Credentials provider, JWT sessions, RBAC (admin/guest)
+- **Auth (API):** Bearer token for Apple Shortcuts, session cookie for browser UI — both enforced in middleware
 
 ## Environment Variables
 
 ```
-EXPENSE_SECRET=        # shared secret for all API endpoints
+AUTH_SECRET=           # generated via `npx auth secret`, required by Auth.js
+EXPENSE_SECRET=        # shared secret for Apple Shortcuts API endpoints
+CRON_SECRET=           # secret for Vercel cron jobs
 SUPABASE_URL=          # from Supabase project settings
 SUPABASE_SERVICE_ROLE_KEY=  # secret key (sb_secret_...) from Supabase API Keys tab
 OPENAI_API_KEY=        # OpenAI API key
@@ -21,18 +24,32 @@ OPENAI_API_KEY=        # OpenAI API key
 ## Project Structure
 
 ```
-app/api/
-  log/route.ts       # POST - log a new expense via plain text
-  report/route.ts    # POST - generate expense report (summary or full list)
-  custom/route.ts    # POST - freeform natural language query
-  health/route.ts    # GET  - health check (no auth required)
+app/
+  login/page.tsx         # Login page (email + password)
+  providers.tsx          # Client-side SessionProvider wrapper
+  dashboard/             # Protected dashboard UI
+  api/
+    auth/[...nextauth]/route.ts  # Auth.js route handler
+    log/route.ts         # POST - log expense via plain text
+    report/route.ts      # POST - generate expense report
+    custom/route.ts      # POST - freeform natural language query
+    expenses/route.ts    # POST/PATCH/DELETE - CRUD expenses
+    recurring/route.ts   # GET/POST/PATCH/DELETE - recurring expenses
+    cron/recurring/route.ts  # GET - cron job for recurring expenses
+    health/route.ts      # GET - health check (no auth)
+middleware.ts            # Centralized auth: session for UI, Bearer for API, CRON_SECRET for cron
 lib/
-  auth.ts            # shared secret validation
-  categories.ts      # category/subcategory list + prompt formatter
-  sql-tool.ts        # reusable executeSQL tool with DDL blocking
-  supabase.ts        # Supabase client
+  auth-config.ts         # Auth.js v5 config (Credentials provider, JWT callbacks, RBAC)
+  auth.ts                # Helper functions (authorize, getSession, requireAdmin)
+  password.ts            # bcrypt hash/verify helpers
+  categories.ts          # category/subcategory list + prompt formatter
+  sql-tool.ts            # reusable executeSQL tool with DDL blocking
+  supabase.ts            # Supabase client
+types/
+  next-auth.d.ts         # Type augmentation for Session/JWT with role
 supabase/migrations/
-  001_init.sql       # expenses table + execute_sql Postgres function
+  001_init.sql           # expenses table + execute_sql Postgres function
+  004_users.sql          # users table for auth
 ```
 
 ## Database
@@ -43,10 +60,26 @@ Table: `expenses`
 - `description` TEXT
 - `category` TEXT
 - `subcategory` TEXT
+- `type` TEXT ('expense' | 'income')
 - `date` DATE (defaults to today)
 - `created_at` TIMESTAMPTZ
 
+Table: `users`
+- `id` UUID PK
+- `email` TEXT UNIQUE
+- `password_hash` TEXT (bcrypt)
+- `role` TEXT ('admin' | 'guest')
+- `created_at` TIMESTAMPTZ
+
 The `execute_sql` Postgres function must be created via `supabase/migrations/001_init.sql` in the Supabase SQL editor.
+
+## Authentication
+
+- **Browser UI:** Auth.js v5 Credentials provider with JWT session strategy. Login at `/login`. Session carries `{ id, email, role }`.
+- **Apple Shortcuts:** Bearer token in `Authorization` header, checked by middleware.
+- **Cron:** Separate `CRON_SECRET` Bearer token for `/api/cron/*` routes.
+- **Middleware** handles all auth centrally — individual API routes do not check auth themselves.
+- **RBAC:** `admin` has full access, `guest` is read-only (enforced at route level via `requireAdmin()` when needed).
 
 ## API Endpoints
 

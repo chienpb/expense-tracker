@@ -1,6 +1,5 @@
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { authorize } from '@/lib/auth';
 import { categoriesPrompt } from '@/lib/categories';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
 
@@ -60,10 +59,6 @@ On success: respond with "Succeeded".`,
 });
 
 export async function POST(request: Request) {
-  if (!authorize(request)) {
-    return Response.json({ status: 'failed', error: 'Unauthorized' }, { status: 401 });
-  }
-
   let text: string;
   try {
     const body = await request.json();
