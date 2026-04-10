@@ -8,6 +8,7 @@ import { TransactionsTable } from './_components/transactions-table';
 import { HeroAmount } from './_components/hero-amount';
 import { AddExpenseForm } from './_components/add-expense-form';
 import Link from 'next/link';
+import { SignOutButton } from './_components/sign-out-button';
 
 export default async function DashboardPage({
   searchParams,
@@ -56,6 +57,7 @@ export default async function DashboardPage({
               Subscriptions
             </Link>
             <DateRangeFilter current={range} from={from} to={to} />
+            <SignOutButton />
           </div>
         </div>
       </header>

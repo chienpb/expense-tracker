@@ -4,6 +4,7 @@ import { AddRecurringForm } from './_components/add-recurring-form';
 import { ThemeToggle } from '../_components/theme-toggle';
 import { formatVND } from '@/lib/dashboard/utils';
 import Link from 'next/link';
+import { SignOutButton } from '../_components/sign-out-button';
 
 export interface RecurringExpense {
   id: string;
@@ -55,7 +56,10 @@ export default async function RecurringPage() {
               {activeCount} active subscription{activeCount !== 1 ? 's' : ''} &middot; monthly total
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <SignOutButton />
+          </div>
         </div>
       </header>
 
