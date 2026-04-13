@@ -2,6 +2,10 @@
 
 A personal expense tracker with dashboard UI and Apple Shortcuts input. Hosted on Vercel, backed by Supabase.
 
+## Design System
+
+UI and dashboard work follows the Swiss/International Typographic Style. Read [`docs/dashboard-design-system.md`](docs/dashboard-design-system.md) before making design or dashboard UI changes.
+
 ## Stack
 
 - **Next.js 16** (App Router) on Vercel
