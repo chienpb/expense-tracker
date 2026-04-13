@@ -80,6 +80,12 @@ export default async function DashboardPage({
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/chat"
+              className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+            >
+              Chat
+            </Link>
+            <Link
               href="/dashboard/recurring"
               className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
             >
