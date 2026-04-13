@@ -47,6 +47,22 @@ export async function getSpendingByDay(from: string, to: string): Promise<DailyS
   return (data as DailySpending[]) ?? [];
 }
 
+export interface DayCategorySpending {
+  date: string;
+  category: string;
+  total: number;
+}
+
+export async function getSpendingByDayAndCategory(from: string, to: string): Promise<DayCategorySpending[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc('execute_sql', {
+    query: `SELECT date::text, category, SUM(amount) as total FROM expenses WHERE date >= '${from}' AND date <= '${to}' AND type = 'expense' GROUP BY date, category ORDER BY date, total DESC`,
+  });
+
+  if (error) throw error;
+  return (data as DayCategorySpending[]) ?? [];
+}
+
 export async function getSpendingByCategory(from: string, to: string): Promise<CategorySpending[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase.rpc('execute_sql', {

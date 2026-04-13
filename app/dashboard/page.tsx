@@ -1,4 +1,4 @@
-import { getExpenses, getSpendingByDay, getSpendingByCategory, getOverview } from '@/lib/dashboard/queries';
+import { getExpenses, getSpendingByDay, getSpendingByCategory, getSpendingByDayAndCategory, getOverview } from '@/lib/dashboard/queries';
 import { getDateRange, getDayCount, formatVND, type RangeKey, RANGE_LABELS } from '@/lib/dashboard/utils';
 import { DateRangeFilter } from './_components/date-range-filter';
 import { OverviewCards } from './_components/overview-cards';
@@ -13,23 +13,42 @@ import { SignOutButton } from './_components/sign-out-button';
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ range?: string; from?: string; to?: string; day?: string }>;
 }) {
   const params = await searchParams;
   const range = (params.range ?? '7d') as RangeKey;
   const { from, to } = getDateRange(range, params.from, params.to);
   const dayCount = getDayCount(from, to);
 
-  const [expenses, dailySpending, categorySpending, overview] = await Promise.all([
-    getExpenses(from, to),
+  const rawDay = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) ? params.day : undefined;
+  const selectedDay = rawDay && rawDay >= from && rawDay <= to ? rawDay : undefined;
+  const effFrom = selectedDay ?? from;
+  const effTo = selectedDay ?? to;
+  const effDayCount = selectedDay ? 1 : dayCount;
+
+  const [expenses, dailySpending, categorySpending, dayCategory, overview] = await Promise.all([
+    getExpenses(effFrom, effTo),
     getSpendingByDay(from, to),
-    getSpendingByCategory(from, to),
-    getOverview(from, to),
+    getSpendingByCategory(effFrom, effTo),
+    getSpendingByDayAndCategory(from, to),
+    getOverview(effFrom, effTo),
   ]);
 
-  const dailyAvg = dayCount > 0 ? Math.round(overview.totalSpent / dayCount) : 0;
+  const categoriesByDay: Record<string, { category: string; total: number }[]> = {};
+  for (const row of dayCategory) {
+    (categoriesByDay[row.date] ??= []).push({ category: row.category, total: row.total });
+  }
+
+  const dailyAvg = effDayCount > 0 ? Math.round(overview.totalSpent / effDayCount) : 0;
   const topCategory = categorySpending[0]?.category ?? '—';
   const net = overview.totalSpent - overview.totalIncome;
+
+  const clearDayHref = (() => {
+    const p = new URLSearchParams();
+    p.set('range', range);
+    if (range === 'custom') { p.set('from', from); p.set('to', to); }
+    return `/dashboard?${p.toString()}`;
+  })();
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 sm:py-12">
@@ -41,7 +60,17 @@ export default async function DashboardPage({
             </p>
             <HeroAmount value={formatVND(overview.totalIncome > 0 ? net : overview.totalSpent)} />
             <p className="mt-2 text-sm text-muted-foreground">
-              {range === 'custom' ? 'Custom range' : RANGE_LABELS[range]} &middot; {from} — {to}
+              {selectedDay ? (
+                <>
+                  <span className="text-foreground">{selectedDay}</span>
+                  {' · '}
+                  <Link href={clearDayHref} className="underline underline-offset-2 hover:text-foreground">
+                    clear
+                  </Link>
+                </>
+              ) : (
+                <>{range === 'custom' ? 'Custom range' : RANGE_LABELS[range]} &middot; {from} — {to}</>
+              )}
             </p>
             {overview.totalIncome > 0 && (
               <p className="mt-1 text-sm text-muted-foreground tabular-nums">
@@ -73,7 +102,14 @@ export default async function DashboardPage({
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Daily Spending
           </h2>
-          <SpendingChart data={dailySpending} />
+          <SpendingChart
+            data={dailySpending}
+            categoriesByDay={categoriesByDay}
+            selectedDay={selectedDay}
+            range={range}
+            rangeFrom={from}
+            rangeTo={to}
+          />
         </div>
         <div>
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">

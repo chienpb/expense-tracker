@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useRouter } from 'next/navigation';
 import { formatVNDShort, formatVND } from '@/lib/dashboard/utils';
 import type { DailySpending } from '@/lib/dashboard/queries';
 
@@ -16,11 +17,77 @@ function formatDateLabel(dateStr: string): string {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+interface DayCategory { category: string; total: number }
+
 interface Props {
   data: DailySpending[];
+  categoriesByDay: Record<string, DayCategory[]>;
+  selectedDay?: string;
+  range: string;
+  rangeFrom: string;
+  rangeTo: string;
 }
 
-export function SpendingChart({ data }: Props) {
+export function SpendingChart({ data, categoriesByDay, selectedDay, range, rangeFrom, rangeTo }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function renderTooltip({ active, payload }: { active?: boolean; payload?: readonly any[] }) {
+    if (!active || !payload?.length) return null;
+    const row = payload[0].payload as DailySpending;
+    const cats = categoriesByDay[row.date] ?? [];
+    const top = cats.slice(0, 5);
+    const rest = cats.slice(5).reduce((s, c) => s + c.total, 0);
+
+    return (
+      <div className="min-w-[200px] rounded-sm border border-border bg-card p-3 text-xs shadow-none">
+        <div className="mb-2 text-muted-foreground">{formatDateLabel(row.date)}</div>
+        <div className="mb-2 flex items-baseline justify-between gap-4 border-b border-border pb-2">
+          <span className="uppercase tracking-wide text-muted-foreground">Spent</span>
+          <span className="tabular-nums text-foreground">{formatVND(row.total)}</span>
+        </div>
+        {row.income > 0 && (
+          <div className="mb-2 flex items-baseline justify-between gap-4">
+            <span className="uppercase tracking-wide text-muted-foreground">Got back</span>
+            <span className="tabular-nums text-green-600 dark:text-green-400">{formatVND(row.income)}</span>
+          </div>
+        )}
+        {top.length > 0 ? (
+          <div className="space-y-1">
+            {top.map((c) => (
+              <div key={c.category} className="flex items-baseline justify-between gap-4">
+                <span className="lowercase text-foreground">{c.category}</span>
+                <span className="tabular-nums text-muted-foreground">{formatVND(c.total)}</span>
+              </div>
+            ))}
+            {rest > 0 && (
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-muted-foreground">others</span>
+                <span className="tabular-nums text-muted-foreground">{formatVND(rest)}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          row.total === 0 && <div className="text-muted-foreground">No expenses</div>
+        )}
+      </div>
+    );
+  }
+
+  const router = useRouter();
+
+  function buildHref(day?: string) {
+    const p = new URLSearchParams();
+    p.set('range', range);
+    if (range === 'custom') { p.set('from', rangeFrom); p.set('to', rangeTo); }
+    if (day) p.set('day', day);
+    return `/dashboard?${p.toString()}`;
+  }
+
+  function handleClick(payload: { date?: string } | undefined) {
+    const date = payload?.date;
+    if (!date) return;
+    router.push(buildHref(date === selectedDay ? undefined : date));
+  }
+
   if (data.length === 0) {
     return (
       <div className="flex h-72 items-center justify-center rounded-sm border border-border bg-card text-sm text-muted-foreground">
@@ -33,7 +100,14 @@ export function SpendingChart({ data }: Props) {
 
   const chartData = data.map(d => ({
     ...d,
-    expenseFill: d.total === maxTotal ? 'hsl(0 72% 51%)' : 'hsl(0 0% 72%)',
+    expenseFill:
+      d.date === selectedDay
+        ? 'var(--foreground)'
+        : selectedDay
+        ? 'var(--muted)'
+        : d.total === maxTotal
+        ? 'hsl(0 72% 51%)'
+        : 'var(--muted-foreground)',
   }));
 
   return (
@@ -54,19 +128,8 @@ export function SpendingChart({ data }: Props) {
             tickLine={false}
           />
           <Tooltip
-            cursor={false}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            formatter={(value: any, name: any) => [formatVND(Number(value)), name === 'income' ? 'Got back' : 'Spent']}
-            labelFormatter={(label: any) => formatDateLabel(String(label))}
-            contentStyle={{
-              background: 'var(--card)',
-              color: 'var(--foreground)',
-              border: '1px solid var(--border)',
-              borderRadius: '2px',
-              fontSize: '13px',
-            }}
-            labelStyle={{ color: 'var(--muted-foreground)' }}
-            itemStyle={{ color: 'var(--foreground)' }}
+            cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+            content={renderTooltip}
           />
           <Bar
             dataKey="total"
@@ -74,6 +137,8 @@ export function SpendingChart({ data }: Props) {
             maxBarSize={40}
             radius={0}
             fill="hsl(0 0% 72%)"
+            style={{ cursor: 'pointer' }}
+            onClick={(payload) => handleClick(payload as { date?: string })}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             shape={(props: any) => {
               const { x, y, width, height, payload } = props;
@@ -88,6 +153,8 @@ export function SpendingChart({ data }: Props) {
             maxBarSize={40}
             radius={0}
             fill="hsl(142 71% 45%)"
+            style={{ cursor: 'pointer' }}
+            onClick={(payload) => handleClick(payload as { date?: string })}
           />
         </BarChart>
       </ResponsiveContainer>
