@@ -52,25 +52,31 @@ export function groupCategoriesForTally(
   const tail = rows.slice(topN);
   const tailTotal = tail.reduce((acc, r) => acc + r.total, 0);
 
-  const out: TallyRow[] = head.map((r) => {
-    const share = r.total / total;
-    return {
-      category: r.category,
-      displayName: displayCategoryName(r.category),
-      total: r.total,
-      share,
-      tallyCount: Math.max(0, Math.min(10, Math.round(share * 10))),
-    };
-  });
+  const maxAmount = Math.max(
+    ...head.map((r) => r.total),
+    tailTotal,
+  );
+
+  const tallyFor = (amount: number) => {
+    if (maxAmount <= 0) return 0;
+    return Math.max(1, Math.min(12, Math.round((amount / maxAmount) * 12)));
+  };
+
+  const out: TallyRow[] = head.map((r) => ({
+    category: r.category,
+    displayName: displayCategoryName(r.category),
+    total: r.total,
+    share: r.total / total,
+    tallyCount: tallyFor(r.total),
+  }));
 
   if (tailTotal > 0) {
-    const share = tailTotal / total;
     out.push({
       category: 'Other',
       displayName: 'Other',
       total: tailTotal,
-      share,
-      tallyCount: Math.max(0, Math.min(10, Math.round(share * 10))),
+      share: tailTotal / total,
+      tallyCount: tallyFor(tailTotal),
     });
   }
 

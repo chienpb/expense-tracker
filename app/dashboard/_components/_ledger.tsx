@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { LedgerTable, type LedgerRow } from '@/app/_components/paper/LedgerTable';
 import { PaperClip } from '@/app/_components/paper/PaperClip';
-import { formatPrintedDate, formatPrintedTime } from '@/lib/paper-format';
+import { formatPrintedTime } from '@/lib/paper-format';
 import type { Expense } from '@/lib/dashboard/queries';
 import { EntrySlip, type EntryValues } from './_entry-slip';
 
@@ -41,7 +41,7 @@ export function Ledger({ expenses }: { expenses: Expense[] }) {
 
   const rows: LedgerRow[] = visible.map((expense) => ({
     id: expense.id,
-    date: formatPrintedDate(expense.date),
+    date: formatLedgerDate(expense.date),
     time: formatPrintedTime(expense.created_at),
     description: expense.description,
     category: subcategoryLabel(expense),
@@ -133,4 +133,22 @@ export function Ledger({ expenses }: { expenses: Expense[] }) {
 function subcategoryLabel(expense: Expense): string {
   if (!expense.subcategory) return expense.category;
   return `${expense.category} · ${expense.subcategory}`;
+}
+
+const LEDGER_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  timeZone: 'UTC',
+});
+
+function formatLedgerDate(dateStr: string | Date): string {
+  const d =
+    typeof dateStr === 'string'
+      ? new Date(dateStr.length === 10 ? dateStr + 'T00:00:00Z' : dateStr)
+      : dateStr;
+  // "20 Apr" → "Apr 20" to match the mock
+  const parts = LEDGER_DATE_FORMATTER.formatToParts(d);
+  const day = parts.find((p) => p.type === 'day')?.value ?? '';
+  const month = parts.find((p) => p.type === 'month')?.value ?? '';
+  return `${month} ${Number(day)}`;
 }

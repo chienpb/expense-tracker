@@ -19,7 +19,7 @@ type SummaryBoxProps = {
 export function SummaryBox({ label, value, className }: SummaryBoxProps) {
   return (
     <div
-      className={`flex min-w-0 flex-col gap-2 border border-ink/70 bg-paper-2 px-4 py-3 ${className ?? ''}`}
+      className={`flex min-w-0 flex-col gap-2 border border-ink/70 bg-white/60 px-4 py-3 ${className ?? ''}`}
     >
       <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
         {label}

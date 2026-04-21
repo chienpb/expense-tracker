@@ -22,7 +22,6 @@ import {
 import { Page } from '@/app/_components/paper/Page';
 import { Stamp } from '@/app/_components/paper/Stamp';
 import { SummaryBox } from '@/app/_components/paper/SummaryBox';
-import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { MarginNote } from '@/app/_components/paper/MarginNote';
 import { formatPrintedDate } from '@/lib/paper-format';
 import { DateRangeTabs } from './_components/_date-range';
@@ -97,19 +96,29 @@ export default async function DashboardPage({
   const heroTotal = hasPaybacks ? net : overview.totalSpent;
 
   const tallyRows = groupCategoriesForTally(categorySpending, 5);
+  const tallyMax = tallyRows.reduce((m, r) => Math.max(m, r.tallyCount), 0);
 
   const today = new Date();
   const stampText = formatDate(today, 'MMM · dd · yyyy').toUpperCase();
 
   const title = renderTitle(range, from, to, selectedDay);
   const counterpartName = topPayback ? extractCounterpart(topPayback.description) : null;
-  const deltaNote = renderDelta(overview.totalSpent, priorTotal);
+  const deltaNote = renderDelta(overview.totalSpent, priorTotal, range);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Page
         tape
         className="flex-1"
+        footer={
+          <>
+            <span>Pg. {pageNumber(today)} / 52</span>
+            <span className="mx-auto font-serif text-caption italic text-ink-mute">
+              — balanced ✓
+            </span>
+            <span className="ml-auto">Initials ___</span>
+          </>
+        }
         header={
           <div className="flex items-start gap-6">
             <div className="min-w-0 flex-1">
@@ -148,13 +157,17 @@ export default async function DashboardPage({
                   : `Total spent, ${rangeWord(range)} to date`}
               </h2>
               <p className="mt-3 font-serif text-display-hero font-bold leading-none nums-lining-tabular text-ink">
-                {formatVND(heroTotal)}
+                <span className="align-middle">{formatVND(heroTotal)}</span>
+                {counterpartName && hasPaybacks && (
+                  <MarginNote
+                    inline
+                    side="right"
+                    className="ml-4 align-middle text-[22px]"
+                  >
+                    net, after {counterpartName} paid me back 👍
+                  </MarginNote>
+                )}
               </p>
-              {counterpartName && hasPaybacks && (
-                <MarginNote inline side="right" className="ml-4 align-middle">
-                  net, after {counterpartName} paid me back
-                </MarginNote>
-              )}
               <div className="mt-4 flex flex-wrap items-baseline gap-x-8 gap-y-2 font-typewriter text-[11px] text-ink-mute">
                 {hasPaybacks && (
                   <>
@@ -167,7 +180,11 @@ export default async function DashboardPage({
                   </>
                 )}
                 {deltaNote && (
-                  <span className="font-hand text-[15px] text-pen-navy">
+                  <span
+                    data-ledger-tilt
+                    className="inline-block font-hand text-[17px] text-pen-navy"
+                    style={{ transform: 'rotate(-1.2deg)' }}
+                  >
                     {deltaNote}
                   </span>
                 )}
@@ -212,7 +229,7 @@ export default async function DashboardPage({
           </div>
 
           {/* RIGHT COLUMN */}
-          <aside className="flex min-w-0 flex-col gap-8">
+          <aside className="flex min-w-0 flex-col gap-8 lg:-ml-6 lg:border-l-2 lg:border-dashed lg:border-ink/80 lg:pl-6">
             <div className="grid grid-cols-3 gap-3">
               <SummaryBox label="Entries" value={overview.count} />
               <SummaryBox label="Daily avg" value={formatVND(dailyAvg)} />
@@ -249,16 +266,12 @@ export default async function DashboardPage({
                 {tallyRows.map((row) => (
                   <li
                     key={row.category}
-                    className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-4 border-b border-dotted border-ink/25 pb-1.5"
+                    className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)_auto] items-baseline gap-4 border-b border-dotted border-ink/25 pb-1.5"
                   >
                     <span className="truncate font-serif text-body text-ink">
                       {row.displayName}
                     </span>
-                    <span className="justify-self-end">
-                      {row.tallyCount > 0 && (
-                        <TallyMarks count={row.tallyCount} height={18} />
-                      )}
-                    </span>
+                    <SlashTally count={row.tallyCount} max={tallyMax} />
                     <span className="justify-self-end font-serif text-body font-semibold nums-lining-tabular text-ink">
                       {formatVND(row.total)}
                     </span>
@@ -274,6 +287,24 @@ export default async function DashboardPage({
         </div>
       </Page>
     </div>
+  );
+}
+
+function pageNumber(d: Date): number {
+  const start = new Date(d.getFullYear(), 0, 1);
+  const day = Math.floor((d.getTime() - start.getTime()) / 86_400_000);
+  return (day % 52) + 1;
+}
+
+function SlashTally({ count, max }: { count: number; max: number }) {
+  if (count <= 0 || max <= 0) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="min-w-0 overflow-hidden whitespace-nowrap font-hand text-[22px] leading-none tracking-[0.05em] text-pen-navy"
+    >
+      {'/'.repeat(count)}
+    </span>
   );
 }
 
@@ -350,16 +381,38 @@ function rangeWord(range: RangeKey): string {
   }
 }
 
-function renderDelta(current: number, prior: number): string | null {
+function renderDelta(
+  current: number,
+  prior: number,
+  range: RangeKey,
+): string | null {
   if (prior <= 0 || current <= 0) return null;
+  const unit = deltaUnit(range);
   const diff = current - prior;
   const pct = Math.abs(diff) / prior;
-  if (pct < 0.03) return '↔ about the same as last time';
+  if (pct < 0.03) return `↔ about the same as last ${unit}`;
   const arrow = diff > 0 ? '↑' : '↓';
   const direction = diff > 0 ? 'over' : 'under';
-  if (pct < 0.12) return `${arrow} a bit ${direction} last time`;
-  if (pct < 0.3) return `${arrow} ${direction} last time`;
-  return `${arrow} well ${direction} last time`;
+  if (pct < 0.12) return `${arrow} a bit ${direction} last ${unit}`;
+  if (pct < 0.3) return `${arrow} ${direction} last ${unit}`;
+  return `${arrow} well ${direction} last ${unit}`;
+}
+
+function deltaUnit(range: RangeKey): string {
+  switch (range) {
+    case 'today':
+      return 'day';
+    case 'this_week':
+    case '7d':
+      return 'wk';
+    case 'this_month':
+    case 'last_month':
+      return 'mo';
+    case '30d':
+      return '30d';
+    default:
+      return 'time';
+  }
 }
 
 /**

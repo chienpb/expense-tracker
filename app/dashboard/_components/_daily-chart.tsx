@@ -37,9 +37,10 @@ type DailyChartProps = {
   rangeTo: string;
 };
 
-const PAD = { top: 28, right: 20, bottom: 40, left: 20 };
+const PAD = { top: 44, right: 20, bottom: 40, left: 20 };
 const WIDTH = 640;
 const HEIGHT = 260;
+const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 export function DailyChart({
   data,
@@ -92,6 +93,9 @@ export function DailyChart({
   const selectedTotal =
     selectedDay && data.find((d) => d.date === selectedDay)?.total;
 
+  const useWeekdayLabels =
+    (range === '7d' || range === 'this_week') && data.length <= 7;
+
   return (
     <figure className="flex flex-col gap-3">
       <svg
@@ -100,25 +104,10 @@ export function DailyChart({
         height={HEIGHT}
         role="img"
         aria-label={`Daily spending · ${data.length} days · peak ${formatVND(peak)}`}
-        className="border border-ink/15 bg-paper"
+        className="border border-ink/15 bg-white/60"
         preserveAspectRatio="xMidYMid meet"
       >
         <title>Daily spending — click a bar to drill into that day</title>
-
-        <text
-          x={WIDTH - PAD.right}
-          y={PAD.top - 10}
-          textAnchor="end"
-          className="font-typewriter"
-          style={{
-            fontSize: 10,
-            fill: 'var(--color-ink-mute)',
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-          }}
-        >
-          peak {formatVNDShort(peak)}
-        </text>
 
         <g style={{ filter: 'url(#hand-wobble)' }}>
           {data.map((d, i) => {
@@ -131,8 +120,23 @@ export function DailyChart({
             const isDimmed = !!selectedDay && !isSelected;
             const fillOpacity = isDimmed ? 0.08 : 0.22;
             const strokeOpacity = isDimmed ? 0.35 : 1;
+            const labelY = Math.min(spendY, incomeY) - 8;
             return (
               <g key={d.date}>
+                {(d.total > 0 || d.income > 0) && !isDimmed && (
+                  <text
+                    x={xFor(i)}
+                    y={labelY}
+                    textAnchor="middle"
+                    className="font-hand"
+                    style={{
+                      fontSize: 14,
+                      fill: 'var(--color-pen-navy)',
+                    }}
+                  >
+                    {formatVNDShort(d.total + d.income)}
+                  </text>
+                )}
                 {d.total > 0 && (
                   <rect
                     x={x}
@@ -183,17 +187,17 @@ export function DailyChart({
           <text
             key={`x-${i}`}
             x={xFor(i)}
-            y={baselineY + 16}
+            y={baselineY + 18}
             textAnchor="middle"
             className="font-typewriter"
             style={{
-              fontSize: 9,
+              fontSize: 10,
               fill: 'var(--color-ink-mute)',
-              letterSpacing: '0.15em',
+              letterSpacing: '0.18em',
               textTransform: 'uppercase',
             }}
           >
-            {shortDate(d.date)}
+            {useWeekdayLabels ? weekdayLabel(d.date) : shortDate(d.date)}
           </text>
         ))}
 
@@ -230,18 +234,12 @@ export function DailyChart({
         })}
       </svg>
 
-      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
-        <span>
-          {selectedDay
-            ? `Drilled · ${formatDateLabel(selectedDay)}${
-                typeof selectedTotal === 'number'
-                  ? ` · ${formatVND(selectedTotal)}`
-                  : ''
-              }`
-            : `Range · ${formatDateLabel(rangeFrom)} → ${formatDateLabel(rangeTo)}`}
-        </span>
-        <span>Click a bar to drill in · click again to clear</span>
-      </figcaption>
+      {selectedDay && (
+        <p className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+          Drilled · {formatDateLabel(selectedDay)}
+          {typeof selectedTotal === 'number' ? ` · ${formatVND(selectedTotal)}` : ''}
+        </p>
+      )}
 
       {selectedDay && (
         <DailyBreakdown
@@ -315,4 +313,11 @@ function shortDate(dateStr: string): string {
   const day = d.getDate();
   const month = d.toLocaleDateString('en-GB', { month: 'short' });
   return `${day} ${month}`;
+}
+
+function weekdayLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const idx = (date.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  return WEEKDAY_LABELS[idx];
 }
