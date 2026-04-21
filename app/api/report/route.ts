@@ -2,6 +2,7 @@ import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
 import { getSupabase } from '@/lib/supabase';
+import { ledgerKeeperInstructions } from '@/lib/ledger-keeper-prompt';
 
 type Range = 'yesterday' | 'last_week' | 'last_month';
 type Mode = 'summary' | 'full';
@@ -22,18 +23,18 @@ const summaryAgent = new ToolLoopAgent({
   tools: {
     executeSQL: makeExecuteSQLTool(['SELECT']),
   },
-  instructions: `You are an expense analysis assistant. Use the executeSQL tool to query the expenses table and produce a concise, insightful plain-text summary.
+  instructions: ledgerKeeperInstructions(`Task: settle the books for the requested range and render a short summary. Use the executeSQL tool to read whatever you need from the expenses table.
 
-Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE)
+Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE).
 
-The "type" column distinguishes spending from money received. Include both in your analysis — show total spent, total income, and net spending.
+The "type" column distinguishes spending from money coming back (paybacks, refunds). Include both — report total spent, total returned, and net.
 
-Guidelines:
-- Run whatever SELECT queries you need to gather meaningful data
-- Aggregate by category, find largest expenses, compare patterns
-- Present amounts in readable format (e.g. 25,000đ or 1.5 triệu)
-- Write in a friendly, human-readable style — not just raw numbers
-- Keep the report under 300 words`,
+Method:
+- Run as many SELECT queries as the summary needs.
+- Aggregate by category. Note the largest line. Compare against prior patterns only if the data supports it — do not invent trends.
+- Keep the report under 300 words.
+- Present amounts as \`1.180.000 ₫\`. Returns go in parentheses, e.g. \`(25.000 ₫)\`.
+- Close with \`— LK\` on its own line.`),
 });
 
 export async function POST(request: Request) {
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
       }>;
 
       if (rows.length === 0) {
-        return Response.json({ status: 'succeeded', report: 'No expenses found for this period.' });
+        return Response.json({ status: 'succeeded', report: 'No entries on the books for this period.\n\n— LK' });
       }
 
       const totalSpent = rows.filter(r => r.type !== 'income').reduce((s, r) => s + r.amount, 0);
@@ -112,5 +113,5 @@ function rangeStartDate(range: Range): string {
 }
 
 function formatAmount(n: number): string {
-  return n.toLocaleString('vi-VN') + 'đ';
+  return n.toLocaleString('vi-VN') + ' ₫';
 }

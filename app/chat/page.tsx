@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Page } from '@/app/_components/paper/Page';
+import { formatPrintedDate } from '@/lib/paper-format';
 import { PaperChat } from './_chat';
 
 export const metadata: Metadata = {
@@ -19,20 +20,11 @@ export default function ChatPage() {
         pageNumber="∞"
         tape
         title="Correspondence"
-        headerMeta={todayStamp()}
+        headerMeta={formatPrintedDate(new Date())}
         className="flex-1"
       >
         <PaperChat />
       </Page>
     </div>
   );
-}
-
-function todayStamp(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
 }

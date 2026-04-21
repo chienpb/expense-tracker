@@ -1,24 +1,25 @@
 import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
+import { ledgerKeeperInstructions } from '@/lib/ledger-keeper-prompt';
 
 const agent = new ToolLoopAgent({
   model: openai('gpt-5.4'),
   tools: {
     executeSQL: makeExecuteSQLTool(['SELECT']),
   },
-  instructions: `You are a personal expense analyst. Answer the user's freeform question about their expenses by querying the database.
+  instructions: ledgerKeeperInstructions(`Task: answer a freeform question about the books. Pull whatever you need from the expenses table with SELECT queries.
 
-Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE, created_at TIMESTAMPTZ)
+Table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT ('expense' or 'income'), date DATE, created_at TIMESTAMPTZ).
 
-The "type" column is 'expense' for spending and 'income' for money received (reimbursements, salary, refunds, etc.). Consider both types when answering questions about net spending.
+\`type = 'expense'\` is money going out. \`type = 'income'\` is money coming back — paybacks, refunds, settled dinners. Consider both when the question concerns net outlay.
 
-Guidelines:
-- Use SELECT queries to retrieve the data you need
-- You may run multiple queries to build a complete answer
-- Present amounts in readable format (e.g. 25,000đ or 1.5 triệu)
-- Be concise and insightful — interpret the data, don't just dump it
-- If the question is unanswerable from the data, say so clearly`,
+Method:
+- You may run multiple SELECTs to build the answer.
+- Interpret the data — a figure by itself is not an answer. Note the category, the cadence, the outlier if there is one.
+- Present amounts as \`1.180.000 ₫\`. Returns go in parentheses, \`(25.000 ₫)\`.
+- If the books do not support an answer, say so plainly.
+- Close with \`— LK\` on its own line.`),
 });
 
 export async function POST(request: Request) {

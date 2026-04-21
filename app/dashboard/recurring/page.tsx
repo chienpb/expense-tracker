@@ -4,6 +4,7 @@ import { getSupabase } from '@/lib/supabase';
 import { Page } from '@/app/_components/paper/Page';
 import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { formatVND } from '@/lib/dashboard/utils';
+import { formatPrintedDate } from '@/lib/paper-format';
 import { StandingOrderRegister } from './_register';
 import { NewStandingOrderSlip } from './_slip';
 
@@ -50,7 +51,7 @@ export default async function RecurringPage() {
         pageNumber="1/1"
         tape
         title="Standing Orders"
-        headerMeta={todayStamp()}
+        headerMeta={formatPrintedDate(new Date())}
         className="flex-1"
       >
         <div className="mb-6 flex items-baseline justify-between gap-4">
@@ -136,11 +137,3 @@ function monthlyAmount(item: RecurringExpense): number {
   }
 }
 
-function todayStamp(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
-}

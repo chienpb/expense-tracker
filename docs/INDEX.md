@@ -24,6 +24,7 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 |---|---|
 | [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Any UI change. Paper Ledger is the live system — components, tokens, filters, voice. |
 | [`ROADMAP.md`](ROADMAP.md) | Planning or executing a Paper Ledger phase; checking what ships when. |
+| [`DASHBOARD_REDESIGN.md`](DASHBOARD_REDESIGN.md) | Touching `/dashboard` layout/chrome to match the desk-blotter spread reference. Chunked refactor plan. |
 | [`DECISION_LOG.md`](DECISION_LOG.md) | Recording a non-trivial trade-off or spike verdict. |
 | [`swiss-design-system-archive.md`](swiss-design-system-archive.md) | Historical only — the retired Swiss dashboard system. Portfolio reference. |
 

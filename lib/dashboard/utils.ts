@@ -1,7 +1,13 @@
 import { format, subDays, startOfMonth, endOfMonth, subMonths, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
 
+/**
+ * Canonical VND renderer — §10 of `docs/DESIGN_SYSTEM.md`: VN-style
+ * dotted grouping, integer only, single space before the `₫` glyph
+ * (`1.180.000 ₫`). Callers that need refunds in parentheses should
+ * reach for `formatSignedVND` in `lib/paper-format.ts` instead.
+ */
 export function formatVND(amount: number): string {
-  return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+  return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
 }
 
 export function formatVNDShort(amount: number): string {

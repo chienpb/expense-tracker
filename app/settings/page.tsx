@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Page } from '@/app/_components/paper/Page';
+import { formatPrintedDate } from '@/lib/paper-format';
 import { readLedgerSettings } from '@/lib/settings';
 import { SignOut } from '@/app/dashboard/_components/_sign-out';
 import { SettingsForm } from './_form';
@@ -34,7 +35,7 @@ export default async function SettingsPage() {
         pageNumber="1/1"
         tape
         title="House rules"
-        headerMeta={todayStamp()}
+        headerMeta={formatPrintedDate(new Date())}
         className="flex-1"
       >
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-ink/15 pb-4">
@@ -77,11 +78,3 @@ export default async function SettingsPage() {
   );
 }
 
-function todayStamp(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
-}

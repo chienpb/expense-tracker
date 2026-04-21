@@ -17,6 +17,7 @@ import {
 import { Page } from '@/app/_components/paper/Page';
 import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { Stamp } from '@/app/_components/paper/Stamp';
+import { formatPrintedDate } from '@/lib/paper-format';
 import { DateRangeTabs } from './_components/_date-range';
 import { DailyChart } from './_components/_daily-chart';
 import { CategoryChart } from './_components/_category-chart';
@@ -95,7 +96,7 @@ export default async function DashboardPage({
         pageNumber="1/1"
         tape
         title="Daybook"
-        headerMeta={todayStamp()}
+        headerMeta={formatPrintedDate(new Date())}
         className="flex-1"
       >
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-ink/15 pb-4">
@@ -295,21 +296,6 @@ function Figure({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function todayStamp(): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
-}
-
 function formatLongDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(d);
+  return formatPrintedDate(new Date(dateStr + 'T00:00:00'));
 }

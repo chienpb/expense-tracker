@@ -2,13 +2,14 @@ import { ToolLoopAgent } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { categoriesPrompt } from '@/lib/categories';
 import { makeExecuteSQLTool } from '@/lib/sql-tool';
+import { ledgerKeeperInstructions } from '@/lib/ledger-keeper-prompt';
 
 const agent = new ToolLoopAgent({
   model: openai('gpt-5.4'),
   tools: {
     executeSQL: makeExecuteSQLTool(['SELECT', 'INSERT', 'UPDATE', 'DELETE']),
   },
-  instructions: `You are an expense logging assistant for Chien Pham. Your job is to parse plain-text expense entries (in Vietnamese or English) and persist them to the database using the executeSQL tool.
+  instructions: ledgerKeeperInstructions(`Task: you are filing entries into the register on behalf of the keeper. Parse plain-text entries (Vietnamese or English) handed in at the window, and record them to the database via the executeSQL tool.
 
 Database table: expenses (id UUID, amount INTEGER in VND, description TEXT, category TEXT, subcategory TEXT, type TEXT, date DATE, created_at TIMESTAMPTZ)
 
@@ -54,8 +55,10 @@ Other instructions:
   - Malboro (eg: Malboro đỏ)
   - Saigon (eg: Saigon dưa lưới)
 
-On ambiguity or parse failure: do NOT call the tool. Just respond with "Failed: <short reason>".
-On success: respond with "Succeeded".`,
+Response shape — this endpoint is read by a script, not by a human, so break voice only here:
+- On success: respond with exactly "Succeeded".
+- On ambiguity or parse failure: do NOT call the tool. Respond with "Failed: <short reason>".
+- No sign-off, no prose, no other formatting in this endpoint.`),
 });
 
 export async function POST(request: Request) {

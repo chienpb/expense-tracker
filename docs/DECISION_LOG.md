@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-04-21 · Phase 6 · Ledger-keeper voice lives in `lib/ledger-keeper-prompt.ts`; `formatVND` gains a space
+
+  Context:   Phase 6 asks for a single clerical-1962 voice across every AI surface (`/api/log`, `/api/report`, `/api/custom`, chat agent) so the Ledger-keeper persona reads consistently regardless of which endpoint the user hits. The four endpoints historically grew their own instruction blocks — each drifting on amount formatting (`đ` vs `₫`, no space vs space) and signing off differently.
+  Decision:  Ship `lib/ledger-keeper-prompt.ts` exporting `LEDGER_KEEPER_PERSONA` + a `ledgerKeeperInstructions(task)` helper. Each endpoint now wraps its task-specific instructions through the helper so voice rules (no exclamation marks, no emoji, ledger vocabulary, `— LK` sign-off) live in one place. `/api/log` retains its `Succeeded` / `Failed: …` contract since Apple Shortcuts parses the text — the prompt carves out an explicit exception for that endpoint. `formatVND` in `lib/dashboard/utils.ts` updated from `1.180.000₫` to `1.180.000 ₫` per §10; the `đ` usage in `/api/report` full-mode table and in prompts is out. Duplicate `todayStamp()` helpers in `/dashboard`, `/dashboard/recurring`, `/chat`, `/settings` collapsed onto `formatPrintedDate(new Date())` from `lib/paper-format.ts`.
+  Rationale: One persona block beats four drifting ones, and the endpoints still own their own behaviour below the persona — the helper only prepends voice. The `/api/log` carve-out is unavoidable (the script-facing response shape is load-bearing); documenting it inline in the prompt keeps future edits from accidentally humanising that endpoint. The `formatVND` space is the system spec and was the only deviation across every call site; fixing it at the source propagates cleanly through dashboard / recurring / chat tool receipts without per-caller edits.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-04-21 · Phase 5.6 · Swiss nuke — flag removed, side routes collapsed, Swiss doc archived
 
   Context:   All five Phase 5 migrations shipped behind `NEXT_PUBLIC_PAPER_UI`, each keeping a `/foo-paper` side route + `_swiss.tsx` fallback for rollback. With the Paper chrome proven on desktop, keeping two copies of every route is pure tax — every edit risks drifting Swiss, and the flag obscures what's actually live.

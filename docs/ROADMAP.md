@@ -206,13 +206,13 @@ For each page:
 
 **Goal.** Every string in the app matches the "Ledger-keeper" voice (§10).
 
-- [ ] Inventory every user-facing string: button labels, empty states, error messages, AI system prompts, toasts (which should now be stamps).
-- [ ] Rewrite to clerical-1962 voice. Examples: "Recorded ✓" not "Saved!" / "On this page" not "Loaded items" / "Settle the books" for month-end.
-- [ ] Remove every exclamation mark. Every emoji. Every "!" in copy.
-- [ ] Date formatting helper: `"Mon, 20 Apr 2026"` for printed dates. User-written dates stay free-form.
-- [ ] Currency helper: VND with VN-style dotted grouping (`1.180.000 ₫`). Locale `vi-VN`, no fraction digits.
-- [ ] **AI system prompts** (`app/api/log/route.ts`, `app/api/report/route.ts`, `app/api/custom/route.ts`, `app/chat/page.tsx` LLM calls): personify as "the Ledger-keeper." Always polite, never enthusiastic, no exclamation marks, signs replies with `— LK` in pencil-gray. Add this to a shared `lib/ledger-keeper-prompt.ts` so the voice is consistent across endpoints.
-- [ ] Replace every toast/sonner call with a `<Stamp>` that thumps in, dries, stays. Audit: remove `sonner` dependency if nothing else uses it.
+- [x] Inventory every user-facing string: button labels, empty states, error messages, AI system prompts, toasts (which should now be stamps). Phase 5 shipped the UI already in-voice — the Phase 6 sweep confirmed zero exclamation marks, zero emoji, and no leftover toasts (Phase 5 pages use `<Stamp>`; sonner is not a dependency).
+- [x] Rewrite to clerical-1962 voice. UI copy already lands in voice from Phase 5; AI system prompts rewritten in this phase — see `lib/ledger-keeper-prompt.ts`.
+- [x] Remove every exclamation mark. Every emoji. Every "!" in copy. Verified via grep across `app/{login,dashboard,chat,settings}`.
+- [x] Date formatting helper: `"Mon, 20 Apr 2026"` for printed dates. `formatPrintedDate` in `lib/paper-format.ts` is the canonical printed-layer renderer; duplicate `todayStamp()` / `formatLongDate()` helpers in the four page components collapsed onto it.
+- [x] Currency helper: VND with VN-style dotted grouping (`1.180.000 ₫`). Locale `vi-VN`, no fraction digits. `formatVND` in `lib/dashboard/utils.ts` now emits the spec-mandated space before `₫`; `/api/report` full-mode table updated to match.
+- [x] **AI system prompts** (`app/api/log/route.ts`, `app/api/report/route.ts`, `app/api/custom/route.ts`, `lib/chat-agent.ts`) route through `ledgerKeeperInstructions()` from `lib/ledger-keeper-prompt.ts`. Every reply closes `— LK` except `/api/log`, which keeps the script-facing `Succeeded` / `Failed: <reason>` contract under an explicit carve-out in the persona block.
+- [x] Replace every toast/sonner call with a `<Stamp>` that thumps in, dries, stays. Already done in Phase 5; `sonner` is not a dependency (verified in `package.json`).
 
 **Exit criteria.** A stranger skimming the app can tell it's "in character" on every screen.
 
@@ -340,4 +340,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 + 5 complete (Swiss nuked, `NEXT_PUBLIC_PAPER_UI` gate removed, Swiss doc archived) · mobile (Phase 9) and accessibility (Phase 10) deferred to the end of the roadmap per owner priority.*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 + 5 + 6 complete (Ledger-keeper voice consolidated in `lib/ledger-keeper-prompt.ts`, VND formatter spec-aligned) · mobile (Phase 9) and accessibility (Phase 10) deferred to the end of the roadmap per owner priority.*
