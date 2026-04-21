@@ -64,25 +64,25 @@ Each spike is a throwaway `app/spikes/<name>/page.tsx` route, gated at runtime o
 **Goal.** Replace the Swiss color/spacing/type tokens with the Paper Ledger ones. App still looks Swiss (because no components consume the new tokens yet), but every new token is in place and switchable.
 
 ### 1.1 Tailwind v4 token replacement
-- [ ] In `app/globals.css`, replace the HSL grayscale palette with the Paper Ledger tokens from §1 (Day + Midnight).
-- [ ] Switch theme strategy from `next-themes` class (`.dark`) to `data-theme="day" | "night"` on `<html>` (per §12). Keep `next-themes` package but configure `attribute="data-theme"`, `value={{ light: 'day', dark: 'night' }}`.
-- [ ] Add font families to `@theme`: `--font-serif`, `--font-typewriter`, `--font-hand`, `--font-hand-signature`, `--font-stamp`.
-- [ ] Add type-scale tokens from §2.5 as CSS custom properties and Tailwind utilities (`text-display-hero`, `text-hand`, `text-label`, etc.).
-- [ ] Add spacing scale (already close — just audit §3.2) and ruled-line constant (`--rule-spacing: 32px`).
-- [ ] Expose `font-variant-numeric` utilities: `.nums-oldstyle`, `.nums-tabular`, `.nums-lining-tabular`.
-- [ ] Expose letter-spacing tokens for labels (1.5px, 2.5px tracked).
+- [x] In `app/globals.css`, replace the HSL grayscale palette with the Paper Ledger tokens from §1 (Day + Midnight). Swiss tokens kept alive on the same `[data-theme]` switch so shadcn chrome still renders until Phase 5.
+- [x] Switch theme strategy from `next-themes` class (`.dark`) to `data-theme="day" | "night"` on `<html>` (per §12). `attribute="data-theme"`, `value={{ light: 'day', dark: 'night' }}`. `@custom-variant dark` re-bound to `[data-theme="night"]` — DECISION_LOG 2026-04-21.
+- [x] Add font families to `@theme`: `--font-serif`, `--font-typewriter`, `--font-hand`, `--font-hand-signature`, `--font-stamp`, `--font-hand-hurried`. next/font variables renamed `--font-*-face` to avoid collision — DECISION_LOG 2026-04-21.
+- [x] Add type-scale tokens from §2.5 as CSS custom properties and Tailwind utilities (`text-display-hero`, `text-hand`, `text-label`, etc.).
+- [x] Add spacing scale (already close — just audit §3.2) and ruled-line constant (`--rule-spacing: 32px`). Tailwind v4 default scale covers §3.2; `--rule-spacing`, `--margin-rule-offset`, `--margin-rule-offset-mobile` added.
+- [x] Expose `font-variant-numeric` utilities: `.nums-oldstyle`, `.nums-tabular`, `.nums-oldstyle-tabular`, `.nums-lining-tabular`.
+- [x] Expose letter-spacing tokens for labels (1.5px, 2.5px tracked) — `--letter-spacing-label-s` (0.15em), `--letter-spacing-label-m` (0.25em).
 
 ### 1.2 Typography runtime
-- [ ] `app/layout.tsx` — load all five Google Fonts via `next/font/google` with proper subsets. Verify `vietnamese` subset is included for Crimson Pro, Patrick Hand, Caveat.
-- [ ] Set body default to Crimson Pro 14/1.55 with `font-variant-numeric: oldstyle-nums`.
-- [ ] Update `<title>` and `<metadata>` (still says "Create Next App" in current `layout.tsx:18`).
+- [x] `app/layout.tsx` — load all five Paper Ledger fonts via `next/font/google` with proper subsets (Crimson Pro + Patrick Hand carry `vietnamese`; Caveat does not, per §2.3 + DECISION_LOG). Geist kept for Phase 5 shadcn compatibility — DECISION_LOG 2026-04-21.
+- [x] Set body default to Crimson Pro 14/1.55 with `font-variant-numeric: oldstyle-nums`. Applied in `@layer base` in `globals.css`.
+- [x] Update `<title>` and `<metadata>` — now "Ledger".
 
 ### 1.3 Settings scaffolding (groundwork for a11y)
-- [ ] Plan a `/settings` route shape (don't build yet). Keys: `theme`, `reduce-motion`, `reduce-skew`, `use-printed-font-for-handwritten`, `show-edit-history`. Store in a cookie (SSR-safe) + Zustand for client reads. Decision log entry.
-- [ ] Add `<html>` attributes driven by settings: `data-theme`, `data-reduce-motion`, `data-reduce-skew`, `data-print-hand`. Components key off these attributes in CSS.
+- [x] Plan a `/settings` route shape (don't build yet). Keys: `theme`, `reduce-motion`, `reduce-skew`, `use-printed-font-for-handwritten`, `show-edit-history`. Cookie-per-setting (SSR-safe); client Zustand store deferred to Phase 5.5 with the route itself — DECISION_LOG 2026-04-21.
+- [x] Add `<html>` attributes driven by settings: `data-theme`, `data-reduce-motion`, `data-reduce-skew`, `data-print-hand`, `data-show-edit-history`. `lib/settings.ts` → `readLedgerSettings()` + `settingsToHtmlAttrs()` called from root layout.
 
 ### 1.4 Rotation seeding
-- [ ] Ship `lib/seed-rotation.ts` from the spike into production.
+- [x] Ship `lib/seed-rotation.ts` from the spike into production. (Already landed in Phase 0.1; no changes needed.)
 
 **Exit criteria.** `/dashboard` still renders (because nothing consumes the new tokens), but DevTools shows the new CSS vars. Toggling `data-theme` in DevTools visually re-paints the background between `#f6efe0` and `#1a1410` on an empty page.
 
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude)*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phase 0 + Phase 1 complete.*

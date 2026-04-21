@@ -41,6 +41,35 @@ YYYY-MM-DD · one-line decision
   Rationale: Caveat is the signature/display fallback; any Vietnamese rendering risk means Patrick Hand is the required hand font. Enforced at the font-loading layer.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 1 · `dark` Tailwind variant re-bound to `[data-theme="night"]`
+
+  Context:   Phase 1.1 switches `next-themes` from `attribute="class"` (which sets `.dark` on `<html>`) to `attribute="data-theme"` with `value={{ light: "day", dark: "night" }}` per DESIGN_SYSTEM §12. Every pre-existing shadcn `dark:*` Tailwind utility keyed off the `.dark` class — those would silently stop responding to theme changes.
+  Decision:  Redefine the v4 variant in `app/globals.css` to `@custom-variant dark (&:is([data-theme="night"] *))`. The Swiss token blocks now live under `:root, [data-theme="day"]` and `[data-theme="night"]` so `bg-background`, `dark:bg-card`, etc. continue to work on unmigrated pages through Phase 5.
+  Rationale: Zero churn in shadcn-consuming code, one selector change to own the migration. Keeps the roadmap's Phase 5 flag-flip surgical: we don't need to touch every `dark:` utility to drop Swiss.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 1 · Paper Ledger font variables renamed `--font-*-face`
+
+  Context:   Tailwind v4 exposes `font-serif`, `font-hand`, etc. utilities by defining `--font-serif`, `--font-hand`, ... in `@theme inline`. `lib/paper-fonts.ts` originally used the same names for `next/font/google`'s `variable` option, so both next/font (via a class on `<html>`) and Tailwind (via `@theme inline`) would write to the same custom property — an unstable race on specificity.
+  Decision:  Rename the next/font variables to `--font-serif-face`, `--font-typewriter-face`, `--font-hand-face`, `--font-hand-signature-face`, `--font-stamp-face`, `--font-hand-hurried-face`. `@theme inline` bridges each Tailwind font utility to its `-face` var: `--font-hand: var(--font-hand-face), "Comic Sans MS", cursive;` etc. The utility name stays `font-hand` (matches §12 of the spec); the rename is internal.
+  Rationale: Explicit ownership — next/font writes the actual font-family, Tailwind bridges it into the utility. Existing spike pages that read `var(--font-hand)` keep working because `:root` now carries `--font-hand` courtesy of Tailwind's `@theme inline` emission.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 1 · Settings persisted as cookies, read server-side in root layout
+
+  Context:   Phase 1.3 calls for `data-reduce-motion`, `data-reduce-skew`, `data-print-hand`, `data-show-edit-history` attributes on `<html>` so components can gate CSS against them. We need them on the first paint (no FOUC of unreduced motion) and we don't want a hydration mismatch.
+  Decision:  Store each setting as a dedicated cookie (`ledger-reduce-motion`, `ledger-reduce-skew`, `ledger-print-hand`, `ledger-show-edit-history`). `lib/settings.ts::readLedgerSettings()` reads them in the async root layout via `next/headers` → `cookies()` and `settingsToHtmlAttrs()` converts to the HTML attributes. `theme` itself stays owned by `next-themes` (its own cookie + `localStorage`).
+  Plan:      A client Zustand store will mirror the cookies in Phase 5.5 when the `/settings` route ships. Writers (the eventual settings page) will `document.cookie = ...` + call the store setter; readers on the client will consume the store. For Phase 1–4, devs flip the cookies from DevTools to exercise every branch.
+  Rationale: SSR-correct by construction (cookies are always available before HTML emits), no JS-driven class cascade, no reliance on a hydration-time effect that could flash motion/skew. Rejects `localStorage` alone (not SSR-readable) and rejects a single JSON cookie (harder to set/inspect from the eventual `/settings` form).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 1 · Geist (sans/mono) kept loaded through Phase 5
+
+  Context:   Paper Ledger has no role for Geist — the text faces are Crimson Pro (serif), Courier Prime (typewriter), Patrick Hand (hand), Caveat (signature), Archivo Black (stamp), Homemade Apple (hurried hand). The natural instinct was to remove the Geist imports from `app/layout.tsx`.
+  Decision:  Keep Geist imports for now. shadcn chrome still on unmigrated pages (all of `/dashboard`, `/chat`, `/login`) references `font-sans` / `font-mono` and expects Geist. Tailwind's `--font-sans` / `--font-mono` tokens in `@theme inline` already bridge to `var(--font-geist-sans)` / `var(--font-geist-mono)`.
+  Rationale: Remove Geist only after Phase 5 finishes page migration — any page still using `font-sans` would otherwise fall back to a system font mid-migration. The delete is a one-line follow-up and will land in Phase 9.1 (bundle audit).
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ---
 
 ## Spike verdicts (Phase 0.2)

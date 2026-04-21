@@ -2,13 +2,33 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Paper Ledger drives dark mode via data-theme="night" on <html>.
+   Redefine the dark variant so existing shadcn `dark:*` utilities keep
+   working while we migrate pages in Phase 5. */
+@custom-variant dark (&:is([data-theme="night"] *));
 
 @theme inline {
+  /* ---------------------------------------------------------------
+   * Fonts
+   * - Swiss stack (Geist) kept for Phase 5 shadcn compatibility.
+   * - Paper Ledger fonts are loaded by next/font/google into
+   *   --font-*-face variables (see lib/paper-fonts.ts) and bridged
+   *   here so `font-serif`, `font-hand`, etc. resolve correctly.
+   * ------------------------------------------------------------- */
+  --font-sans: var(--font-geist-sans), "Helvetica Neue", "Inter", sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
+  --font-serif: var(--font-serif-face), Georgia, "Times New Roman", serif;
+  --font-typewriter: var(--font-typewriter-face), "Courier New", monospace;
+  --font-hand: var(--font-hand-face), "Comic Sans MS", cursive;
+  --font-hand-signature: var(--font-hand-signature-face), cursive;
+  --font-stamp: var(--font-stamp-face), "Helvetica Neue", sans-serif;
+  --font-hand-hurried: var(--font-hand-hurried-face), cursive;
+
+  /* ---------------------------------------------------------------
+   * Swiss tokens (preserved for shadcn components until Phase 5)
+   * ------------------------------------------------------------- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Helvetica Neue", "Inter", sans-serif;
-  --font-mono: "Geist Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -38,6 +58,71 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* ---------------------------------------------------------------
+   * Paper Ledger palette (§1 of DESIGN_SYSTEM.md)
+   * Values live in :root / [data-theme="night"] below; utilities
+   * resolve via var() so theme switch is a single attribute flip.
+   * ------------------------------------------------------------- */
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-ink: var(--ink);
+  --color-ink-mute: var(--ink-mute);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule-blue: var(--rule-blue);
+  --color-rule-pink: var(--rule-pink);
+  --color-pen-navy: var(--pen-navy);
+  --color-pen-navy-deep: var(--pen-navy-deep);
+  --color-stamp-red: var(--stamp-red);
+  --color-stamp-red-fade: var(--stamp-red-fade);
+  --color-pencil-gray: var(--pencil-gray);
+  --color-highlighter: var(--highlighter);
+  --color-coffee-stain: var(--coffee-stain);
+  --color-seal-gold: var(--seal-gold);
+
+  /* ---------------------------------------------------------------
+   * Type scale (§2.5)
+   * ------------------------------------------------------------- */
+  --text-display-hero: clamp(56px, 8vw, 96px);
+  --text-display-hero--line-height: 0.95;
+  --text-display: 48px;
+  --text-display--line-height: 1.05;
+  --text-title-1: 32px;
+  --text-title-1--line-height: 1.1;
+  --text-title-2: 22px;
+  --text-title-2--line-height: 1.2;
+  --text-body-l: 18px;
+  --text-body-l--line-height: 1.55;
+  --text-body: 14px;
+  --text-body--line-height: 1.55;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-label: 10px;
+  --text-label--line-height: 1.3;
+  --text-hand-l: 28px;
+  --text-hand-l--line-height: 1.1;
+  --text-hand: 20px;
+  --text-hand--line-height: 1.15;
+  --text-hand-s: 14px;
+  --text-hand-s--line-height: 1.2;
+  --text-hand-signature: 24px;
+  --text-hand-signature--line-height: 1.1;
+  --text-stamp: 12px;
+  --text-stamp--line-height: 1;
+
+  /* ---------------------------------------------------------------
+   * Letter-spacing (§2.2 — labels tracked 1.5–2.5px at 10px)
+   * ------------------------------------------------------------- */
+  --letter-spacing-tighter: -0.03em;
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-wide: 0.08em;
+  --letter-spacing-label-s: 0.15em;
+  --letter-spacing-label-m: 0.25em;
+
+  /* ---------------------------------------------------------------
+   * Radii (legacy Swiss — kept for shadcn)
+   * ------------------------------------------------------------- */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -45,12 +130,16 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --letter-spacing-tighter: -0.03em;
-  --letter-spacing-tight: -0.02em;
-  --letter-spacing-wide: 0.08em;
 }
 
-:root {
+/* ---------------------------------------------------------------------
+ * Day theme — ":root" is the default so the page renders before
+ * next-themes hydrates. "[data-theme='day']" is listed explicitly so
+ * opting back out of Midnight works symmetrically.
+ * ------------------------------------------------------------------- */
+:root,
+[data-theme="day"] {
+  /* Swiss Day (unchanged from pre-Phase-1) */
   --background: hsl(0 0% 98%);
   --foreground: hsl(0 0% 5%);
   --card: hsl(0 0% 100%);
@@ -83,9 +172,37 @@
   --sidebar-accent-foreground: hsl(0 0% 5%);
   --sidebar-border: hsl(0 0% 88%);
   --sidebar-ring: hsl(0 0% 5%);
+
+  /* Paper Ledger — Daybook */
+  --paper: #f6efe0;
+  --paper-2: #f0e7d4;
+  --paper-3: #e9deb9;
+  --ink: #2c2418;
+  --ink-mute: #8a7a5e;
+  --ink-faint: #bfb094;
+  --rule-blue: #a8c3d9;
+  --rule-pink: #d89090;
+  --pen-navy: #1f3a5f;
+  --pen-navy-deep: #142844;
+  --stamp-red: #b02a2a;
+  --stamp-red-fade: #c46b6b;
+  --pencil-gray: #6b6055;
+  --highlighter: #ffe88a;
+  --coffee-stain: #a07a4a;
+  --seal-gold: #a68a3b;
+
+  /* Layout constants */
+  --rule-spacing: 32px;
+  --margin-rule-offset: 60px;
+  --margin-rule-offset-mobile: 36px;
 }
 
-.dark {
+/* ---------------------------------------------------------------------
+ * Midnight theme — next-themes sets data-theme="night" when the
+ * resolved theme is "dark" (see value map in app/layout.tsx).
+ * ------------------------------------------------------------------- */
+[data-theme="night"] {
+  /* Swiss Night (was previously under .dark) */
   --background: hsl(0 0% 4%);
   --foreground: hsl(0 0% 95%);
   --card: hsl(0 0% 7%);
@@ -104,16 +221,58 @@
   --border: hsl(0 0% 18%);
   --input: hsl(0 0% 18%);
   --ring: hsl(0 0% 95%);
+
+  /* Paper Ledger — Midnight */
+  --paper: #1a1410;
+  --paper-2: #221a14;
+  --paper-3: #2c2218;
+  --ink: #e8dcc4;
+  --ink-mute: #9a8a6e;
+  --ink-faint: #5a4e3a;
+  --rule-blue: #3a4a5a;
+  --rule-pink: #5a3a3a;
+  --pen-navy: #7ab0e0;
+  --pen-navy-deep: #5e8bbe;
+  --stamp-red: #e06060;
+  --stamp-red-fade: #c26060;
+  --pencil-gray: #807565;
+  --highlighter: #5a4e1a;
+  --coffee-stain: #6b5230;
+  --seal-gold: #d4b35a;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    font-family: var(--font-serif);
+    font-variant-numeric: oldstyle-nums;
+  }
   body {
     @apply bg-background text-foreground;
+    font-size: 14px;
+    line-height: 1.55;
   }
-  html {
-    @apply font-sans;
-  }
+}
+
+/* ---------------------------------------------------------------------
+ * font-variant-numeric utilities (§2.1)
+ *
+ *   nums-oldstyle          — body copy (digits have ascenders/descenders)
+ *   nums-tabular           — columnar alignment with lining figures
+ *   nums-oldstyle-tabular  — ledger rows: aligned AND old-style
+ *   nums-lining-tabular    — hero numerals (display-hero amounts)
+ * ------------------------------------------------------------------- */
+@utility nums-oldstyle {
+  font-variant-numeric: oldstyle-nums;
+}
+@utility nums-tabular {
+  font-variant-numeric: tabular-nums;
+}
+@utility nums-oldstyle-tabular {
+  font-variant-numeric: oldstyle-nums tabular-nums;
+}
+@utility nums-lining-tabular {
+  font-variant-numeric: lining-nums tabular-nums;
 }
