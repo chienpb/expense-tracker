@@ -63,6 +63,20 @@ YYYY-MM-DD · one-line decision
   Rationale: SSR-correct by construction (cookies are always available before HTML emits), no JS-driven class cascade, no reliance on a hydration-time effect that could flash motion/skew. Rejects `localStorage` alone (not SSR-readable) and rejects a single JSON cookie (harder to set/inspect from the eventual `/settings` form).
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 2 · `paper-grain.png` build-time bake deferred
+
+  Context:   Phase 2.2 listed `public/textures/paper-grain.png` as "placeholder generated at build time from `feTurbulence`." Baking a PNG from an SVG that relies on filter primitives (`feTurbulence`, `feColorMatrix`) requires a real rasterizer — `sharp`, `@resvg/resvg-js`, or `puppeteer`-style headless rendering — none of which are currently in the project's dependency graph.
+  Decision:  Ship only the tileable SVG placeholder (`public/textures/paper-grain.svg`). The `<PaperGrain>` primitive consumes it via `background-image: url(...)` with CSS-repeat per §7.6 + Spike 2 verdict. No component change needed when the PNG lands; `<PaperGrain>` updates the single `url()` reference.
+  Rationale: Browsers cache rasterized SVG backgrounds as bitmaps, so the tile is effectively a PNG once painted. Adding a native rasterizer as a build dependency for a single placeholder asset is poor ROI; the real swap is Chien's photographed grain (Asset A1) in Phase 8. If Phase 9.1's performance sweep shows the SVG cache missing on mobile, we revisit then.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 2 · Decoration primitives are absolute overlays
+
+  Context:   `<RuledLines>`, `<MarginRule>`, and `<PaperGrain>` each need to cover the full parent surface without claiming layout space — consumers (future `<Page>`, `<CarbonSlip>`, dialogs) must be able to stack them behind content and keep interacting with the normal flex/grid layout of the page body.
+  Decision:  Each primitive renders as `position: absolute; inset: 0` (MarginRule as a 1px `top-0 bottom-0` stripe), with `pointer-events: none` and `aria-hidden="true"`. Consumers wrap a `position: relative` surface and stack the overlays as the first children; page content follows in the same surface.
+  Rationale: Zero layout side-effects, single contract for every decoration primitive, accessibility-correct by construction (decorative SVG stays invisible to AT per §9). The shape generalises cleanly to `<TapeStrip>`, `<Stamp>`, `<CoffeeRing>` in Phase 3.
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 1 · Geist (sans/mono) kept loaded through Phase 5
 
   Context:   Paper Ledger has no role for Geist — the text faces are Crimson Pro (serif), Courier Prime (typewriter), Patrick Hand (hand), Caveat (signature), Archivo Black (stamp), Homemade Apple (hurried hand). The natural instinct was to remove the Geist imports from `app/layout.tsx`.

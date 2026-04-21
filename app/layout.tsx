@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Providers } from "./providers";
+import PaperFilters from "./_components/paper/_filters";
 import { paperFontVariables } from "@/lib/paper-fonts";
 import { readLedgerSettings, settingsToHtmlAttrs } from "@/lib/settings";
 import "./globals.css";
@@ -40,6 +41,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
+        <PaperFilters />
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="system"

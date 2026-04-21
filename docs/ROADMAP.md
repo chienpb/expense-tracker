@@ -95,21 +95,21 @@ Each spike is a throwaway `app/spikes/<name>/page.tsx` route, gated at runtime o
 **Goal.** Every drawing primitive the system needs. A `/design-system` internal route displays all of them side-by-side for visual regression.
 
 ### 2.1 SVG filter defs
-- [ ] `app/_components/paper/_filters.tsx` — a single `<svg width="0" height="0">` with `<defs>` for `#paper-grain`, `#stamp-wear`, `#hand-wobble`, `#ink-bleed`, `#pencil-stroke`. Include once in root layout.
-- [ ] Performance gate: verify each filter is cheap on mobile. If `#paper-grain` on full-page fails the Phase 0.2 test, ship a pre-rendered PNG placeholder per §7.6 and leave a TODO to swap when the Asset A1 lands.
+- [x] `app/_components/paper/_filters.tsx` — a single `<svg width="0" height="0">` with `<defs>` for `#paper-grain`, `#stamp-wear`, `#hand-wobble`, `#ink-bleed`, `#pencil-stroke`. Mounted once from `app/layout.tsx` as the first `<body>` child.
+- [x] Performance gate: §7.6 path chosen up-front — `<PaperGrain>` consumes the tileable SVG (`public/textures/paper-grain.svg`) via CSS `background-repeat` per Spike 2's verdict. `#paper-grain` filter remains available for small decorative elements and is rendered in `/design-system` for regression checks.
 
 ### 2.2 Placeholder asset generators
-- [ ] `public/textures/paper-grain.png` — placeholder generated at build time from `feTurbulence`. Document swap-out path in DECISION_LOG (`Asset A1`).
-- [ ] `public/glyphs.svg` — placeholder sprite using Unicode glyphs wrapped in `<symbol>` elements. Each glyph has an id like `glyph-leaf`, `glyph-star`, `glyph-hand-pointing`, etc. When Chien's real glyphs ship, we replace the `<symbol>` paths and components stay the same.
-- [ ] `<Glyph name="..." />` component that resolves via `<use href="/glyphs.svg#glyph-leaf" />`.
+- [x] `public/textures/paper-grain.svg` (placeholder) — tileable §7.1 recipe already ships from Phase 0.1. PNG bake deferred — see DECISION_LOG 2026-04-21 "Phase 2 · `paper-grain.png` build-time bake deferred" (no rasterizer in deps; SVG tile is cached as a bitmap by the browser). Real PNG lands with Chien's photographed grain in Phase 8.
+- [x] `public/glyphs.svg` — placeholder sprite with 12 `<symbol>` Unicode fallbacks shipped in Phase 0.1. Ids frozen per `GLYPH_NAMES`.
+- [x] `<Glyph name="..." />` component at `app/_components/paper/Glyph.tsx` — typed `GlyphName` union, resolves via `<use href="/glyphs.svg#glyph-{name}" />`. Decorative by default; pass `title` to lift into the a11y tree.
 
 ### 2.3 Decoration primitives (code-only, no assets needed)
-- [ ] `<RuledLines />` — renders the 32px ruled-line background at component level.
-- [ ] `<MarginRule />` — single pink vertical line 60px from left (36px on mobile per §3.4).
-- [ ] `<PaperGrain />` — wraps `#paper-grain` over a surface; automatically swapped to PNG when PNG placeholder lands.
+- [x] `<RuledLines />` — `repeating-linear-gradient` driven by `--color-rule-blue` + `--rule-spacing`, anchored to a 12px top offset per §3.1.
+- [x] `<MarginRule />` — 1px `rule-pink` absolute stripe at `--margin-rule-offset-mobile` on <640px, `--margin-rule-offset` from `sm:` up.
+- [x] `<PaperGrain />` — tiles `/textures/paper-grain.svg` as a 200×200 background overlay. Single `url()` is the swap point for the PNG / real asset.
 
 ### 2.4 `/design-system` internal route
-- [ ] `app/design-system/page.tsx` (dev-only, gated on `NODE_ENV === 'development'`; the folder can't be underscored because that would make it unrouteable). Lists every primitive and, as the roadmap advances, every component. This is our visual regression deck through launch.
+- [x] `app/design-system/page.tsx` + `layout.tsx` (dev-only, gated on `NODE_ENV === 'development'`; the folder can't be underscored because that would make it unrouteable). Lists every Phase 2 primitive — filters, glyphs, decoration overlays — rendered side-by-side on Day and Midnight via nested `data-theme` panels. The visual regression deck through launch.
 
 **Exit criteria.** A dev visiting `/design-system` sees the ruled page background, margin rule, paper grain, and every Phase 2 primitive rendered on both Day and Midnight themes.
 
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phase 0 + Phase 1 complete.*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 complete.*
