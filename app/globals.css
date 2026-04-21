@@ -276,3 +276,22 @@
 @utility nums-lining-tabular {
   font-variant-numeric: lining-nums tabular-nums;
 }
+
+/* ---------------------------------------------------------------------
+ * Reduce-skew — §9 · roadmap Phase 7. Any element tilted via
+ * `tiltFor` / `stampRotationFor` / ad-hoc inline transform marks
+ * itself with `data-ledger-tilt`. When a setting or OS preference
+ * flags "reduce skew", this rule flattens every tilted element's
+ * rotation to 0 without touching the component code.
+ *
+ * `!important` defeats the inline `transform: rotate(...)` written
+ * by the components themselves; that's the whole point of the flag.
+ * ------------------------------------------------------------------- */
+[data-reduce-skew="1"] [data-ledger-tilt] {
+  transform: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ledger-tilt] {
+    transform: none !important;
+  }
+}

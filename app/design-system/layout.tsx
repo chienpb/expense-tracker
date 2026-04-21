@@ -3,7 +3,17 @@ import { notFound } from 'next/navigation';
 import { paperFontVariables } from '@/lib/paper-fonts';
 
 const SECTIONS = [
-  { slug: 'foundation', label: 'Phase 2 · Foundation' },
+  { slug: 'filters', label: 'P2 · Filters' },
+  { slug: 'glyphs', label: 'P2 · Glyphs' },
+  { slug: 'decoration', label: 'P2 · Decoration' },
+  { slug: 'page', label: 'P3 · Page' },
+  { slug: 'filetab', label: 'P3 · FileTab' },
+  { slug: 'fieldline', label: 'P3 · FieldLine' },
+  { slug: 'stamp', label: 'P3 · Stamp' },
+  { slug: 'tape', label: 'P3 · Tape' },
+  { slug: 'margin-note', label: 'P3 · MarginNote' },
+  { slug: 'carbon-slip', label: 'P3 · CarbonSlip' },
+  { slug: 'attachments', label: 'P3 · Attachments' },
 ];
 
 export default function DesignSystemLayout({

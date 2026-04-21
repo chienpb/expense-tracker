@@ -70,6 +70,37 @@ YYYY-MM-DD · one-line decision
   Rationale: Browsers cache rasterized SVG backgrounds as bitmaps, so the tile is effectively a PNG once painted. Adding a native rasterizer as a build dependency for a single placeholder asset is poor ROI; the real swap is Chien's photographed grain (Asset A1) in Phase 8. If Phase 9.1's performance sweep shows the SVG cache missing on mobile, we revisit then.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 3 · `<MarginNote>` defaults to Patrick Hand, not Caveat
+
+  Context:   §4.6 of the spec says "Pen-navy Caveat, hand-s." That conflicts with §2.3, which explicitly forbids Caveat below 24px and for any Vietnamese content. `hand-s` is 14–16px and Vietnamese margin notes are a core use case ("sửa lại mai", "ngon!", place names, people's names).
+  Decision:  Default `<MarginNote>` to `font-hand` (Patrick Hand) at `text-hand-s`. Expose `hand="signature"` as an opt-in for English-only display flourishes at 24px+ (signatures, ornamental notes). The 14–16px floor is enforced by `text-hand-s`, not by the hand prop.
+  Rationale: §2.3 is the stronger rule — it's the typography law that prevents illegibility. §4.6's Caveat reference reads as a holdover from the earlier design when margin notes were assumed English-only. Default to the safer hand; let callers opt up to Caveat when the content is display-grade English.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 3 · `data-ledger-tilt` is the universal reduce-skew hook
+
+  Context:   Phase 3 lands eight components that tilt — `<FieldLine kind="hand">`, `<Stamp>`, `<TapeStrip>`, `<MarginNote>`, `<CarbonSlip>`, and any future handwriting-bearing surface. Phase 7 requires all of them to flatten to 0° when `data-reduce-skew="1"` is set (or when `prefers-reduced-motion: reduce` is active per Spike 6). A per-component conditional in every file was going to rot — easy to forget, easy to miss when hooking new components.
+  Decision:  Every tilted DOM node carries a `data-ledger-tilt` attribute and writes its rotation as an inline `transform: rotate(...)`. Two rules in `app/globals.css` flatten them at the layer:
+               `[data-reduce-skew="1"] [data-ledger-tilt] { transform: none !important; }`
+               `@media (prefers-reduced-motion: reduce) { [data-ledger-tilt] { transform: none !important; } }`
+             `!important` defeats the inline rotation — that's the intent of the override.
+  Rationale: One rule enforces the invariant across every present and future component. New tilted components only need to mark the node with `data-ledger-tilt`; no JS, no theme-aware prop drilling, no per-component CSS. `!important` is the correct tool here because the inline style is itself the baseline that the preference overrides.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 3 · Stamp rotation uses a dedicated `stampRotationFor(id)` helper
+
+  Context:   §2.4 says stamps are "always rotated 4–8deg." Existing `tiltFor(id, maxDeg)` returns a value in `[-maxDeg, +maxDeg]` linearly, which means many seeds land near 0° — a stamp that's "almost straight" reads as a designed badge, not a slammed-down rubber stamp.
+  Decision:  Add `stampRotationFor(id, minDeg=4, maxDeg=8)` to `lib/seed-rotation.ts`. Hash the id, take the low bit as sign, take the rest mod the [min, max] range as magnitude. Stamps never land in the neutral zone.
+  Rationale: The spec's tolerance matters — the reason stamps are rotated at all is that a worn, human-applied stamp is never axis-aligned. Bending the seed to respect that keeps the metaphor honest without a new prop surface. `tiltFor` stays cheap for handwriting (which should look close to straight most of the time).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 3 · `<CarbonSlip>` pink derived via `color-mix` instead of a new token
+
+  Context:   §4.8 specifies the slip's background as `#f7d8d0` — a pink tint. That color doesn't exist in the §1 palette and has no Midnight counterpart. Adding a dedicated `--color-carbon-pink` for both themes would bloat the token set for a single component; hardcoding `#f7d8d0` would break the Midnight theme.
+  Decision:  Compute the background at render time via `color-mix(in srgb, var(--color-stamp-red) 14%, var(--color-paper))`. On Day that resolves to a warm pink near `#f4d6cd`; on Midnight it resolves to a muted ember against the dark leather paper — in-palette on both themes automatically.
+  Rationale: Zero token bloat, zero theme drift, and the resulting color is derived from existing §1 tokens so it shifts correctly if either ever changes. `color-mix` is supported in every browser matrix we target (Chromium 111+, Firefox 113+, Safari 16.2+).
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 2 · Decoration primitives are absolute overlays
 
   Context:   `<RuledLines>`, `<MarginRule>`, and `<PaperGrain>` each need to cover the full parent surface without claiming layout space — consumers (future `<Page>`, `<CarbonSlip>`, dialogs) must be able to stack them behind content and keep interacting with the normal flex/grid layout of the page body.

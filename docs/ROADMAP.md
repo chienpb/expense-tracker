@@ -122,18 +122,18 @@ Each spike is a throwaway `app/spikes/<name>/page.tsx` route, gated at runtime o
 **Goal.** Everything needed to compose a page that's recognizably "Paper Ledger," even if tables and charts are still Swiss.
 
 Build, in order:
-1. [ ] `<Page formCode pageNumber>` — the root surface (§4.1). Ruled lines, margin rule, header (~80px with 2px black rule), footer (~32px with page-no affordance), optional tape strips at corners.
-2. [ ] `<FileTab>` navigation (§4.9). Manila folder metaphor. Active/inactive states.
-3. [ ] `<FieldLine label value kind>` — printed/hand/stamped variants (§4.2). Slight rotation on `kind="hand"` via `tiltFor(id)`.
-4. [ ] `<Stamp text subtext color rotation wear>` (§4.4). Archivo Black + `#stamp-wear`.
-5. [ ] `<TapeStrip>` (§4.5) — coded placeholder SVG until Asset A5 lands.
-6. [ ] `<MarginNote>` (§4.6). Caveat, pen-navy, connector line optional.
-7. [ ] `<CarbonSlip>` (§4.8). Pink-tinted + stamp-red border.
-8. [ ] `<PaperClip>`, `<TornCorner>`, `<FoldCrease>` (§4.7) — coded SVG placeholders behind same component API (Assets A6, A7, A4).
+1. [x] `<Page formCode pageNumber>` — the root surface (§4.1). Ruled lines, margin rule, header (~80px with 2px black rule), footer (~32px with page-no affordance), optional tape strips at corners.
+2. [x] `<FileTab>` navigation (§4.9). Manila folder metaphor. Active/inactive states. Router-agnostic tablist semantics — accepts `href` (renders as `next/link`) or `onChange`.
+3. [x] `<FieldLine label value kind>` — printed/hand/stamped variants (§4.2). Slight rotation on `kind="hand"` via `tiltFor(id)`. Display-only; editable sibling ships with Phase 4.
+4. [x] `<Stamp text subtext color rotation wear>` (§4.4). Archivo Black + `#stamp-wear`. Seeded rotation via `stampRotationFor(id)` giving |4–8°| with random sign.
+5. [x] `<TapeStrip>` (§4.5) — coded placeholder SVG until Asset A5 lands.
+6. [x] `<MarginNote>` (§4.6). Patrick Hand by default (Caveat unsafe for Vietnamese per §2.3) — `hand="signature"` opt-in for English-only display flourishes. DECISION_LOG 2026-04-21.
+7. [x] `<CarbonSlip>` (§4.8). Pink-tinted via `color-mix(stamp-red 14%, paper)` + stamp-red border.
+8. [x] `<PaperClip>`, `<TornCorner>`, `<FoldCrease>` (§4.7) — coded SVG placeholders behind same component API (Assets A6, A7, A4).
 
 Each ships with:
-- A `/design-system` entry showing all states (default / hover / focus / disabled).
-- a11y audit: decorative SVGs get `aria-hidden` + `role="presentation"`, real meaning lives in text.
+- [x] A `/design-system` entry showing all states (default / hover / focus / disabled). `app/design-system/_phase-three.tsx` renders every component on Day + Midnight.
+- [x] a11y audit: decorative SVGs get `aria-hidden` + `role="presentation"`, real meaning lives in text. `<Stamp>` lifts `text` + `subtext` into `aria-label` (the stamp encodes state and must reach AT).
 
 **Exit criteria.** I can compose a static "Paper Ledger" page end-to-end using only these primitives, visually matching the spec mockups (once we have them).
 
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 complete.*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 complete.*
