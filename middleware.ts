@@ -7,7 +7,9 @@ export default auth((req) => {
   if (
     pathname === '/login' ||
     pathname === '/api/health' ||
-    pathname.startsWith('/api/auth/')
+    pathname.startsWith('/api/auth/') ||
+    pathname.startsWith('/spikes') ||
+    pathname.startsWith('/design-system')
   ) {
     return;
   }

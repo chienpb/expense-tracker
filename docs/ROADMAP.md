@@ -44,7 +44,7 @@ Tracked so nothing is forgotten. Order suggests priority, but any order is fine 
 - [ ] Add `public/textures/` and `public/glyphs.svg` with placeholder content.
 
 ### 0.2 Technical spikes (proof-of-concepts, not production)
-Each spike is a throwaway `app/_spikes/<name>/page.tsx` route. Keep them around during the roadmap as a visual regression deck; delete in Phase 9.
+Each spike is a throwaway `app/spikes/<name>/page.tsx` route, gated at runtime on `process.env.NODE_ENV === 'development'`. Keep them around during the roadmap as a visual regression deck; delete in Phase 9.
 
 1. **Font loading.** Load Crimson Pro, Courier Prime, Patrick Hand, Caveat, Archivo Black via `next/font/google`. Render full Vietnamese diacritic torture strings (`Phở bò`, `Cà phê sữa đá — Cộng Cà Phê`, `Bún chả Đắc Kim`, `Hoàn tiền từ Mai`). Verify Patrick Hand actually renders stacked tones (`ấ ầ ẩ ẫ ậ`) — if not, flag fallback strategy.
 2. **SVG filter performance.** Apply `#paper-grain` to a 1440×900 div. Measure FPS on scroll on a mid-tier laptop + iPhone 12. If it hitches, resolve per §7.6 (tile + CSS-repeat instead of filtering the full element).
@@ -109,7 +109,7 @@ Each spike is a throwaway `app/_spikes/<name>/page.tsx` route. Keep them around 
 - [ ] `<PaperGrain />` — wraps `#paper-grain` over a surface; automatically swapped to PNG when PNG placeholder lands.
 
 ### 2.4 `/design-system` internal route
-- [ ] `app/_design-system/page.tsx` (dev-only, gated behind `NODE_ENV !== 'production'`). Lists every primitive and, as the roadmap advances, every component. This is our visual regression deck through launch.
+- [ ] `app/design-system/page.tsx` (dev-only, gated on `NODE_ENV === 'development'`; the folder can't be underscored because that would make it unrouteable). Lists every primitive and, as the roadmap advances, every component. This is our visual regression deck through launch.
 
 **Exit criteria.** A dev visiting `/design-system` sees the ruled page background, margin rule, paper grain, and every Phase 2 primitive rendered on both Day and Midnight themes.
 

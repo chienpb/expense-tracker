@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Paper Ledger glyph sprite (Asset A8, placeholder).
+
+  Each <symbol> is addressable by id. Consume via:
+    <svg width="16" height="16"><use href="/glyphs.svg#glyph-leaf" /></svg>
+
+  Current content: Unicode typographic glyphs rendered as <text> in a generic
+  serif — every browser renders these. When Chien ships real hand-drawn SVG
+  paths, replace each <text> inside a <symbol> with the real <path> and keep
+  the id stable. No component code should need to change.
+
+  All symbols use viewBox="0 0 24 24" and currentColor so consumers control size and color.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none" aria-hidden="true">
+
+  <!-- ❧ section opener / decorative bullet -->
+  <symbol id="glyph-leaf" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">❧</text>
+  </symbol>
+
+  <!-- ✦ important / starred -->
+  <symbol id="glyph-star" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">✦</text>
+  </symbol>
+
+  <!-- ☞ see also / link out -->
+  <symbol id="glyph-hand-pointing" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">☞</text>
+  </symbol>
+
+  <!-- ✎ edit / write -->
+  <symbol id="glyph-pen" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">✎</text>
+  </symbol>
+
+  <!-- ✓ checkmark, quick pen-stroke -->
+  <symbol id="glyph-check" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">✓</text>
+  </symbol>
+
+  <!-- × cross out / delete -->
+  <symbol id="glyph-cross" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">×</text>
+  </symbol>
+
+  <!-- → arrow -->
+  <symbol id="glyph-arrow-right" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">→</text>
+  </symbol>
+
+  <!-- ↗ arrow up-right -->
+  <symbol id="glyph-arrow-up-right" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">↗</text>
+  </symbol>
+
+  <!-- † dagger (footnote) -->
+  <symbol id="glyph-dagger" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">†</text>
+  </symbol>
+
+  <!-- ‡ double dagger -->
+  <symbol id="glyph-double-dagger" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">‡</text>
+  </symbol>
+
+  <!-- ¶ pilcrow -->
+  <symbol id="glyph-pilcrow" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">¶</text>
+  </symbol>
+
+  <!-- § section -->
+  <symbol id="glyph-section" viewBox="0 0 24 24">
+    <text x="12" y="18" font-family="serif" font-size="20" text-anchor="middle" fill="currentColor">§</text>
+  </symbol>
+
+</svg>
