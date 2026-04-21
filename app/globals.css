@@ -400,32 +400,27 @@
 /* =====================================================================
  * §6.1 — Highlighter hover (row-level)
  *
- * A `::before` pseudo-element rides under the row content. On hover
- * it swipes in from the left; on leave it instantly retracts (real
- * highlighter doesn't "slide back"). Focus-visible also triggers
- * the swipe so keyboard users get the same affordance.
+ * A translucent highlighter band swipes in from the left via
+ * `background-size`. We avoid `::before` on <tr> because an
+ * absolutely-positioned pseudo-element on a table-row is wrapped in
+ * an anonymous table-cell and shifts the real <td>s one column over.
+ * Transition is applied only on hover so leaving the row instantly
+ * retracts the band (real highlighter doesn't "slide back").
  * =================================================================== */
 .paper-row-interactive {
-  position: relative;
-  transition: background-color 120ms var(--ease-ink);
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-highlighter) 30%, transparent),
+    color-mix(in srgb, var(--color-highlighter) 30%, transparent)
+  );
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
 }
-.paper-row-interactive::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--color-highlighter);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
-  transform: translateX(-100%);
-}
-.paper-row-interactive > * {
-  position: relative;
-  z-index: 1;
-}
-.paper-row-interactive:hover::before,
-.paper-row-interactive:focus-visible::before {
-  animation: paper-highlighter-swipe 200ms var(--ease-ink) forwards;
+.paper-row-interactive:hover,
+.paper-row-interactive:focus-visible {
+  background-size: 100% 100%;
+  transition: background-size 200ms var(--ease-ink);
 }
 .paper-row-interactive:focus-visible {
   outline: 2px solid var(--color-pen-navy);
@@ -525,14 +520,11 @@
   .paper-slide-in,
   .paper-eraser-pulse,
   .paper-stamp-thump,
-  .paper-row-voided,
-  .paper-row-interactive::before {
+  .paper-row-voided {
     animation: none !important;
   }
-  .paper-row-interactive:hover::before,
-  .paper-row-interactive:focus-visible::before {
-    animation: none !important;
-    opacity: 0.3;
-    transform: translateX(0);
+  .paper-row-interactive:hover,
+  .paper-row-interactive:focus-visible {
+    transition: none !important;
   }
 }
