@@ -13,6 +13,13 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-04-21 · Phase 5.5 · `/settings` ships without a flag gate or Swiss fallback
+
+  Context:   Phase 5.5 introduces a brand-new `/settings` route. Every prior Phase 5 migration used a `/foo-paper` side route plus a `NEXT_PUBLIC_PAPER_UI` gate on `/foo` to preserve the Swiss predecessor for instant rollback. `/settings` has no predecessor, and the settings cookies are already read by the root layout regardless of the flag (Phase 1.3).
+  Decision:  Ship directly at `app/settings/page.tsx` on the Paper chrome. No `/settings-paper` side route, no gate, no Swiss fallback. Theme toggle routes through `next-themes` (`useTheme()`); the four cookie-backed settings post to a `setLedgerSetting` server action that writes the cookie + `revalidatePath('/', 'layout')`.
+  Rationale: The gate pattern exists to protect against regressions in an already-shipped surface. A new route has nothing to regress against; adding the plumbing would be ceremony. The settings themselves are universal — they affect the `<html>` data-attributes the root layout emits, which apply even while the main chrome is still Swiss.
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Spike routes live at `app/spikes/` (no underscore)
 
   Context:   The roadmap originally specified `app/_spikes/<name>/page.tsx`.

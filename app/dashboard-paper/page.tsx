@@ -128,6 +128,12 @@ export default async function DashboardPaperPage({
             >
               Correspondence
             </Link>
+            <Link
+              href="/settings"
+              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
+            >
+              House rules
+            </Link>
           </nav>
           <SignOut />
         </div>
