@@ -11,7 +11,7 @@ import { Glyph } from '@/app/_components/paper/Glyph';
  * `<NewStandingOrderSlip>` — carbon-slip Quick-Add form (§4.8).
  *
  * Pink carbon paper, stamp-red border, slight tilt — matches the
- * `/login-paper` slip so the Paper Ledger "you are filling in an
+ * `/login` slip so the Paper Ledger "you are filling in an
  * official form" affordance reads across the app. On submit a navy
  * RECORDED stamp thumps and the server refreshes. On failure a red
  * REJECTED stamp lands and a stamp-red margin note explains.

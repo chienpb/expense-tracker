@@ -7,7 +7,7 @@ Personal expense tracker. Dashboard UI + Apple Shortcuts input. Next.js 16 on Ve
 - **Amounts are integers.** VND, no decimals anywhere — storage, math, or display.
 - **Auth is centralized in `middleware.ts`.** Session cookie for UI, Bearer `EXPENSE_SECRET` for Shortcuts, Bearer `CRON_SECRET` for `/api/cron/*`. Individual route handlers do NOT re-check auth.
 - **Supabase uses the service role key** (server-only). No RLS; access control lives in the app.
-- **Design system:** the current live UI follows the Swiss/International Typographic Style (`docs/dashboard-design-system.md`); the project is migrating to the Paper Ledger system (`docs/DESIGN_SYSTEM.md`, tracked in `docs/ROADMAP.md`). Before changing any UI, read whichever governs the surface you're touching.
+- **Design system:** the live UI is the Paper Ledger system (`docs/DESIGN_SYSTEM.md`, rollout tracked in `docs/ROADMAP.md`). Read it before changing any UI. The prior Swiss system is archived at `docs/swiss-design-system-archive.md` for portfolio reference only.
 - **Decision log is mandatory.** Non-trivial trade-offs, spike outcomes, and rule exceptions go in `docs/DECISION_LOG.md` with date + rationale.
 
 ## Navigation

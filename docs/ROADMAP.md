@@ -184,18 +184,19 @@ Order is chosen to ship the highest-visibility surface last (so we iterate on le
 5. [x] New **`/settings`** route (theme, reduce-motion, reduce-skew, use-printed-font, show-edit-history). Server component reads cookies via `readLedgerSettings()` and hands the snapshot to a client `<SettingsForm>`; each toggle writes through a `setLedgerSetting` server action + `revalidatePath('/', 'layout')` so the root-layout `<html>` data-attributes stay in lockstep. Theme is handled separately via `next-themes` (Day / Midnight / System). Ships directly on the Paper chrome with no flag gate — the settings themselves already apply regardless of `NEXT_PUBLIC_PAPER_UI` because the root layout hydrates them from cookies. "House rules" link added to `/dashboard-paper` nav.
 
 For each page:
-- [ ] Identify every current Swiss component → map to Paper equivalent.
-- [ ] Rebuild in a side route (e.g. `/dashboard-paper`) until parity, then flip the flag.
-- [ ] Keyboard-nav check, screen-reader check, Vietnamese torture-string check per page.
+- [x] Identify every current Swiss component → map to Paper equivalent.
+- [x] Rebuild in a side route (e.g. `/dashboard-paper`) until parity, then flip the flag.
+- [ ] Keyboard-nav check, Vietnamese torture-string check per page (screen-reader pass deferred to the accessibility phase).
 
-### 5.1 Mobile treatment (§3.4)
-Every page needs its mobile variant designed + tested at 375px:
-- [ ] Margin rule moves to 36px.
-- [ ] Tape strips removed on <640px.
-- [ ] FileTab collapses to `<select>` styled as a paper tag.
-- [ ] LedgerTable becomes a stack of receipt cards (torn-edge tops).
+> Mobile treatment (§3.4) and the full accessibility pass are intentionally deferred to the last two phases — desktop Day + Midnight are the priority first.
 
-**Exit criteria.** All five pages shipped behind the flag. Flag flipped on. Swiss code deleted (keep old doc in `docs/` for portfolio narrative).
+### 5.6 Swiss nuke (close-out)
+- [x] Collapse every `/foo-paper` side route back into its real path; delete `_swiss.tsx` fallbacks.
+- [x] Delete `lib/paper-ui-flag.ts` and the `NEXT_PUBLIC_PAPER_UI` gate from every page.
+- [x] Drop `/login-paper` whitelist from `middleware.ts`.
+- [x] Archive `docs/dashboard-design-system.md` → `docs/swiss-design-system-archive.md`; update `CLAUDE.md` + `docs/INDEX.md` pointers.
+
+**Exit criteria.** All five pages shipped on Paper. Flag removed. Swiss code deleted; Swiss doc archived for portfolio narrative.
 
 **Asset dependency.** Still only placeholders. Assets can arrive any time during Phase 5 and we'll hot-swap them.
 
@@ -219,26 +220,7 @@ Every page needs its mobile variant designed + tested at 375px:
 
 ---
 
-## Phase 7 — Accessibility & polish
-
-**Goal.** The metaphor is never at the expense of usability (§9).
-
-- [ ] WCAG AA contrast sweep. `ink-mute` on `paper` must hit 4.5:1. `pen-navy` on `paper` must hit 4.5:1. `stamp-red` on `paper` for non-text uses must hit 3:1. Automate with `@axe-core/react` in dev.
-- [ ] Handwriting readability: Patrick Hand below 14px is banned (already documented in §2.3); ensure no `text-hand-s` instance renders <14px. Ship the "Use printed font for handwritten content" setting end-to-end.
-- [ ] Rotation cap: every element that uses `tiltFor` respects `data-reduce-skew="1"` and collapses to 0°.
-- [ ] Focus indicators: keyboard focus visible on every interactive element. Hand-traced border PLUS a solid high-contrast outer ring (§9).
-- [ ] Screen reader pass: every decorative SVG (tape, stamps, blots, clips) has `aria-hidden="true"` + `role="presentation"`. Meaning lives in text. Run through VoiceOver end-to-end.
-- [ ] Color blindness: stamp-red is the only red. Every use pairs with a glyph (✓, ×, ✎).
-- [ ] Vietnamese torture test: the longest realistic strings ("Cà phê sữa đá Cộng Cà Phê — chi nhánh quận 1") don't break any table or card. Tabular-nums hold.
-- [ ] Reduced-motion respect: system `prefers-reduced-motion` disables every animation in §8. Our setting flag can override either way.
-
-**Exit criteria.** Lighthouse a11y score 100. Axe 0 violations. VoiceOver walkthrough doesn't stumble.
-
-**Asset dependency.** None.
-
----
-
-## Phase 8 — Asset integration
+## Phase 7 — Asset integration
 
 **Goal.** Swap every coded placeholder for Chien's real hand-drawn asset.
 
@@ -268,32 +250,75 @@ Ordering (easiest hand-off to hardest):
 
 ---
 
-## Phase 9 — Performance, portfolio polish, and launch
+## Phase 8 — Performance & motion review
 
-**Goal.** Ship a thing that holds up to portfolio scrutiny.
+**Goal.** Desktop runs smooth and on-spec before we tackle mobile + a11y.
 
-### 9.1 Performance
+### 8.1 Performance
 - [ ] Bundle audit. Font subsetting (Vietnamese + Latin only). Verify total font weight <200KB.
-- [ ] Lighthouse ≥ 95 on all four categories on the dashboard.
-- [ ] SVG filter perf on a mid-tier Android (not just iPhone). If any filter regresses, fall back to pre-rendered textures.
+- [ ] Lighthouse ≥ 95 on performance / best-practices / SEO on the dashboard (a11y score gated on Phase 10).
+- [ ] SVG filter perf on a mid-tier laptop. If any filter regresses, fall back to pre-rendered textures.
 - [ ] `next/image` for every paper texture PNG with `priority` on the visible ones.
 
-### 9.2 Motion review
+### 8.2 Motion review
 - [ ] Every animation matches §8 (180–240ms, ink-drying easing). Rip out anything spring-y or bouncing.
 - [ ] Page-flip transition between major sections (Dashboard ↔ Recurring) per §8. Make it subtle — 400ms `rotateY`.
 
-### 9.3 Portfolio case-study assets
+**Exit criteria.** Desktop feels right. No perf regressions against the Swiss baseline.
+
+**Asset dependency.** None.
+
+---
+
+## Phase 9 — Mobile treatment (§3.4)
+
+**Goal.** Every migrated page gets its mobile variant designed + tested at 375px.
+
+- [ ] Margin rule moves to 36px.
+- [ ] Tape strips removed on <640px.
+- [ ] FileTab collapses to `<select>` styled as a paper tag.
+- [ ] LedgerTable becomes a stack of receipt cards (torn-edge tops).
+- [ ] Per-page audit: `/login`, `/dashboard/recurring`, `/chat`, `/dashboard`, `/settings` at 375×812.
+- [ ] SVG filter perf check on a mid-tier Android; fall back to pre-rendered textures if needed.
+
+**Exit criteria.** Every page holds up at 375px without horizontal scroll, broken tables, or unreachable controls.
+
+**Asset dependency.** None.
+
+---
+
+## Phase 10 — Accessibility & polish
+
+**Goal.** The metaphor is never at the expense of usability (§9).
+
+- [ ] WCAG AA contrast sweep. `ink-mute` on `paper` must hit 4.5:1. `pen-navy` on `paper` must hit 4.5:1. `stamp-red` on `paper` for non-text uses must hit 3:1. Automate with `@axe-core/react` in dev.
+- [ ] Handwriting readability: Patrick Hand below 14px is banned (already documented in §2.3); ensure no `text-hand-s` instance renders <14px. Ship the "Use printed font for handwritten content" setting end-to-end.
+- [ ] Rotation cap: every element that uses `tiltFor` respects `data-reduce-skew="1"` and collapses to 0°.
+- [ ] Focus indicators: keyboard focus visible on every interactive element. Hand-traced border PLUS a solid high-contrast outer ring (§9).
+- [ ] Screen reader pass: every decorative SVG (tape, stamps, blots, clips) has `aria-hidden="true"` + `role="presentation"`. Meaning lives in text. Run through VoiceOver end-to-end.
+- [ ] Color blindness: stamp-red is the only red. Every use pairs with a glyph (✓, ×, ✎).
+- [ ] Vietnamese torture test: the longest realistic strings ("Cà phê sữa đá Cộng Cà Phê — chi nhánh quận 1") don't break any table or card. Tabular-nums hold.
+- [ ] Reduced-motion respect: system `prefers-reduced-motion` disables every animation in §8. Our setting flag can override either way.
+
+**Exit criteria.** Lighthouse a11y score 100. Axe 0 violations. VoiceOver walkthrough doesn't stumble.
+
+**Asset dependency.** None.
+
+---
+
+## Phase 11 — Portfolio polish & launch
+
+**Goal.** Ship a thing that holds up to portfolio scrutiny.
+
 - [ ] Clean up `/design-system` route; either delete or gate behind `/admin`.
 - [ ] Remove spike routes.
 - [ ] Screenshot deck: Day theme hero, Midnight hero, mobile receipt view, empty state, error state, stamp animation, AI reply example. 1440×900 and 375×812.
 - [ ] Short screen recording (15–30s) of "log an expense → stamp appears" and "monthly report → paper flips."
 - [ ] `docs/CASE_STUDY.md`: one-page narrative of the design decisions (why paper ledger, what Swiss lacked, trade-offs, what Vietnamese users recognize instantly). Link before/after screenshots.
 - [ ] Update README with "built with Paper Ledger design system — see `DESIGN_SYSTEM.md`."
-
-### 9.4 Final QA
 - [ ] Every checklist from §13 and the Quick-Reference Card of the spec passes on every page.
-- [ ] Delete the Swiss doc's references from `CLAUDE.md`; leave the file as `docs/swiss-design-system-archive.md`.
-- [ ] Close the feature flag — Paper UI is the only UI.
+- [x] Delete the Swiss doc's references from `CLAUDE.md`; leave the file as `docs/swiss-design-system-archive.md`. *(done in Phase 5.6.)*
+- [x] Close the feature flag — Paper UI is the only UI. *(done in Phase 5.6.)*
 
 **Exit criteria.** Portfolio-shippable.
 
@@ -315,4 +340,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete · Phase 5 in progress (/login + /dashboard/recurring + /chat + /dashboard + /settings migrated; mobile pass remains).*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 + 5 complete (Swiss nuked, `NEXT_PUBLIC_PAPER_UI` gate removed, Swiss doc archived) · mobile (Phase 9) and accessibility (Phase 10) deferred to the end of the roadmap per owner priority.*

@@ -130,7 +130,7 @@ export function PaperChat() {
 
 /**
  * Typewriter nav row — mirrors the Daybook ← link + sign-out pair on
- * `/dashboard/recurring-paper` so the top-of-page chrome stays
+ * `/dashboard/recurring` so the top-of-page chrome stays
  * consistent across migrated routes.
  */
 function NavRow() {
@@ -395,7 +395,7 @@ function ReceiptLine({
 
 /**
  * `<ComposeSlip>` — the new-entry surface at the bottom of the page.
- * Pink carbon tint to mirror `/login` and `/dashboard/recurring-paper`
+ * Pink carbon tint to mirror `/login` and `/dashboard/recurring`
  * new-order slips — the "fill this in and hand it back" form that
  * recurs everywhere in the app.
  */

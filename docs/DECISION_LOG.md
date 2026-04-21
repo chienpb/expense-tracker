@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-04-21 · Phase 5.6 · Swiss nuke — flag removed, side routes collapsed, Swiss doc archived
+
+  Context:   All five Phase 5 migrations shipped behind `NEXT_PUBLIC_PAPER_UI`, each keeping a `/foo-paper` side route + `_swiss.tsx` fallback for rollback. With the Paper chrome proven on desktop, keeping two copies of every route is pure tax — every edit risks drifting Swiss, and the flag obscures what's actually live.
+  Decision:  Delete the gate wholesale. Each `/foo-paper` side route's components move into the real route (`app/login-paper/_form.tsx` → `app/login/_form.tsx`, same for `-paper` siblings under `/dashboard`, `/dashboard/recurring`, `/chat`). Each `_swiss.tsx` + Swiss `_components/` directory is deleted. `lib/paper-ui-flag.ts` removed; `middleware.ts` loses the `/login-paper` whitelist. `docs/dashboard-design-system.md` renamed to `docs/swiss-design-system-archive.md`; `CLAUDE.md` and `docs/INDEX.md` now point at Paper as the sole live system with the archive as portfolio reference.
+  Rationale: Phase 5.6 ("Swiss nuke") is the formal close-out the roadmap always called for; it just happens now instead of at launch. Mobile (Phase 9) + a11y (Phase 10) still need work, but they build on the Paper chrome either way — there is no scenario in which Swiss gets revived, so maintaining it is dead weight. The rollback story is now `git revert`, which is fine for a personal tracker.
+  Reviewer:  Chien
+
+---
+
 ## 2026-04-21 · Phase 5.5 · `/settings` ships without a flag gate or Swiss fallback
 
   Context:   Phase 5.5 introduces a brand-new `/settings` route. Every prior Phase 5 migration used a `/foo-paper` side route plus a `NEXT_PUBLIC_PAPER_UI` gate on `/foo` to preserve the Swiss predecessor for instant rollback. `/settings` has no predecessor, and the settings cookies are already read by the root layout regardless of the flag (Phase 1.3).

@@ -10,7 +10,7 @@ import { EntrySlip, type EntryValues } from './_entry-slip';
  *
  * Collapsed state: a typewriter-tagged call-out inviting the user to
  * file something new. Expanded state: the shared `<EntrySlip>` on pink
- * carbon paper. Same pattern as `/dashboard/recurring-paper`'s slip;
+ * carbon paper. Same pattern as `/dashboard/recurring`'s slip;
  * staying consistent keeps "filling in an official form" legible.
  *
  * Not a modal. The slip stays inline at the bottom of the ledger

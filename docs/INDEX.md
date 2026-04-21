@@ -22,10 +22,10 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 
 | Doc | Read when |
 |---|---|
-| [`dashboard-design-system.md`](dashboard-design-system.md) | Any UI change on the **current** Swiss dashboard (live in production). |
-| [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Any work inside the **Paper Ledger** migration — components, tokens, filters, voice. |
+| [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Any UI change. Paper Ledger is the live system — components, tokens, filters, voice. |
 | [`ROADMAP.md`](ROADMAP.md) | Planning or executing a Paper Ledger phase; checking what ships when. |
 | [`DECISION_LOG.md`](DECISION_LOG.md) | Recording a non-trivial trade-off or spike verdict. |
+| [`swiss-design-system-archive.md`](swiss-design-system-archive.md) | Historical only — the retired Swiss dashboard system. Portfolio reference. |
 
 ## Historical / planning
 

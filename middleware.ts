@@ -6,7 +6,6 @@ export default auth((req) => {
   // Public routes
   if (
     pathname === '/login' ||
-    pathname === '/login-paper' ||
     pathname === '/api/health' ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/spikes') ||

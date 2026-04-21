@@ -20,7 +20,7 @@ import { PhaseTitle, Sample, SectionTitle, ThemeFork } from './_parts';
  * Phase 5 — page migration deck. Starts with `/login`; adds one section
  * per route as the migration lands.
  *
- * The login sample is static: it mirrors the live `/login-paper` chrome
+ * The login sample is static: it mirrors the live `/login` chrome
  * without running `signIn()`, and includes a state switcher so the
  * `idle` / `checking` / `recorded` / `rejected` states can be visually
  * regressed side-by-side on both themes.
@@ -29,15 +29,19 @@ export function PhaseFive() {
   return (
     <>
       <PhaseTitle
-        phase="Phase 5 · In progress"
+        phase="Phase 5 · Complete"
         title="Page migration"
         description={
           <>
-            Each migrated page ships behind{' '}
-            <code className="font-typewriter text-[13px]">NEXT_PUBLIC_PAPER_UI=1</code>{' '}
-            and keeps a side route (e.g.{' '}
-            <code className="font-typewriter text-[13px]">/login-paper</code>) for
-            parity review. Dev-only flag flip — restart the server to pick it up.
+            All five pages (<code className="font-typewriter text-[13px]">/login</code>,{' '}
+            <code className="font-typewriter text-[13px]">/dashboard/recurring</code>,{' '}
+            <code className="font-typewriter text-[13px]">/chat</code>,{' '}
+            <code className="font-typewriter text-[13px]">/dashboard</code>,{' '}
+            <code className="font-typewriter text-[13px]">/settings</code>) run on the
+            Paper chrome. Swiss fallbacks and the{' '}
+            <code className="font-typewriter text-[13px]">NEXT_PUBLIC_PAPER_UI</code>{' '}
+            flag have been removed. This deck remains as a visual regression
+            reference for the live surfaces.
           </>
         }
       />

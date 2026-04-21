@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Page } from '@/app/_components/paper/Page';
 import { readLedgerSettings } from '@/lib/settings';
-import { SignOut } from '@/app/dashboard-paper/_components/_sign-out';
+import { SignOut } from '@/app/dashboard/_components/_sign-out';
 import { SettingsForm } from './_form';
 
 export const metadata: Metadata = {
