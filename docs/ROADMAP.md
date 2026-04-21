@@ -177,7 +177,7 @@ Then every state in §6:
 
 Order is chosen to ship the highest-visibility surface last (so we iterate on less-critical pages first):
 
-1. [ ] **`/login`** (smallest surface, lowest risk). Paper page, carbon-slip form, stamp on submit.
+1. [x] **`/login`** (smallest surface, lowest risk). Paper page, carbon-slip form, stamp on submit. Ships at `/login-paper` (side route) and is gated on `/login` behind `NEXT_PUBLIC_PAPER_UI=1`. Swiss form preserved in `app/login/_swiss.tsx` for flag-off fallback. Visual regression deck lives under `/design-system#login` with all four states (idle / checking / recorded / rejected).
 2. [ ] **`/dashboard/recurring`**. LedgerTable, stamps for active/paused, torn-corner on archived.
 3. [ ] **`/chat`** (AI conversation UI). Full voice pass happens here in Phase 6; this phase just rebuilds the chrome — messages on ruled paper, AI replies in Crimson with `— LK` signature, user messages in Patrick Hand.
 4. [ ] **`/dashboard`** (overview + charts + today's entries). The hero screen.
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete.*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete · Phase 5 in progress (/login migrated).*

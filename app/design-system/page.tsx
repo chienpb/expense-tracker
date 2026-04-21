@@ -1,3 +1,4 @@
+import { PhaseFive } from './_phase-five';
 import { PhaseFour } from './_phase-four';
 import { PhaseThree } from './_phase-three';
 import { PhaseTwo } from './_phase-two';
@@ -28,6 +29,7 @@ export default function DesignSystemIndex() {
       <PhaseTwo />
       <PhaseThree />
       <PhaseFour />
+      <PhaseFive />
     </div>
   );
 }

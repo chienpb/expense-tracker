@@ -1,94 +1,50 @@
-'use client';
+import type { Metadata } from 'next';
+import { PAPER_UI_ENABLED } from '@/lib/paper-ui-flag';
+import { Page } from '@/app/_components/paper/Page';
+import { LoginForm as PaperLoginForm } from '@/app/login-paper/_form';
+import { SwissLoginForm } from './_swiss';
 
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+export const metadata: Metadata = {
+  title: PAPER_UI_ENABLED ? 'Sign the register · Ledger' : 'Sign in · Ledger',
+};
 
+/**
+ * `/login` — delegates to Paper Ledger or Swiss based on the Phase 5
+ * feature flag. The Swiss form is preserved verbatim (just extracted
+ * into `_swiss.tsx`) so rolling back is a one-env-var change, not a
+ * git revert.
+ *
+ * Once Phase 9 deletes Swiss, drop `_swiss.tsx` + the branch here and
+ * inline the Paper composition from `/login-paper`.
+ */
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      setError('Invalid credentials');
-      setLoading(false);
-    } else {
-      router.push('/dashboard');
-    }
+  if (!PAPER_UI_ENABLED) {
+    return <SwissLoginForm />;
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Expense Tracker
-        </p>
-        <p className="mt-1 text-4xl font-bold tracking-tighter text-foreground">
-          Sign in
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Enter your credentials to continue
-        </p>
-
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-11 w-full rounded-sm border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-              autoFocus
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-11 w-full rounded-sm border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-              required
-            />
-          </div>
-          {error && (
-            <p className="text-sm text-accent">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-11 w-full rounded-sm bg-foreground text-sm font-medium text-background hover:bg-foreground/90 disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Page
+        formCode="CHN-LOG"
+        pageNumber="1/1"
+        tape
+        title="Daily Register"
+        headerMeta={todayStamp()}
+        className="flex-1"
+      >
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center py-8">
+          <PaperLoginForm />
+        </div>
+      </Page>
     </div>
   );
+}
+
+function todayStamp(): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date());
 }

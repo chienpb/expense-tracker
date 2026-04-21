@@ -22,6 +22,7 @@ const SECTIONS = [
   { slug: 'red-string', label: 'P4 · RedStringCorrection' },
   { slug: 'states', label: 'P4 · States' },
   { slug: 'dashboard-prototype', label: 'P4 · Dashboard prototype' },
+  { slug: 'login', label: 'P5 · /login' },
 ];
 
 export default function DesignSystemLayout({

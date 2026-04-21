@@ -136,6 +136,20 @@ YYYY-MM-DD · one-line decision
   Rationale: Zero layout side-effects, single contract for every decoration primitive, accessibility-correct by construction (decorative SVG stays invisible to AT per §9). The shape generalises cleanly to `<TapeStrip>`, `<Stamp>`, `<CoffeeRing>` in Phase 3.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 5 · `NEXT_PUBLIC_PAPER_UI` gates the migration, per-route branch
+
+  Context:   Phase 5 of the roadmap migrates five pages page-by-page behind a feature flag. The flag needs to (a) let us A/B internally before the flip, (b) support rollback without a redeploy, (c) keep the Swiss fallback live on every migrated route until Phase 9 deletes it. Options on the table: runtime env var, cookie, middleware rewrite, build-time constant.
+  Decision:  A single `NEXT_PUBLIC_PAPER_UI` env var, read through `lib/paper-ui-flag.ts::PAPER_UI_ENABLED`. `'1'` = Paper, anything else = Swiss. Each migrated page (`/login`, and the four to come) imports the flag and branches between a `_swiss.tsx` fallback and the paper composition. Side routes (`/login-paper`, …) stay reachable regardless of the flag for parity review — middleware whitelists them alongside `/login`.
+  Rationale: `NEXT_PUBLIC_*` inlines at build, so the branch is a tree-shakable constant — zero runtime cost, no hydration mismatch. Per-page branching means unmigrated pages pay nothing; Swiss deletion in Phase 9 is one file + one import away. Rejected: middleware rewrite (forces full-page redirect, kills the clean side-by-side comparison), cookie (needs SSR wiring we already spent on `ledger-*` preferences and would add a second story without benefit). Rejected: a single top-level switch in `layout.tsx` — that forces every Phase 5 page to migrate together, which defeats the point of shipping one route per PR.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5 · `/login` renders on a `<CarbonSlip>`-shaped form, not `<Page>` body content
+
+  Context:   §4.1 + §4.8 suggest a few compositions for auth. The form could sit directly on a `<Page>` ruled body (printed labels + ruled inputs) or on a `<CarbonSlip>` overlay (pink-tinted, stamp-red bordered, tilted). The Swiss original is centered in a plain card; the migration should improve the metaphor, not just re-skin it.
+  Decision:  The page is a `<Page>` with tape strips and a "Daily Register" title; the form is a carbon-slip-shaped `<form>` overlaying the ruled body. Inputs use `<FieldLine kind="hand">`-matching visuals (typewriter label above a 1px-ink-underlined Patrick Hand input, pen-navy) — rebuilt inline here since `<FieldLine>` is display-only per §4.2 and the editable sibling was not planned for Phase 4. Submit is a pressed-paper button (Archivo Black, border-2) that locks on `checking` and fires either a navy `RECORDED` thump (success → navigate after 700 ms) or a red `REJECTED` thump (failure → clear password + stamp-red margin note).
+  Rationale: The slip treatment is the correct metaphor for an entry pass — it's literally the form the clerk hands you. Putting the form on a carbon slip gives us the stamp-red border "this is an official document" affordance for free, keeps the pink tint derived from `color-mix` (no new token), and sits naturally on top of the ruled page. Rejected: inlining into the ruled body (too plain for a high-signal action), stamping a `<FieldLine>` onto a non-slip card (loses the bordered-form feel). The 700 ms recorded-hold is under §8's 1 s ceiling and long enough for the stamp to be seen — redirect sooner and the user never sees the confirmation.
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 1 · Geist (sans/mono) kept loaded through Phase 5
 
   Context:   Paper Ledger has no role for Geist — the text faces are Crimson Pro (serif), Courier Prime (typewriter), Patrick Hand (hand), Caveat (signature), Archivo Black (stamp), Homemade Apple (hurried hand). The natural instinct was to remove the Geist imports from `app/layout.tsx`.
