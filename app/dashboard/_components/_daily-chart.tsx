@@ -37,9 +37,9 @@ type DailyChartProps = {
   rangeTo: string;
 };
 
-const PAD = { top: 44, right: 20, bottom: 40, left: 20 };
+const PAD = { top: 32, right: 20, bottom: 36, left: 20 };
 const WIDTH = 640;
-const HEIGHT = 260;
+const HEIGHT = 200;
 const WEEKDAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 export function DailyChart({
@@ -98,13 +98,20 @@ export function DailyChart({
 
   return (
     <figure className="flex flex-col gap-3">
+      <div className="relative border border-ink/30 bg-white/40">
+        <span
+          className="absolute -top-2 left-4 bg-paper px-2 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
+          aria-hidden="true"
+        >
+          Fig. 1 — Daily
+        </span>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width="100%"
         height={HEIGHT}
         role="img"
         aria-label={`Daily spending · ${data.length} days · peak ${formatVND(peak)}`}
-        className="border border-ink/15 bg-white/60"
+        className="block"
         preserveAspectRatio="xMidYMid meet"
       >
         <title>Daily spending — click a bar to drill into that day</title>
@@ -233,6 +240,7 @@ export function DailyChart({
           );
         })}
       </svg>
+      </div>
 
       {selectedDay && (
         <p className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">

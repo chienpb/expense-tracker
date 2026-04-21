@@ -110,7 +110,7 @@ export function LedgerTable({
 
         {!hideHeader && (
           <thead>
-            <tr className="border-b border-ink/70">
+            <tr className="border-b border-ink/70 border-t-2 border-t-ink/80 bg-paper-2/60">
               {columns.map((col) => (
                 <th
                   key={col}
@@ -129,7 +129,7 @@ export function LedgerTable({
         <tbody>
           {loading ? (
             Array.from({ length: skeletonRows }).map((_, i) => (
-              <tr key={`skeleton-${i}`} className="paper-ledger-row border-b border-rule-blue/60">
+              <tr key={`skeleton-${i}`} className="paper-ledger-row">
                 <td colSpan={colCount} className="h-8 px-3 align-middle">
                   <EraserMarks variant="inline" label="Loading row" />
                 </td>
@@ -196,7 +196,7 @@ function Row({
       onClick={interactive ? () => onDrillIn?.(row) : undefined}
       onKeyDown={interactive ? onKeyDown : undefined}
       className={[
-        'paper-ledger-row group border-b border-rule-blue/60',
+        'paper-ledger-row group',
         interactive ? 'paper-row-interactive cursor-pointer' : '',
         status === 'ai-suggested' ? 'paper-row-ai' : '',
         status === 'deleted-recently' ? 'paper-row-voided' : '',

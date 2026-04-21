@@ -192,11 +192,8 @@ export default async function DashboardPage({
             </section>
 
             <section aria-labelledby="chart-heading">
-              <h3
-                id="chart-heading"
-                className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
-              >
-                Fig. 1 — Daily
+              <h3 id="chart-heading" className="sr-only">
+                Daily spending chart
               </h3>
               <DailyChart
                 data={dailySpending}
