@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Paper Ledger — paper grain texture (Asset A1, placeholder).
+
+  Recipe per DESIGN_SYSTEM.md §7.1:
+    feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"
+      → feColorMatrix (mute to warm dark paper tone)
+      → composed at low alpha for a 6% effective tint on paper.
+
+  Tileable: `stitchTiles="stitch"` guarantees seamless 200×200 repeats.
+  Transparent background — layer over `--color-paper` (#f6efe0) via
+  `background-image: url("/textures/paper-grain.svg")` on any surface.
+
+  Roadmap swap-out: Phase 2.2 bakes this to `paper-grain.png` at build
+  time (tileable, <30KB) so mobile skips the filter cost. Phase 8 swaps
+  for Chien's photographed grain.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="200" height="200"
+     viewBox="0 0 200 200"
+     preserveAspectRatio="none"
+     aria-hidden="true">
+  <defs>
+    <filter id="paper-grain-noise" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise"
+                    baseFrequency="0.9"
+                    numOctaves="2"
+                    stitchTiles="stitch"
+                    seed="7"/>
+      <!--
+        Map greyscale noise onto a warm dark ink tone (≈ ink-mute #8a7a5e).
+        The alpha row caps opacity; consumers still apply ~6% on top.
+      -->
+      <feColorMatrix type="matrix"
+                     values="0 0 0 0 0.54
+                             0 0 0 0 0.48
+                             0 0 0 0 0.37
+                             0 0 0 0.42 0"/>
+    </filter>
+  </defs>
+  <rect width="200" height="200" fill="transparent" filter="url(#paper-grain-noise)"/>
+</svg>

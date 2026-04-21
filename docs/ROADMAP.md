@@ -38,10 +38,10 @@ Tracked so nothing is forgotten. Order suggests priority, but any order is fine 
 **Goal.** De-risk every hard thing before we touch a single user-facing screen. No visual change ships in this phase.
 
 ### 0.1 Repo hygiene
-- [ ] Create `docs/DECISION_LOG.md` (per §13 of the spec).
-- [ ] Update `CLAUDE.md` so the "Design System" section points at `DESIGN_SYSTEM.md` (after Phase 1 lands), not the Swiss doc. Keep the Swiss doc in `/docs` as historical reference — don't delete.
-- [ ] Add `app/_components/paper/` directory with a README stub.
-- [ ] Add `public/textures/` and `public/glyphs.svg` with placeholder content.
+- [x] Create `docs/DECISION_LOG.md` (per §13 of the spec).
+- [x] Refactor docs: slim `CLAUDE.md` to invariants + pointer, add `docs/INDEX.md` as table of contents, extract API/database/auth into their own `docs/*.md`. Design-system pointer now references both Swiss (current) and Paper Ledger (target) so the handoff in Phase 1 is a one-line edit.
+- [x] Add `app/_components/paper/` directory with a README stub (scope, placeholder-swap contract, folder conventions).
+- [x] Add `public/textures/` and `public/glyphs.svg` with placeholder content. `public/glyphs.svg` ships 12 `<symbol>` Unicode fallbacks per asset A8. `public/textures/paper-grain.svg` ships the §7.1 `feTurbulence` recipe, tileable. A2/A3/A4 stay as component-local coded placeholders until Phases 3–4 per the inventory table in `public/textures/README.md`.
 
 ### 0.2 Technical spikes (proof-of-concepts, not production)
 Each spike is a throwaway `app/spikes/<name>/page.tsx` route, gated at runtime on `process.env.NODE_ENV === 'development'`. Keep them around during the roadmap as a visual regression deck; delete in Phase 9.

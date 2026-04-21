@@ -20,6 +20,20 @@ YYYY-MM-DD · one-line decision
   Rationale: Next.js App Router treats `_`-prefixed folders as *private* and excludes them from routing entirely. A page at `app/_spikes/foo/page.tsx` is unreachable. To keep them reachable in dev and deletable at launch, the public segment name is required. Each page gates itself with `process.env.NODE_ENV === 'development'` and `middleware.ts` adds `/spikes` + `/design-system` to the public route list.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · `paper-grain` ships as an SVG, not a PNG, in Phase 0.1
+
+  Context:   Phase 0.1 needed a placeholder inside `public/textures/`. The spec (§7.1 + §12) eventually calls for a PNG (`paper-grain.png`, tileable, <30KB) baked from feTurbulence, but the PNG pipeline is a Phase 2.2 item.
+  Decision:  Ship `public/textures/paper-grain.svg` now. It carries the exact §7.1 recipe (`baseFrequency="0.9"`, two octaves, `stitchTiles="stitch"`, warm-dark feColorMatrix) and is immediately usable as `background-image: url(...)` on any surface. Phase 2.2 will render the same recipe to PNG at build time; consumers swap the `.svg` → `.png` URL — single-line change.
+  Rationale: Zero-blocking placeholder that documents the recipe in code rather than in prose. If a consumer surface appears before Phase 2.2, it uses the SVG with the known filter cost accepted (Spike 2 verdict: acceptable on dev-laptop and iPhone 12).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Documentation restructured into CLAUDE.md + INDEX.md + per-topic docs
+
+  Context:   `CLAUDE.md` had grown to ~120 lines holding project intro, stack, env vars, full project tree, DB schema, full API specs, auth flow, Shortcuts setup, and categories. Every session paid that cost even when the task only touched one surface. Paper Ledger will keep adding docs (DESIGN_SYSTEM, ROADMAP, DECISION_LOG, future CASE_STUDY), so the "one big CLAUDE.md" model was going to get worse.
+  Decision:  Three-tier split. `CLAUDE.md` keeps only identity + invariants + a pointer to `docs/INDEX.md`. `docs/INDEX.md` is a one-screen table of contents: each doc has a one-line *trigger* ("read when X"). Runtime detail extracted into `docs/api.md`, `docs/database.md`, `docs/auth.md`. Env vars live in `.env.local.example` (expanded to include `AUTH_SECRET` and `CRON_SECRET`, which were previously missing).
+  Rationale: CLAUDE.md stays ~20 lines forever; detail docs are only loaded when their trigger matches. Design-system pointer now references both Swiss (current) and Paper Ledger (target) — the Phase 1 handoff is a one-line edit instead of a CLAUDE.md rewrite.
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Caveat font does not carry Vietnamese subset
 
   Context:   Spike #1 attempted to load Caveat with the `vietnamese` subset via `next/font/google`; TS rejected it.
