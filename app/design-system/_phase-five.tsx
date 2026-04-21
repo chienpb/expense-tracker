@@ -8,9 +8,12 @@ import { Glyph } from '@/app/_components/paper/Glyph';
 import { TornCorner } from '@/app/_components/paper/TornCorner';
 import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { EraserMarks } from '@/app/_components/paper/EraserMarks';
+import { LedgerTable, type LedgerRow } from '@/app/_components/paper/LedgerTable';
+import { PaperClip } from '@/app/_components/paper/PaperClip';
+import { HandDrawnChart } from '@/app/_components/paper/HandDrawnChart';
 import { tiltFor } from '@/lib/seed-rotation';
-import { formatVND } from '@/lib/dashboard/utils';
-import { formatPrintedDate } from '@/lib/paper-format';
+import { formatVND, formatVNDShort } from '@/lib/dashboard/utils';
+import { formatPrintedDate, formatPrintedTime } from '@/lib/paper-format';
 import { PhaseTitle, Sample, SectionTitle, ThemeFork } from './_parts';
 
 /**
@@ -83,6 +86,23 @@ export function PhaseFive() {
       </p>
       <ThemeFork id="chat-showcase">
         <ChatStates />
+      </ThemeFork>
+
+      <SectionTitle id="dashboard" number="§5.4">
+        /dashboard
+      </SectionTitle>
+      <p className="max-w-prose text-body-l leading-relaxed text-ink">
+        The daybook — where the week&apos;s spending lands. Hero amount
+        in oldstyle-lining figures, three summary figures with a{' '}
+        <strong>LARGEST</strong> stamp on the biggest category, a
+        pen-drawn bar chart with per-day drill-in, a ranked category
+        strip, and a <code className="font-typewriter text-[13px]">&lt;LedgerTable&gt;</code>{' '}
+        of entries. Click any row to amend on a paper-clipped carbon
+        slip; file a new entry on the same slip at the foot of the
+        register.
+      </p>
+      <ThemeFork id="dashboard-showcase">
+        <DashboardStates />
       </ThemeFork>
     </>
   );
@@ -907,5 +927,439 @@ function StubComposeSlip({ streaming }: { streaming: boolean }) {
         </div>
       </div>
     </form>
+  );
+}
+
+/**
+ * Phase 5.4 — `/dashboard` visual regression.
+ *
+ * Four states cover the daybook end-to-end: populated (the daily bars,
+ * ranked categories, ledger rows, and collapsed quick-add), empty
+ * (range with no entries), drilled-day (one bar selected with its
+ * category breakdown shown underneath), and amend-slip (row drill-in
+ * into the paper-clipped edit slip). Data is static; no fetches.
+ */
+type DashboardDemo = 'populated' | 'empty' | 'drilled-day' | 'amend-slip';
+
+const DASHBOARD_SAMPLE_DAILY = [
+  { date: '2026-04-14', total: 215000, income: 0 },
+  { date: '2026-04-15', total: 482000, income: 0 },
+  { date: '2026-04-16', total: 96000, income: 120000 },
+  { date: '2026-04-17', total: 310000, income: 0 },
+  { date: '2026-04-18', total: 720000, income: 0 },
+  { date: '2026-04-19', total: 148000, income: 0 },
+  { date: '2026-04-20', total: 262000, income: 0 },
+];
+
+const DASHBOARD_SAMPLE_CATEGORIES = [
+  { category: 'Food & Drink', total: 1180000, count: 14 },
+  { category: 'Transport', total: 560000, count: 9 },
+  { category: 'Entertainment', total: 260000, count: 3 },
+  { category: 'Bills & Utilities', total: 245000, count: 2 },
+  { category: 'Shopping', total: 90000, count: 1 },
+];
+
+const DASHBOARD_SAMPLE_ROWS: LedgerRow[] = [
+  {
+    id: 'd-1',
+    date: formatPrintedDate('2026-04-20'),
+    time: formatPrintedTime('2026-04-20T07:14:00'),
+    description: 'Phở bò — quán Hưng',
+    category: 'Food & Drink · restaurant',
+    amount: 85000,
+  },
+  {
+    id: 'd-2',
+    date: formatPrintedDate('2026-04-20'),
+    time: formatPrintedTime('2026-04-20T09:02:00'),
+    description: 'Cà phê sữa đá — Cộng Cà Phê',
+    category: 'Food & Drink · coffee',
+    amount: 35000,
+  },
+  {
+    id: 'd-3',
+    date: formatPrintedDate('2026-04-19'),
+    time: formatPrintedTime('2026-04-19T18:44:00'),
+    description: 'Grab — Q1 → Thảo Điền',
+    category: 'Transport · grab',
+    amount: 142000,
+  },
+  {
+    id: 'd-4',
+    date: formatPrintedDate('2026-04-16'),
+    time: formatPrintedTime('2026-04-16T12:01:00'),
+    description: 'Hoàn tiền từ Mai',
+    category: 'Income · payback',
+    amount: -120000,
+  },
+];
+
+function DashboardStates() {
+  const [demo, setDemo] = useState<DashboardDemo>('populated');
+
+  const empty = demo === 'empty';
+  const selectedDay = demo === 'drilled-day' ? '2026-04-18' : undefined;
+  const showSlip = demo === 'amend-slip';
+
+  const daily = empty
+    ? []
+    : DASHBOARD_SAMPLE_DAILY.map((d) => ({ ...d }));
+  const categories = empty ? [] : DASHBOARD_SAMPLE_CATEGORIES;
+  const rows = empty ? [] : DASHBOARD_SAMPLE_ROWS;
+  const count = rows.length;
+  const totalSpent = daily.reduce((s, d) => s + d.total, 0);
+  const totalIncome = daily.reduce((s, d) => s + d.income, 0);
+  const heroTotal = selectedDay
+    ? daily.find((d) => d.date === selectedDay)?.total ?? 0
+    : totalSpent - totalIncome;
+  const dailyAvg =
+    empty || daily.length === 0 ? 0 : Math.round(totalSpent / daily.length);
+  const topCategory = categories[0]?.category ?? '—';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)]">
+        {(['populated', 'empty', 'drilled-day', 'amend-slip'] as const).map(
+          (d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDemo(d)}
+              className={`paper-focusable paper-pressable border border-ink px-3 py-1 ${
+                demo === d
+                  ? 'bg-ink text-paper'
+                  : 'bg-paper text-ink hover:bg-paper-2'
+              }`}
+            >
+              {d}
+            </button>
+          ),
+        )}
+      </div>
+
+      <Sample label={`/dashboard · ${demo}`}>
+        <div className="flex min-h-[820px]">
+          <Page
+            formCode="CHN-01"
+            pageNumber="1/1"
+            tape
+            title="Daybook"
+            headerMeta="Mon, 20 Apr 2026"
+            className="flex-1"
+          >
+            <nav
+              aria-label="Ledger sections"
+              className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-ink/15 pb-4"
+            >
+              <div className="flex items-baseline gap-4 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)]">
+                <span className="text-ink">Daybook</span>
+                <span className="text-ink-mute">Standing orders</span>
+                <span className="text-ink-mute">Correspondence</span>
+              </div>
+              <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                Close the book
+              </span>
+            </nav>
+
+            <section className="mb-10 flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <h4 className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  {selectedDay ? 'On this day' : 'On this page'}
+                </h4>
+                <p className="mt-2 font-serif text-display-hero font-bold leading-none nums-lining-tabular text-ink">
+                  {formatVND(heroTotal)}
+                </p>
+                <p className="mt-3 font-serif text-body text-ink-mute">
+                  {selectedDay
+                    ? `${selectedDay} · drilled in`
+                    : empty
+                      ? 'Last 7 days · no entries filed'
+                      : 'Last 7 days · 14 Apr → 20 Apr 2026'}
+                </p>
+                {!empty && totalIncome > 0 && (
+                  <p className="mt-2 font-serif text-caption italic text-ink-mute">
+                    Before paybacks {formatVND(totalSpent)} · got back{' '}
+                    <span className="text-stamp-red">
+                      ({formatVND(totalIncome)})
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div
+                role="group"
+                aria-label="Range"
+                className="flex flex-wrap items-center gap-1"
+              >
+                <span className="mr-2 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Range
+                </span>
+                {['Today', 'Last 7 days', 'This week', 'This month'].map(
+                  (label, i) => (
+                    <span
+                      key={label}
+                      className={`border border-ink/50 px-2.5 py-1 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] ${
+                        i === 1
+                          ? 'border-ink bg-ink text-paper'
+                          : 'bg-paper-2 text-ink-mute'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  ),
+                )}
+              </div>
+            </section>
+
+            <section className="grid grid-cols-1 gap-4 border-y border-ink/25 py-6 sm:grid-cols-3">
+              <div className="flex flex-col gap-2">
+                <span className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Entries
+                </span>
+                <span className="inline-flex items-center gap-3">
+                  <span className="font-serif text-title-1 font-bold nums-lining-tabular text-ink">
+                    {count}
+                  </span>
+                  {count > 0 && (
+                    <TallyMarks count={count} height={20} />
+                  )}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Daily average
+                </span>
+                <span className="font-serif text-title-1 font-bold nums-lining-tabular text-ink">
+                  {formatVND(dailyAvg)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Top line
+                </span>
+                <span className="inline-flex items-center gap-3">
+                  <span className="font-hand text-hand text-pen-navy">
+                    {topCategory}
+                  </span>
+                  {topCategory !== '—' && (
+                    <Stamp
+                      text="Largest"
+                      color="red"
+                      wear={0.65}
+                      id={`demo-top-${topCategory}`}
+                      className="text-[8px]"
+                    />
+                  )}
+                </span>
+              </div>
+            </section>
+
+            <section className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-5">
+              <div className="lg:col-span-3">
+                <h4 className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Daily spending
+                </h4>
+                {daily.length === 0 ? (
+                  <div className="border border-ink/20 bg-paper-2 px-5 py-10 font-hand-signature text-hand-signature text-ink-faint">
+                    Nothing on this line yet for the range you picked.
+                  </div>
+                ) : (
+                  <HandDrawnChart
+                    kind="bar"
+                    data={daily.map((d) => ({
+                      label: d.date.slice(5).replace('-', '/'),
+                      value: d.total,
+                    }))}
+                    annotations={
+                      selectedDay
+                        ? [
+                            {
+                              index: daily.findIndex(
+                                (d) => d.date === selectedDay,
+                              ),
+                              note: 'drilled',
+                            },
+                          ]
+                        : undefined
+                    }
+                    yFormatter={formatVNDShort}
+                    title="Daily spending · 7 days"
+                  />
+                )}
+                {selectedDay && (
+                  <div className="mt-3 border border-ink/30 bg-paper-2 px-4 py-3">
+                    <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                      {selectedDay} · {formatVND(720000)}
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      <li className="flex items-baseline justify-between gap-6 font-serif text-body nums-oldstyle-tabular text-ink">
+                        <span className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+                          Food & Drink
+                        </span>
+                        <span>{formatVND(420000)}</span>
+                      </li>
+                      <li className="flex items-baseline justify-between gap-6 font-serif text-body nums-oldstyle-tabular text-ink">
+                        <span className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+                          Transport
+                        </span>
+                        <span>{formatVND(300000)}</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <div className="lg:col-span-2">
+                <h4 className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  By category
+                </h4>
+                {categories.length === 0 ? (
+                  <div className="border border-ink/20 bg-paper-2 px-5 py-10 font-hand-signature text-hand-signature text-ink-faint">
+                    Nothing charged to a category yet.
+                  </div>
+                ) : (
+                  <ol className="flex list-none flex-col gap-3 border border-ink/15 bg-paper p-5">
+                    {categories.map((entry, i) => {
+                      const peak = categories[0]?.total ?? 0;
+                      const pct = peak > 0 ? (entry.total / peak) * 100 : 0;
+                      const isTop = i === 0;
+                      const color = isTop
+                        ? 'var(--color-stamp-red)'
+                        : 'var(--color-pen-navy)';
+                      const tilt = tiltFor(`demo-cat-${entry.category}`, 0.8);
+                      return (
+                        <li
+                          key={entry.category}
+                          className="flex flex-col gap-1"
+                        >
+                          <div className="flex items-baseline justify-between gap-4">
+                            <span
+                              data-ledger-tilt
+                              className="inline-block origin-left font-hand text-hand text-pen-navy"
+                              style={{ transform: `rotate(${tilt}deg)` }}
+                            >
+                              {entry.category}
+                            </span>
+                            <span className="font-serif text-body nums-oldstyle-tabular text-ink">
+                              {formatVND(entry.total)}
+                            </span>
+                          </div>
+                          <svg
+                            aria-hidden="true"
+                            role="presentation"
+                            focusable="false"
+                            viewBox="0 0 400 10"
+                            preserveAspectRatio="none"
+                            width="100%"
+                            height={10}
+                            style={{ filter: 'url(#hand-wobble)' }}
+                          >
+                            <rect
+                              x={0}
+                              y={2}
+                              width={(pct / 100) * 400}
+                              height={6}
+                              fill={color}
+                              fillOpacity={0.22}
+                              stroke={color}
+                              strokeWidth="1.4"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+            </section>
+
+            <section className="mt-12">
+              <div className="mb-4 flex items-baseline justify-between gap-3">
+                <h4 className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                  Register · {rows.length}{' '}
+                  {rows.length === 1 ? 'entry' : 'entries'}
+                </h4>
+                <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+                  Click any row to amend · turn the page for more
+                </span>
+              </div>
+              {showSlip && (
+                <div className="relative mb-6">
+                  <PaperClip corner="tr" size={44} />
+                  <DashboardAmendSlipStub />
+                </div>
+              )}
+              <LedgerTable
+                rows={rows}
+                activeRowId={showSlip ? 'd-1' : undefined}
+                emptyText="No entries on this page. File one below."
+              />
+              <div className="mt-8 flex items-center justify-between gap-4 border-t border-ink/20 pt-4">
+                <p className="font-hand-signature text-hand-signature text-ink-mute">
+                  Missed something? File it on a new line.
+                </p>
+                <span className="inline-flex items-center gap-2 border-2 border-ink bg-paper px-4 py-2 font-stamp text-[12px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink">
+                  <Glyph name="pen" size={13} />
+                  <span>File a new entry</span>
+                </span>
+              </div>
+            </section>
+          </Page>
+        </div>
+      </Sample>
+    </div>
+  );
+}
+
+function DashboardAmendSlipStub() {
+  return (
+    <div
+      className="relative isolate"
+      data-ledger-tilt
+      style={{ transform: 'rotate(-0.3deg)' }}
+    >
+      <div
+        className="relative border px-5 py-6 sm:px-7 sm:py-7"
+        style={{
+          backgroundColor:
+            'color-mix(in srgb, var(--color-stamp-red) 14%, var(--color-paper))',
+          borderColor: 'var(--color-stamp-red)',
+        }}
+      >
+        <div className="flex items-baseline justify-between gap-4">
+          <div>
+            <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+              Form · Amend entry
+            </p>
+            <h3 className="mt-1 font-serif text-title-2 font-bold text-ink">
+              Amend this entry
+            </h3>
+          </div>
+          <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+            Close
+          </span>
+        </div>
+        <p className="mt-2 font-serif text-body text-ink-mute">
+          Correct any line. The change is recorded on the books.
+        </p>
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <StubField label="Description" value="Phở bò — quán Hưng" />
+          <StubField label="Amount (₫)" value="85000" />
+          <StubField label="Kind" value="Expense" />
+          <StubField label="Category" value="Food & Drink" />
+          <StubField label="Subcategory" value="restaurant" />
+          <StubField label="Date" value="2026-04-20" />
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 border-2 border-ink bg-paper px-4 py-2.5 font-stamp text-[13px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink">
+            <Glyph name="pen" size={14} />
+            <span>Save amendment</span>
+          </span>
+          <span className="ml-auto inline-flex items-center gap-2 border border-stamp-red bg-paper px-3 py-2 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-stamp-red">
+            <Glyph name="cross" size={12} />
+            <span>Discard</span>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

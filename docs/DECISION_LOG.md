@@ -206,6 +206,34 @@ YYYY-MM-DD · one-line decision
   Rationale: The metaphor is "what falls off the ledger per month on rotation" — a monthly estimate matches the voice. Approximations (30-day month, no DST) are fine at this layer; the number is for orientation, not accounting. The real billing cadence is surfaced in each row's `Cycle` column. Rejected: showing one total per cycle (four hero lines competes with the actual register below); rejected: a toggle between "as-charged" and "monthly-equivalent" — adds UI churn for a spreadsheet-shaped control, wrong register for Ledger-keeper voice.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 5.4 · `/dashboard` daily chart is hand-drawn inline, not `<HandDrawnChart>`
+
+  Context:   Phase 5.4's daily bars need per-day drill-in (click a bar → `?day=YYYY-MM-DD`) and keyboard a11y — every bar must be a focus target, not just a hover-tooltip. `<HandDrawnChart>` renders an `<svg>` with no hit targets, no selected-state styling, and no income stack. Retrofitting all three into the generic component would leak dashboard concerns (routing, search-param build) into a shared primitive.
+  Decision:  Ship a route-local `<DailyChart>` that re-implements the same wobble-filter SVG geometry inline. It stacks income (stamp-red) on top of expense (pen-navy), dims non-selected bars when a `selectedDay` is present, and lays transparent `<rect>` hit targets with `role="button" tabIndex={0}` behind each slot so every bar is keyboard-activatable.
+  Rationale: The Phase 4 decision "charts ship on raw SVG, not Recharts" (DECISION_LOG 2026-04-21) already accepted that charts with interaction needs would be bespoke. `<HandDrawnChart>` stays as the simple primitive for read-only charts (e.g. the design-system deck, future report surfaces). Rejected: extending `<HandDrawnChart>` with `onBarClick` + `activeIndex` — pushes wobble-filter geometry toward a Recharts shape, exactly what the earlier decision refused.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.4 · Category chart stays horizontal, drops `<HandDrawnChart>`
+
+  Context:   The Swiss `/dashboard` renders categories as a ranked horizontal bar list — conventional for top-N ranking, and well-matched to the paper metaphor (think: a typewritten accounts-receivable list). `<HandDrawnChart kind="bar">` is vertical-axis only.
+  Decision:  Route-local `<CategoryChart>` renders an `<ol>` of rows — each row = Patrick Hand category label + oldstyle-tabular amount + a `#hand-wobble`-filtered `<rect>` strip sized to the top category. Top row swaps to `stamp-red`; the rest ride `pen-navy`.
+  Rationale: A vertical chart of five categories would fight the ruled body rhythm and duplicate the daily chart's visual. Horizontal ranking reads "who took the biggest slice this week" in one glance, which is the Swiss version's job too. Rejected: rotating `<HandDrawnChart>` 90° — the label + axis layout is hard-coded vertical; would be more plumbing than a 20-line bespoke list.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.4 · Range filter drops the custom-calendar popover
+
+  Context:   The Swiss dashboard pairs seven presets with a `react-day-picker` popover for arbitrary ranges. The popover is a shadcn composition (Radix Popover + Calendar) that doesn't read as "paper" and that would need a ground-up paper port.
+  Decision:  Phase 5.4 ships presets only, as a flat row of paper-tab pills (`<DateRangeTabs>`). Custom-range selection — plus the rest of user settings — is deferred to Phase 5.5's `/settings` route, where a proper paper calendar primitive lands alongside other preferences.
+  Rationale: The Swiss `range=custom&from=...&to=...` URL shape is preserved in the server code, so a manually-typed URL still loads a custom range — just no UI to pick one until 5.5. This keeps the 5.4 diff bounded and removes a Radix dependency from the paper chrome. Rejected: inline popover in paper chrome (doesn't match the tactile affordance language — popovers are screen-app idiom, not document idiom).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.4 · Drill-in opens the edit slip above the ledger, not a modal
+
+  Context:   The Swiss transactions table opens a shadcn `<Dialog>` to edit a row. A modal feels right in an app shell — a scrim darkens the world, the form claims focus — but it breaks the document metaphor Paper Ledger trades on. The page should read as a continuous sheet; interactions should sit *on* the sheet, not *above* it.
+  Decision:  Row drill-in mounts the shared `<EntrySlip>` (same carbon-slip shape as `/login` + `/dashboard/recurring-paper`) inline at the top of the ledger section, with a `<PaperClip>` decoration at the top-right corner as the "pinned for review" affordance called for by §4.7. Close / Save / Discard all live on the slip.
+  Rationale: Keeps the ruled body unscrimmed and the page scrollable to see the edit in context ("I'm amending *this* row on *this* register"). Also unifies add + edit on one component — the slip has an optional `onDiscard` prop for the edit flow. Rejected: shadcn dialog with paper chrome (dialog is still a modal mechanically — scrim + focus-trap + portal); rejected: per-row inline editing (forces every row to carry form state even when idle).
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 1 · Geist (sans/mono) kept loaded through Phase 5
 
   Context:   Paper Ledger has no role for Geist — the text faces are Crimson Pro (serif), Courier Prime (typewriter), Patrick Hand (hand), Caveat (signature), Archivo Black (stamp), Homemade Apple (hurried hand). The natural instinct was to remove the Geist imports from `app/layout.tsx`.
