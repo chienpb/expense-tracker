@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { format as formatDate } from 'date-fns';
 import {
   getExpenses,
   getSpendingByDay,
   getSpendingByCategory,
   getSpendingByDayAndCategory,
   getOverview,
+  getPriorRangeTotal,
+  getTopPaybackCounterpart,
+  getPeakDayCategory,
 } from '@/lib/dashboard/queries';
+import { groupCategoriesForTally } from '@/lib/dashboard/categories';
 import {
   getDateRange,
   getDayCount,
@@ -15,15 +20,16 @@ import {
   RANGE_LABELS,
 } from '@/lib/dashboard/utils';
 import { Page } from '@/app/_components/paper/Page';
-import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { Stamp } from '@/app/_components/paper/Stamp';
+import { SummaryBox } from '@/app/_components/paper/SummaryBox';
+import { TallyMarks } from '@/app/_components/paper/TallyMarks';
+import { MarginNote } from '@/app/_components/paper/MarginNote';
 import { formatPrintedDate } from '@/lib/paper-format';
 import { DateRangeTabs } from './_components/_date-range';
 import { DailyChart } from './_components/_daily-chart';
-import { CategoryChart } from './_components/_category-chart';
 import { Ledger } from './_components/_ledger';
 import { QuickAdd } from './_components/_quick-add';
-import { SignOut } from './_components/_sign-out';
+import { Masthead } from './_components/_masthead';
 
 export const metadata: Metadata = {
   title: 'Daybook · Ledger',
@@ -51,19 +57,27 @@ export default async function DashboardPage({
   const effTo = selectedDay ?? to;
   const effDayCount = selectedDay ? 1 : dayCount;
 
-  const [expenses, dailySpending, categorySpending, dayCategory, overview] =
-    await Promise.all([
-      getExpenses(effFrom, effTo),
-      getSpendingByDay(from, to),
-      getSpendingByCategory(effFrom, effTo),
-      getSpendingByDayAndCategory(from, to),
-      getOverview(effFrom, effTo),
-    ]);
+  const [
+    expenses,
+    dailySpending,
+    categorySpending,
+    dayCategory,
+    overview,
+    priorTotal,
+    topPayback,
+    peak,
+  ] = await Promise.all([
+    getExpenses(effFrom, effTo),
+    getSpendingByDay(from, to),
+    getSpendingByCategory(effFrom, effTo),
+    getSpendingByDayAndCategory(from, to),
+    getOverview(effFrom, effTo),
+    getPriorRangeTotal(effFrom, effTo),
+    getTopPaybackCounterpart(effFrom, effTo),
+    getPeakDayCategory(from, to),
+  ]);
 
-  const categoriesByDay: Record<
-    string,
-    { category: string; total: number }[]
-  > = {};
+  const categoriesByDay: Record<string, { category: string; total: number }[]> = {};
   for (const row of dayCategory) {
     (categoriesByDay[row.date] ??= []).push({
       category: row.category,
@@ -73,229 +87,294 @@ export default async function DashboardPage({
 
   const dailyAvg =
     effDayCount > 0 ? Math.round(overview.totalSpent / effDayCount) : 0;
-  const topCategory = categorySpending[0]?.category ?? '—';
+  const topCategoryRow = categorySpending[0];
+  const topCategoryShare =
+    topCategoryRow && overview.totalSpent > 0
+      ? Math.round((topCategoryRow.total / overview.totalSpent) * 100)
+      : 0;
   const net = overview.totalSpent - overview.totalIncome;
-  const heroTotal = overview.totalIncome > 0 ? net : overview.totalSpent;
-  const rangeLabel =
-    range === 'custom' ? 'Custom range' : RANGE_LABELS[range];
+  const hasPaybacks = overview.totalIncome > 0;
+  const heroTotal = hasPaybacks ? net : overview.totalSpent;
 
-  const clearDayHref = (() => {
-    const p = new URLSearchParams();
-    p.set('range', range);
-    if (range === 'custom') {
-      p.set('from', from);
-      p.set('to', to);
-    }
-    return `/dashboard?${p.toString()}`;
-  })();
+  const tallyRows = groupCategoriesForTally(categorySpending, 5);
+
+  const today = new Date();
+  const stampText = formatDate(today, 'MMM · dd · yyyy').toUpperCase();
+
+  const title = renderTitle(range, from, to, selectedDay);
+  const counterpartName = topPayback ? extractCounterpart(topPayback.description) : null;
+  const deltaNote = renderDelta(overview.totalSpent, priorTotal);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Page
-        formCode="CHN-01"
-        pageNumber="1/1"
         tape
-        title="Daybook"
-        headerMeta={formatPrintedDate(new Date())}
         className="flex-1"
-      >
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-ink/15 pb-4">
-          <nav aria-label="Ledger sections" className="flex items-baseline gap-4">
-            <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink">
-              Daybook
-            </span>
-            <Link
-              href="/dashboard/recurring"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
-            >
-              Standing orders
-            </Link>
-            <Link
-              href="/chat"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
-            >
-              Correspondence
-            </Link>
-            <Link
-              href="/settings"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
-            >
-              House rules
-            </Link>
-          </nav>
-          <SignOut />
-        </div>
-
-        <section
-          aria-labelledby="hero-heading"
-          className="mb-10 flex flex-wrap items-end justify-between gap-6"
-        >
-          <div>
-            <h2
-              id="hero-heading"
-              className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
-            >
-              {selectedDay ? 'On this day' : 'On this page'}
-            </h2>
-            <p className="mt-2 font-serif text-display-hero font-bold leading-none nums-lining-tabular text-ink">
-              {formatVND(heroTotal)}
-            </p>
-            <p className="mt-3 max-w-prose font-serif text-body text-ink-mute">
-              {selectedDay ? (
-                <>
-                  <span className="text-ink">{formatLongDate(selectedDay)}</span>
-                  {' · '}
-                  <Link
-                    href={clearDayHref}
-                    className="paper-focusable underline-offset-4 hover:text-ink"
-                  >
-                    back to the range
-                  </Link>
-                </>
-              ) : (
-                <>
-                  {rangeLabel} · {formatLongDate(from)} → {formatLongDate(to)}
-                </>
-              )}
-            </p>
-            {overview.totalIncome > 0 && (
-              <p className="mt-2 font-serif text-caption italic text-ink-mute">
-                Before paybacks {formatVND(overview.totalSpent)} · got back{' '}
-                <span className="text-stamp-red">
-                  ({formatVND(overview.totalIncome)})
-                </span>
+        header={
+          <div className="flex items-start gap-6">
+            <div className="min-w-0 flex-1">
+              <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+                Sổ Thu Chi · Personal Expenses · Form CHN-01
               </p>
-            )}
+              <h1 className="mt-2 font-serif text-title-1 font-bold text-ink">
+                {title.main}
+                {title.suffix && (
+                  <span className="ml-2 font-hand text-[28px] font-normal text-pen-navy">
+                    {title.suffix}
+                  </span>
+                )}
+              </h1>
+            </div>
+            <div className="relative shrink-0">
+              <Masthead />
+              <div className="pointer-events-none absolute -top-1 right-8 z-20">
+                <Stamp text={stampText} color="red" wear={0.7} id="today-stamp" />
+              </div>
+            </div>
           </div>
-          <DateRangeTabs current={range} from={from} to={to} />
-        </section>
+        }
+      >
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.55fr_1fr] lg:gap-12">
+          {/* LEFT COLUMN */}
+          <div className="flex min-w-0 flex-col gap-10">
+            <section aria-labelledby="hero-heading" className="relative">
+              <h2
+                id="hero-heading"
+                className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
+              >
+                Line A. —{' '}
+                {selectedDay
+                  ? 'Total spent, this day'
+                  : `Total spent, ${rangeWord(range)} to date`}
+              </h2>
+              <p className="mt-3 font-serif text-display-hero font-bold leading-none nums-lining-tabular text-ink">
+                {formatVND(heroTotal)}
+              </p>
+              {counterpartName && hasPaybacks && (
+                <MarginNote inline side="right" className="ml-4 align-middle">
+                  net, after {counterpartName} paid me back
+                </MarginNote>
+              )}
+              <div className="mt-4 flex flex-wrap items-baseline gap-x-8 gap-y-2 font-typewriter text-[11px] text-ink-mute">
+                {hasPaybacks && (
+                  <>
+                    <FieldFigure label="gross" value={formatVND(overview.totalSpent)} />
+                    <FieldFigure
+                      label="returned"
+                      value={`-${formatVND(overview.totalIncome)}`}
+                      valueClassName="text-stamp-red"
+                    />
+                  </>
+                )}
+                {deltaNote && (
+                  <span className="font-hand text-[15px] text-pen-navy">
+                    {deltaNote}
+                  </span>
+                )}
+              </div>
+            </section>
 
-        <Summary
-          count={overview.count}
-          dailyAvg={dailyAvg}
-          topCategory={topCategory}
-        />
+            <section aria-labelledby="chart-heading">
+              <h3
+                id="chart-heading"
+                className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
+              >
+                Fig. 1 — Daily
+              </h3>
+              <DailyChart
+                data={dailySpending}
+                categoriesByDay={categoriesByDay}
+                selectedDay={selectedDay}
+                range={range}
+                rangeFrom={from}
+                rangeTo={to}
+              />
+              {peak && (
+                <p className="mt-2 font-hand text-[14px] text-pen-navy">
+                  peak: {formatPrintedDate(peak.date)} · {peak.category}
+                </p>
+              )}
+            </section>
 
-        <section
-          aria-labelledby="chart-heading"
-          className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-5"
-        >
-          <div className="lg:col-span-3">
-            <h3
-              id="chart-heading"
-              className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
-            >
-              Daily spending
-            </h3>
-            <DailyChart
-              data={dailySpending}
-              categoriesByDay={categoriesByDay}
-              selectedDay={selectedDay}
-              range={range}
-              rangeFrom={from}
-              rangeTo={to}
-            />
+            <section aria-labelledby="ledger-heading">
+              <div className="mb-4 flex items-baseline justify-between gap-3">
+                <h3
+                  id="ledger-heading"
+                  className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
+                >
+                  Register · {expenses.length}{' '}
+                  {expenses.length === 1 ? 'entry' : 'entries'}
+                </h3>
+                <DateRangeTabs current={range} from={from} to={to} />
+              </div>
+              <Ledger expenses={expenses} />
+            </section>
           </div>
-          <div className="lg:col-span-2">
-            <h3 className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
-              By category
-            </h3>
-            <CategoryChart data={categorySpending} />
-          </div>
-        </section>
 
-        <section aria-labelledby="ledger-heading" className="mt-12">
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h3
-              id="ledger-heading"
-              className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
-            >
-              Register · {expenses.length}{' '}
-              {expenses.length === 1 ? 'entry' : 'entries'}
-            </h3>
-            <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
-              Click any row to amend · turn the page for more
-            </span>
-          </div>
-          <Ledger expenses={expenses} />
-          <div className="mt-8">
-            <QuickAdd />
-          </div>
-        </section>
+          {/* RIGHT COLUMN */}
+          <aside className="flex min-w-0 flex-col gap-8">
+            <div className="grid grid-cols-3 gap-3">
+              <SummaryBox label="Entries" value={overview.count} />
+              <SummaryBox label="Daily avg" value={formatVND(dailyAvg)} />
+              <SummaryBox
+                label="Top cat."
+                value={
+                  topCategoryRow ? (
+                    <span>
+                      {topCategoryRow.category}{' '}
+                      <span className="font-typewriter text-[12px] text-ink-mute">
+                        {topCategoryShare}%
+                      </span>
+                    </span>
+                  ) : (
+                    '—'
+                  )
+                }
+              />
+            </div>
+
+            <section aria-labelledby="tally-heading">
+              <h3
+                id="tally-heading"
+                className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
+              >
+                Line B. — By category
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {tallyRows.length === 0 && (
+                  <li className="font-serif text-body italic text-ink-mute">
+                    No entries in this range.
+                  </li>
+                )}
+                {tallyRows.map((row) => (
+                  <li
+                    key={row.category}
+                    className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-4 border-b border-dotted border-ink/25 pb-1.5"
+                  >
+                    <span className="truncate font-serif text-body text-ink">
+                      {row.displayName}
+                    </span>
+                    <span className="justify-self-end">
+                      {row.tallyCount > 0 && (
+                        <TallyMarks count={row.tallyCount} height={18} />
+                      )}
+                    </span>
+                    <span className="justify-self-end font-serif text-body font-semibold nums-lining-tabular text-ink">
+                      {formatVND(row.total)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <div className="lg:sticky lg:top-8">
+              <QuickAdd />
+            </div>
+          </aside>
+        </div>
       </Page>
     </div>
   );
 }
 
-function Summary({
-  count,
-  dailyAvg,
-  topCategory,
+function FieldFigure({
+  label,
+  value,
+  valueClassName,
 }: {
-  count: number;
-  dailyAvg: number;
-  topCategory: string;
+  label: string;
+  value: string;
+  valueClassName?: string;
 }) {
   return (
-    <section
-      aria-label="Page summary"
-      className="grid grid-cols-1 gap-4 border-y border-ink/25 py-6 sm:grid-cols-3 sm:gap-6"
-    >
-      <Figure
-        label="Entries"
-        value={
-          <span className="inline-flex items-center gap-3">
-            <span className="font-serif text-title-1 font-bold nums-lining-tabular text-ink">
-              {count}
-            </span>
-            {count > 0 && count <= 40 && (
-              <TallyMarks count={count} height={20} />
-            )}
-          </span>
-        }
-      />
-      <Figure
-        label="Daily average"
-        value={
-          <span className="font-serif text-title-1 font-bold nums-lining-tabular text-ink">
-            {formatVND(dailyAvg)}
-          </span>
-        }
-      />
-      <Figure
-        label="Top line"
-        value={
-          <span className="inline-flex items-center gap-3">
-            <span className="font-hand text-hand text-pen-navy">
-              {topCategory}
-            </span>
-            {topCategory !== '—' && (
-              <Stamp
-                text="Largest"
-                color="red"
-                wear={0.65}
-                id={`top-${topCategory}`}
-                className="text-[8px]"
-              />
-            )}
-          </span>
-        }
-      />
-    </section>
-  );
-}
-
-function Figure({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="font-typewriter text-label uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
-        {label}
+    <span className="inline-flex items-baseline gap-2">
+      <span className="uppercase tracking-[var(--letter-spacing-label-s)]">
+        {label}:
       </span>
-      {value}
-    </div>
+      <span
+        className={`font-serif text-[14px] font-bold nums-lining-tabular text-ink ${valueClassName ?? ''}`}
+      >
+        {value}
+      </span>
+    </span>
   );
 }
 
-function formatLongDate(dateStr: string): string {
-  return formatPrintedDate(new Date(dateStr + 'T00:00:00'));
+function renderTitle(
+  range: RangeKey,
+  from: string,
+  to: string,
+  selectedDay?: string,
+): { main: string; suffix?: string } {
+  if (selectedDay) {
+    return { main: 'Daily Ledger', suffix: `— ${formatPrintedDate(selectedDay)}` };
+  }
+  const fromDate = new Date(from + 'T00:00:00');
+  const toDate = new Date(to + 'T00:00:00');
+  switch (range) {
+    case 'today':
+      return { main: 'Daily Ledger', suffix: `— today, ${formatDate(fromDate, 'MMM d')}` };
+    case 'this_week':
+    case '7d':
+      return { main: 'Daily Ledger', suffix: `— week of ${formatDate(fromDate, 'MMM d')}` };
+    case 'this_month':
+      return { main: 'Daily Ledger', suffix: `— ${formatDate(fromDate, 'MMMM yyyy')}` };
+    case 'last_month':
+      return { main: 'Daily Ledger', suffix: `— ${formatDate(fromDate, 'MMMM yyyy')}` };
+    case '30d':
+      return { main: 'Daily Ledger', suffix: '— last 30 days' };
+    case 'custom':
+      return {
+        main: 'Daily Ledger',
+        suffix: `— ${formatDate(fromDate, 'MMM d')} → ${formatDate(toDate, 'MMM d')}`,
+      };
+    default:
+      return { main: 'Daily Ledger', suffix: `— ${RANGE_LABELS[range]}` };
+  }
+}
+
+function rangeWord(range: RangeKey): string {
+  switch (range) {
+    case 'today':
+      return 'day';
+    case 'this_week':
+    case '7d':
+      return 'week';
+    case 'this_month':
+    case 'last_month':
+      return 'month';
+    case '30d':
+      return '30 days';
+    default:
+      return 'range';
+  }
+}
+
+function renderDelta(current: number, prior: number): string | null {
+  if (prior <= 0 || current <= 0) return null;
+  const diff = current - prior;
+  const pct = Math.abs(diff) / prior;
+  if (pct < 0.03) return '↔ about the same as last time';
+  const arrow = diff > 0 ? '↑' : '↓';
+  const direction = diff > 0 ? 'over' : 'under';
+  if (pct < 0.12) return `${arrow} a bit ${direction} last time`;
+  if (pct < 0.3) return `${arrow} ${direction} last time`;
+  return `${arrow} well ${direction} last time`;
+}
+
+/**
+ * Heuristic: pull a probable counterpart name out of an income row's
+ * description (`"Mai paid me back"` → `"Mai"`, `"Lunch w/ Mai (split)"`
+ * → `"Mai"`). Falls back to null for descriptions that don't look like
+ * a name, so the hero's handwritten margin note stays empty rather
+ * than rendering nonsense.
+ */
+function extractCounterpart(description: string): string | null {
+  const withMatch = description.match(/\bw\/?\s+([A-ZÀ-Ỹ][\p{L}]+)/u);
+  if (withMatch) return withMatch[1];
+  const paidMatch = description.match(/\b([A-ZÀ-Ỹ][\p{L}]+)\s+(paid|sent|gave|returned|refunded|settled)\b/u);
+  if (paidMatch) return paidMatch[1];
+  const leadMatch = description.match(/^([A-ZÀ-Ỹ][\p{L}]+)\b/u);
+  if (leadMatch && leadMatch[1].length >= 2 && leadMatch[1].length <= 20) return leadMatch[1];
+  return null;
 }

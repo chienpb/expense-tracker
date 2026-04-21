@@ -38,6 +38,12 @@ type PageProps = {
    * `pageNumber` is set. Pass `false` to hide the footer entirely.
    */
   footer?: ReactNode | false;
+  /**
+   * Fully replaces the default header contents (the `formCode` / `title`
+   * / `headerMeta` layout) with a custom node. The outer `<header>`
+   * element, its padding, and its bottom border stay intact.
+   */
+  header?: ReactNode;
   /** Render decorative tape strips at the top corners (§3.1 · primary pages). */
   tape?: boolean;
   children: ReactNode;
@@ -50,6 +56,7 @@ export function Page({
   title,
   headerMeta,
   footer,
+  header,
   tape = false,
   children,
   className,
@@ -92,20 +99,24 @@ export function Page({
       <header
         className={`relative z-10 border-b-2 border-ink ${headerPadLeft} pr-4 pt-5 pb-4 sm:pr-8 sm:pt-6 sm:pb-5`}
       >
-        <div className="flex items-baseline gap-4">
-          {formCode && (
-            <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
-              Form {formCode}
-            </span>
-          )}
-          <span className="ml-auto font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
-            {headerMeta ?? (pageNumber && `Page ${pageNumber}`)}
-          </span>
-        </div>
-        {title !== undefined && (
-          <div className="mt-2 font-serif text-title-1 font-bold text-ink">
-            {title}
-          </div>
+        {header ?? (
+          <>
+            <div className="flex items-baseline gap-4">
+              {formCode && (
+                <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+                  Form {formCode}
+                </span>
+              )}
+              <span className="ml-auto font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+                {headerMeta ?? (pageNumber && `Page ${pageNumber}`)}
+              </span>
+            </div>
+            {title !== undefined && (
+              <div className="mt-2 font-serif text-title-1 font-bold text-ink">
+                {title}
+              </div>
+            )}
+          </>
         )}
       </header>
 
