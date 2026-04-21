@@ -22,6 +22,12 @@ playwright-cli goto http://localhost:3000/dashboard
 
 The state file is gitignored. If it expires, re-save it after a manual sign-in with `playwright-cli state-save .claude/skills/playwright-cli/state/auth.json`.
 
+**Screenshots** go under `.screenshots/` (gitignored). Name them `<slug>-<YYYYMMDD-HHMMSS>.png` — e.g. `dashboard-20260421-172630.png`. No cleanup needed; the whole directory is ignored.
+
+```bash
+playwright-cli screenshot --filename=.screenshots/dashboard-20260421-172630.png
+```
+
 ## Navigation
 
 Start at **[`docs/INDEX.md`](docs/INDEX.md)** — the table of contents. It tells you which doc to open for the task at hand (API shape, database, auth flow, design system, migration roadmap, decision log).

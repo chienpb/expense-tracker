@@ -43,3 +43,4 @@ next-env.d.ts
 # playwright-cli
 .playwright-cli/
 .claude/skills/playwright-cli/state/
+.screenshots/
