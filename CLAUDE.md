@@ -10,6 +10,18 @@ Personal expense tracker. Dashboard UI + Apple Shortcuts input. Next.js 16 on Ve
 - **Design system:** the live UI is the Paper Ledger system (`docs/DESIGN_SYSTEM.md`, rollout tracked in `docs/ROADMAP.md`). Read it before changing any UI. The prior Swiss system is archived at `docs/swiss-design-system-archive.md` for portfolio reference only.
 - **Decision log is mandatory.** Non-trivial trade-offs, spike outcomes, and rule exceptions go in `docs/DECISION_LOG.md` with date + rationale.
 
+## Browser automation
+
+When using `playwright-cli` against the local dev server, load the saved auth state instead of typing credentials:
+
+```bash
+playwright-cli open http://localhost:3000
+playwright-cli state-load .claude/skills/playwright-cli/state/auth.json
+playwright-cli goto http://localhost:3000/dashboard
+```
+
+The state file is gitignored. If it expires, re-save it after a manual sign-in with `playwright-cli state-save .claude/skills/playwright-cli/state/auth.json`.
+
 ## Navigation
 
 Start at **[`docs/INDEX.md`](docs/INDEX.md)** — the table of contents. It tells you which doc to open for the task at hand (API shape, database, auth flow, design system, migration roadmap, decision log).
