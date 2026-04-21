@@ -295,3 +295,244 @@
     transform: none !important;
   }
 }
+
+/* =====================================================================
+ * §6 · State primitives · motion (§8)
+ *
+ * The easing curve is the only one the system should ever use.
+ * Durations live between 180–240ms; anything slower is a page flip
+ * (§8) or the eraser pulse (1s period, infinite). Every animation
+ * here respects `prefers-reduced-motion: reduce`.
+ * =================================================================== */
+@theme inline {
+  --ease-ink: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes paper-highlighter-swipe {
+  /* A left→right yellow band sweep. The highlighter lives on a
+     pseudo-element that covers the row; at 0% it's off-screen left,
+     at 30% it fills the row, and it fades out by 100% so the row
+     returns to neutral when the pointer leaves. */
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.3;
+  }
+}
+
+@keyframes paper-eraser-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes paper-stamp-thump {
+  /* Stamp lands from slightly above the page and settles. The scale
+     starts oversized so the impression reads as a "press down." The
+     rotation jitters in the last 60ms for the broken-ink feel. */
+  0% {
+    transform: scale(1.4) rotate(0deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1) rotate(-0.8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes paper-slide-up {
+  0% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes paper-void-fade {
+  /* Deleted-recently rows cross out, show VOID for ~5s, then fade
+     to nothing (§6.11). The strike animates in the first 200ms; the
+     fade-to-zero occupies the final 600ms. */
+  0% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* §8 — paper slides up for new entries. */
+.paper-slide-in {
+  animation: paper-slide-up 220ms var(--ease-ink) both;
+}
+
+/* §4.13 — eraser pulse for loading. */
+.paper-eraser-pulse {
+  animation: paper-eraser-pulse 1000ms var(--ease-ink) infinite;
+}
+
+/* §6.8 — stamp thumps down on success. Applied to `<Stamp>` when
+   it's mounting fresh; the default stamp (static in a list) doesn't
+   animate. Opt in with the `paper-stamp-thump` class. */
+.paper-stamp-thump {
+  animation: paper-stamp-thump 180ms var(--ease-ink) both;
+}
+
+/* =====================================================================
+ * §6.1 — Highlighter hover (row-level)
+ *
+ * A `::before` pseudo-element rides under the row content. On hover
+ * it swipes in from the left; on leave it instantly retracts (real
+ * highlighter doesn't "slide back"). Focus-visible also triggers
+ * the swipe so keyboard users get the same affordance.
+ * =================================================================== */
+.paper-row-interactive {
+  position: relative;
+  transition: background-color 120ms var(--ease-ink);
+}
+.paper-row-interactive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-highlighter);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateX(-100%);
+}
+.paper-row-interactive > * {
+  position: relative;
+  z-index: 1;
+}
+.paper-row-interactive:hover::before,
+.paper-row-interactive:focus-visible::before {
+  animation: paper-highlighter-swipe 200ms var(--ease-ink) forwards;
+}
+.paper-row-interactive:focus-visible {
+  outline: 2px solid var(--color-pen-navy);
+  outline-offset: -2px;
+}
+.paper-row-interactive:active {
+  background-color: var(--color-paper-2);
+  transform: translateY(1px);
+}
+.paper-row-interactive[data-active='true'] {
+  background-color: color-mix(in srgb, var(--color-highlighter) 35%, transparent);
+}
+
+/* =====================================================================
+ * §6 · Ledger row variants driven by `data-status`
+ * =================================================================== */
+.paper-row-ai {
+  color: var(--color-pencil-gray);
+}
+.paper-row-ai > td {
+  filter: url(#pencil-stroke);
+  color: var(--color-pencil-gray);
+}
+
+.paper-row-voided {
+  position: relative;
+  animation: paper-void-fade 5000ms var(--ease-ink) forwards;
+}
+.paper-row-voided > td {
+  color: var(--color-ink-faint);
+}
+.paper-row-voided::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  background-color: var(--color-stamp-red);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* =====================================================================
+ * §6.2 · Hand-traced focus — buttons, inputs, links
+ *
+ * Solid 1.5px pen-navy outline plus a subtle outer ring for keyboard
+ * users (§9 accessibility note). Consumers add the class to any
+ * interactive surface that isn't a `<button>` with its own focus
+ * treatment. Compatible with the `:focus-visible` shim on older
+ * browsers that hand out focus on mouse-down.
+ * =================================================================== */
+.paper-focusable:focus-visible {
+  outline: 1.5px solid var(--color-pen-navy);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-pen-navy) 22%, transparent);
+}
+
+/* =====================================================================
+ * §6.3 · Pressed · §6.4 · Disabled
+ * =================================================================== */
+.paper-pressable:active {
+  transform: translateY(1px);
+  background-color: var(--color-paper-2);
+}
+.paper-disabled,
+[data-paper-disabled='true'] {
+  color: var(--color-ink-faint);
+  cursor: not-allowed;
+  border-bottom-style: dashed !important;
+}
+
+/* =====================================================================
+ * §6.9 · AI suggestion — pencil-gray through `#pencil-stroke`
+ * =================================================================== */
+.paper-pencil {
+  color: var(--color-pencil-gray);
+  filter: url(#pencil-stroke);
+}
+.paper-pencil-accepted {
+  color: var(--color-pen-navy);
+  transition: color 220ms var(--ease-ink), filter 220ms var(--ease-ink);
+  filter: none;
+}
+
+/* =====================================================================
+ * §6.10 · Correction strike — fine-tune for the inline SVG overlay
+ * =================================================================== */
+.paper-correction [data-show-edit-history='0'] .paper-correction-strike {
+  display: none;
+}
+
+/* =====================================================================
+ * Reduced-motion override for every state animation above.
+ * =================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .paper-slide-in,
+  .paper-eraser-pulse,
+  .paper-stamp-thump,
+  .paper-row-voided,
+  .paper-row-interactive::before {
+    animation: none !important;
+  }
+  .paper-row-interactive:hover::before,
+  .paper-row-interactive:focus-visible::before {
+    animation: none !important;
+    opacity: 0.3;
+    transform: translateX(0);
+  }
+}

@@ -145,27 +145,27 @@ Each ships with:
 
 **Goal.** Tables, charts, and every state from §6 — so we can render real data.
 
-1. [ ] `<LedgerTable>` (§4.3). 32px rows locking to the ruled lines. Columns Date / Time / Description / Category / Amount. Refunds in stamp-red parens. Highlighter hover. Drill-in "lifts" the row as a paper-clipped detail card.
-2. [ ] `<HandDrawnChart>` wrapper (§4.10) for bars, lines, areas. Uses `#hand-wobble`. Start on top of existing Recharts instance but with a custom SVG layer for strokes so we control the wobble. If Recharts can't compose with our filters cleanly, decision log: switch to raw `<svg>` + `d3-shape`.
-3. [ ] `<TallyMarks count groupSize>` (§4.11).
-4. [ ] `<InkBlot>` (§4.12) — coded `feTurbulence` placeholder (Asset A3).
-5. [ ] `<EraserMarks>` (§4.13).
-6. [ ] `<RedStringCorrection>` (§4.14).
+1. [x] `<LedgerTable>` (§4.3). 32px rows locked to the ruled lines. Columns Date / Time / Description / Category / Amount. Refunds in stamp-red parens via `formatSignedVND`. Highlighter hover + hand-traced focus via `.paper-row-interactive`. Drill-in delegated: `onDrillIn(row)` + `activeRowId`; consumers mount the paper-clipped detail card above the page.
+2. [x] `<HandDrawnChart>` wrapper (§4.10) for bars, lines, areas. Raw SVG (not Recharts) per DECISION_LOG 2026-04-21 "Phase 4 · charts ship on raw SVG, not Recharts." `#hand-wobble` on every stroke; dashed annotation ellipses + Caveat labels.
+3. [x] `<TallyMarks count groupSize>` (§4.11). SVG strokes, pen-navy default, `#hand-wobble` applied.
+4. [x] `<InkBlot>` (§4.12) — coded `feTurbulence` placeholder (Asset A3). `InkBlot.tsx`, seeded tilt, swap-ready.
+5. [x] `<EraserMarks>` (§4.13). Inline + overlay variants, 1s pulse, respects reduced motion.
+6. [x] `<RedStringCorrection>` (§4.14). Inline SVG strike (not `text-decoration`) pushed through `#hand-wobble`; supports chained history; hidden when `data-show-edit-history="0"`.
 
 Then every state in §6:
-- [ ] Hover — highlighter swipe (200ms left→right).
-- [ ] Focus — hand-traced 1.5px navy border with high-contrast outer ring fallback.
-- [ ] Pressed — 1px drop + paper→paper-2.
-- [ ] Disabled — dashed underline, `ink-faint` text.
-- [ ] Loading — `<EraserMarks>` pulse. Rip out every spinner from the codebase.
-- [ ] Empty — Caveat "Nothing on this line yet." + margin ✎.
-- [ ] Error — `<InkBlot>` + stamp-red underline + Caveat margin note.
-- [ ] Success — ✓ stamp + optional RECORDED sub-stamp.
-- [ ] AI suggestion — pencil-gray, fades to pen-navy on accept.
-- [ ] Edited — `<RedStringCorrection>` strikethrough history.
-- [ ] Deleted-recently — strikethrough + VOID stamp, 5s fade-out.
+- [x] Hover — highlighter swipe (200ms left→right). `.paper-row-interactive::before` keyframe in `globals.css`.
+- [x] Focus — hand-traced 1.5px navy border + 3px outer ring via `.paper-focusable` / `.paper-row-interactive:focus-visible`.
+- [x] Pressed — 1px drop + paper→paper-2 via `.paper-pressable:active` and `.paper-row-interactive:active`.
+- [x] Disabled — dashed underline, `ink-faint` text. `FieldLine disabled` + `.paper-disabled` utility.
+- [x] Loading — `<EraserMarks>` pulse. Spinner rip-out happens per-page in Phase 5; `<LedgerTable loading>` already consumes `<EraserMarks>`.
+- [x] Empty — `<EmptyLine>` prints "Nothing on this line yet." in hand-signature face + pencil `✎` glyph.
+- [x] Error — `<InkBlot>` + stamp-red underline + Caveat margin note (shown in `/design-system` state matrix).
+- [x] Success — `<Stamp text="Recorded">` + `.paper-stamp-thump` animation on mount.
+- [x] AI suggestion — `<PencilNote>`; pencil-gray + `#pencil-stroke` filter, fades to pen-navy on accept via `.paper-pencil-accepted` transition.
+- [x] Edited — `<RedStringCorrection>` strikethrough history.
+- [x] Deleted-recently — `<VoidedEntry>` / `paper-row-voided` strike + VOID stamp + 5s `paper-void-fade` keyframe.
 
-**Exit criteria.** `/design-system` shows every component in every state. Dashboard charts render with paper aesthetic in a prototype route, not yet wired to real data.
+**Exit criteria.** `/design-system` shows every component in every state. Dashboard-prototype section at the bottom of the deck composes `<LedgerTable>`, `<HandDrawnChart>`, `<TallyMarks>`, `<PaperClip>`, and a Ledger-keeper note into a Phase-5 preview (not wired to real data).
 
 **Asset dependency.** Coded placeholder for A3.
 
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 complete.*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete.*

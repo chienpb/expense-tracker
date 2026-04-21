@@ -14,6 +14,14 @@ const SECTIONS = [
   { slug: 'margin-note', label: 'P3 · MarginNote' },
   { slug: 'carbon-slip', label: 'P3 · CarbonSlip' },
   { slug: 'attachments', label: 'P3 · Attachments' },
+  { slug: 'ledger-table', label: 'P4 · LedgerTable' },
+  { slug: 'hand-drawn-chart', label: 'P4 · HandDrawnChart' },
+  { slug: 'tally-marks', label: 'P4 · TallyMarks' },
+  { slug: 'ink-blot', label: 'P4 · InkBlot' },
+  { slug: 'eraser-marks', label: 'P4 · EraserMarks' },
+  { slug: 'red-string', label: 'P4 · RedStringCorrection' },
+  { slug: 'states', label: 'P4 · States' },
+  { slug: 'dashboard-prototype', label: 'P4 · Dashboard prototype' },
 ];
 
 export default function DesignSystemLayout({

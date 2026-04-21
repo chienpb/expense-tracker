@@ -101,6 +101,34 @@ YYYY-MM-DD · one-line decision
   Rationale: Zero token bloat, zero theme drift, and the resulting color is derived from existing §1 tokens so it shifts correctly if either ever changes. `color-mix` is supported in every browser matrix we target (Chromium 111+, Firefox 113+, Safari 16.2+).
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 4 · `<HandDrawnChart>` ships on raw SVG, not Recharts
+
+  Context:   §4.10 calls for bar / line / area charts with `filter: url(#hand-wobble)` on every stroke, a single bottom rule (no grid), no tooltip, no legend, and dashed-ellipse annotations. The roadmap left the choice open: "start on top of Recharts, switch to raw SVG if it can't compose with our filters cleanly." Recharts is already a dependency, so the natural first attempt was a Recharts wrapper.
+  Decision:  Render the chart as a single raw `<svg>` with explicit path math for each kind (bar, line, area). `#hand-wobble` is applied once to the data `<g>`, annotations, and baseline. No Recharts usage in `<HandDrawnChart>`.
+  Rationale: Applying an SVG filter at Recharts' root surface breaks its event/tooltip hit-testing, and we don't want tooltips or legend chrome anyway. The raw path math (`xFor`, `yFor`, bars rect, line polyline + dots, area closed path to baseline) is ~100 lines total — less than configuring Recharts Bar/Line/Area with custom shape functions to thread filters through. When Phase 5 wires dashboard data in, consumers format the `{ label, value }[]` themselves — same shape Recharts wanted anyway. Recharts stays in the tree for any future chart that needs interactivity we explicitly opt into.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 4 · `<LedgerTable>` delegates drill-in rendering
+
+  Context:   §4.3 says "clicking a row lifts it as a paper-clipped detail card on top of the page." Implementing the lift inside `<LedgerTable>` would pin it to one layout (absolute-positioned card, fixed z-index, fixed reflow model) and couple it to the consumer's page chrome. Dashboard, Recurring, and Reports each want a different detail shape (fields vs. chart vs. attachments).
+  Decision:  The table exposes two props — `onDrillIn(row)` and `activeRowId` — and nothing more. Consumers render the paper-clipped detail card themselves, positioned wherever their page layout wants it, keyed by `activeRowId`. Rows become keyboard-activatable (`role="button"`, `tabIndex=0`, Enter/Space) automatically when `onDrillIn` is set.
+  Rationale: Single-responsibility — the table handles row state and affordance, the page handles the detail view. The `/design-system` prototype shows the canonical composition (LedgerTable + slide-in FieldLines inside a PaperClip'd card). Consumers that want a different detail treatment don't have to fight the component.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 4 · Row state driven by `data-status`, not component variants
+
+  Context:   §6 defines eleven states (hover, focus, pressed, disabled, loading, empty, error, success, AI-suggested, edited, deleted-recently). Rendering each as a dedicated `<LedgerTable>` variant (`<AILedgerRow>`, `<VoidedLedgerRow>`) would explode the API; every new state would touch the table's prop surface.
+  Decision:  Add a single `status?: 'default' | 'ai-suggested' | 'deleted-recently'` field on the row data, projected onto the `<tr>` as `data-status`. CSS classes (`.paper-row-ai`, `.paper-row-voided`) gate every visual transform — pencil-stroke filter, VOID strike, 5s fade — keyed on the attribute. Edit history rides orthogonally via `previousAmount`, which the amount cell threads into `<RedStringCorrection>` only if present.
+  Rationale: Every future state (e.g. "pending approval") becomes one enum value + one CSS rule, not a new component. `data-status` is addressable from DevTools, so debugging a stuck row is one selector away. Matches the convention we already use (`data-theme`, `data-reduce-skew`, `data-ledger-tilt`, `data-show-edit-history`).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 4 · `<TallyMarks>` renders as SVG strokes, not Caveat text
+
+  Context:   §4.11 specifies tally marks "in Caveat, navy." Caveat's "I" is a reasonable vertical stroke, but the diagonal slash that crosses the first four marks in a group of five is impossible to typeset — there's no glyph for it — and forcing Caveat to stretch or rotate an underscore to fake it looked worse than every alternative.
+  Decision:  Draw every stroke as an inline SVG `<path>` with `#hand-wobble` applied, pen-navy default, 1.5px stroke width. The spec's intent (pen-navy, hand-drawn, group-of-five with a slash) holds; the glyph source shifts from the font to our own path geometry.
+  Rationale: Consistent with `<InkBlot>`, `<TapeStrip>`, `<PaperClip>`, `<TornCorner>`, `<FoldCrease>` — every hand-drawn primitive so far ships as inline SVG and swaps for a Chien asset via the same path. Keeping `<TallyMarks>` on text would have made it the outlier.
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 2 · Decoration primitives are absolute overlays
 
   Context:   `<RuledLines>`, `<MarginRule>`, and `<PaperGrain>` each need to cover the full parent surface without claiming layout space — consumers (future `<Page>`, `<CarbonSlip>`, dialogs) must be able to stack them behind content and keep interacting with the normal flex/grid layout of the page body.
