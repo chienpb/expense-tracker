@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatVND } from '@/lib/dashboard/utils';
-import type { RecurringExpense } from '../page';
+import type { RecurringExpense } from '../_swiss';
 
 const FREQ_LABEL: Record<string, string> = {
   daily: 'daily',
