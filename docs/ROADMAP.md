@@ -179,7 +179,7 @@ Order is chosen to ship the highest-visibility surface last (so we iterate on le
 
 1. [x] **`/login`** (smallest surface, lowest risk). Paper page, carbon-slip form, stamp on submit. Ships at `/login-paper` (side route) and is gated on `/login` behind `NEXT_PUBLIC_PAPER_UI=1`. Swiss form preserved in `app/login/_swiss.tsx` for flag-off fallback. Visual regression deck lives under `/design-system#login` with all four states (idle / checking / recorded / rejected).
 2. [x] **`/dashboard/recurring`**. Standing-orders register. Active rows on the ruled body with navy ACTIVE stamps; paused orders pulled out into a "Set aside" stack of torn-corner receipts with red PAUSED stamps (§4.7). New orders filed on the same pink carbon slip as `/login`. Ships at `/dashboard/recurring-paper` (side route); `/dashboard/recurring` delegates via `PAPER_UI_ENABLED`. Swiss preserved in `_swiss.tsx`. `/design-system#recurring` covers populated / all-paused / empty / slip-rejected on Day + Midnight.
-3. [ ] **`/chat`** (AI conversation UI). Full voice pass happens here in Phase 6; this phase just rebuilds the chrome — messages on ruled paper, AI replies in Crimson with `— LK` signature, user messages in Patrick Hand.
+3. [x] **`/chat`** (AI conversation UI). Paper chrome only — streaming, tool calls, and `/api/chat` unchanged. Correspondence renders as a flowing `<Page>` of entries: user messages in Patrick Hand pen-navy with seeded tilt, Ledger-keeper replies in printed Crimson closing with `— LK` in Caveat pencil-gray once the ink has dried. Tool calls fold out inline as `<details>` receipts with a navy `Filed` / red `Error` state stamp. Compose slip reuses the pink carbon form from `/login` and `/dashboard/recurring-paper`; `position: sticky` rides the viewport bottom. ai-elements / shadcn primitives dropped — `useChat` + `streamdown` direct. Ships at `/chat-paper` (side route); `/chat` delegates via `PAPER_UI_ENABLED`. Swiss preserved in `_swiss.tsx`. `/design-system#chat` covers empty / exchange / tool-call / streaming on Day + Midnight. Full voice pass (model-level `— LK` sign-off via `lib/ledger-keeper-prompt.ts`) is Phase 6.
 4. [ ] **`/dashboard`** (overview + charts + today's entries). The hero screen.
 5. [ ] New **`/settings`** route (theme, reduce-motion, reduce-skew, use-printed-font, show-edit-history).
 
@@ -315,4 +315,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete · Phase 5 in progress (/login + /dashboard/recurring migrated).*
+*Last updated: 2026-04-21 · owner: Chien + Ledger-keeper (Claude) · Phases 0 + 1 + 2 + 3 + 4 complete · Phase 5 in progress (/login + /dashboard/recurring + /chat migrated).*

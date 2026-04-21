@@ -23,6 +23,8 @@ const SECTIONS = [
   { slug: 'states', label: 'P4 · States' },
   { slug: 'dashboard-prototype', label: 'P4 · Dashboard prototype' },
   { slug: 'login', label: 'P5 · /login' },
+  { slug: 'recurring', label: 'P5 · /recurring' },
+  { slug: 'chat', label: 'P5 · /chat' },
 ];
 
 export default function DesignSystemLayout({

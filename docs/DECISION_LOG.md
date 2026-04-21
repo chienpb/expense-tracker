@@ -164,6 +164,41 @@ YYYY-MM-DD · one-line decision
   Rationale: Importing another route's default export is supported by the App Router (server components compose freely) and keeps the Paper view as the single source of truth. Rejected: factoring the Paper composition out into a neutral `_paper.tsx` module that both routes import — adds a third file for no benefit, since `/dashboard/recurring-paper` already is that neutral module. Under a single request the Supabase read runs once; the only cost is a second read when someone navigates between the two routes, which is acceptable for a dev-only parity flow.
   Reviewer:  Ledger-keeper (pending Chien)
 
+## 2026-04-21 · Phase 5.3 · `/chat` rebuilt on plain primitives, not the ai-elements `<Message>` / `<Conversation>`
+
+  Context:   `/chat` (Swiss) composes on the shadcn-shaped ai-elements kit — `Message`, `MessageContent`, `Conversation`, `PromptInput`, `Tool*`. Each of those reaches into `@/components/ui/*` (button, tooltip, input-group, spinner, collapsible). Dropping a Paper chrome on top would mean fighting `is-user` bubble styles, pill toolbars, and a `max-w-[95%]` bubble container that's wrong for a ledger page. A surface swap this shallow doesn't justify re-theming five kits of primitives.
+  Decision:  The Paper chat is a standalone `_chat.tsx` client component that uses `@ai-sdk/react`'s `useChat` directly plus `streamdown` for markdown rendering. Conversation is a plain `<ol>`, tool calls are native `<details>` + `<summary>`, and the compose slip is a raw `<form>` + `<textarea>` styled to match `/login` and `/dashboard/recurring-paper`'s pink carbon form. No ai-elements imports, no shadcn `<Button>` or `<Collapsible>`. Streamdown plugins (`cjk`, `code`, `math`, `mermaid`) ship identically so rendered Markdown fidelity holds.
+  Rationale: Every ai-elements piece carried at least one Swiss anti-pattern for Paper (§11) — rounded-pill bubble, tooltip-wrapped icon buttons, Spinner for submit state. Re-implementing around them costs more than rebuilding from primitives we already own. Rejected: theming the ai-elements pieces via class overrides (the bubble's `rounded-sm` and `bg-foreground` live in the component, not via tokens — every consumer branch would need a `data-paper` fork). When Phase 9 deletes the feature flag, the ai-elements files stay live only if something else imports them; otherwise they're dead code to drop alongside `components/ui/button-group.tsx` etc.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.3 · `— LK` signature is a typographic flourish in the UI, not (yet) emitted by the model
+
+  Context:   §10 of `DESIGN_SYSTEM.md` says the Ledger-keeper signs replies with `— LK` in pencil-gray. Two ways to land that: (a) teach the model to write `— LK` at the end of every reply, or (b) render the signature in the UI as a typographic element after the message completes.
+  Decision:  Render in the UI for Phase 5.3. The signature appears on every fully-streamed assistant reply as a Caveat hand-signature line, pencil-gray, with a seeded tilt. Model-level sign-off waits for Phase 6 (voice pass), where the shared `lib/ledger-keeper-prompt.ts` will take ownership of persona.
+  Rationale: Phase 5.3 is explicitly chrome-only per the roadmap ("Full voice pass happens here in Phase 6; this phase just rebuilds the chrome"). A UI signature is a one-component flourish, deterministic, and it survives model changes. When Phase 6 teaches the model to sign, we keep or drop the UI signature based on whether doubled sign-offs read clean — easy to collapse to one line later. Rejected: hard-coding the signature as the last token of every response pre-Phase-6 (would violate the phase's chrome-only scope and touch the API route).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.3 · Caveat `— LK` signature is OK despite "no Caveat for Vietnamese" rule
+
+  Context:   DECISION_LOG 2026-04-21 "Caveat font does not carry Vietnamese subset" and §2.3 of the spec both forbid Caveat for content that could contain Vietnamese. The Paper chat renders the Ledger-keeper's sign-off as Caveat `— LK`, which sits directly under Vietnamese reply bodies.
+  Decision:  Allowed — the sign-off string is a fixed, English-only glyph sequence ("— LK"). Typography rule applies to *content that might contain Vietnamese*; `— LK` never will. Patrick Hand remains required for any user-authored or content-shaped text.
+  Rationale: §2.3 explicitly scopes Caveat to "signatures & English-only display flourishes only" (24px+). `text-hand-signature` is 24px. The signature is outside the translatable content surface, so the risk the rule guards against (stacked-tone fallbacks to Latin) can't arise. Documented here so a future audit doesn't flag it as a regression.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.3 · tool calls render as `<details>` receipts inline, not as separate paper-clipped slips
+
+  Context:   Tool parts (currently just `executeSQL`) land mid-reply and need a way to display their state (running / done / error), input (SQL), and output (rows). Two shapes considered: (1) a paper-clipped slip floating above the Ledger-keeper's reply (§4.7 metaphor), (2) a flat typewritten receipt folded into the reply in-flow.
+  Decision:  Flat inline receipt using native `<details>` + `<summary>` with a state stamp in the summary corner. Running → `<EraserMarks>`; completed → navy `Filed` stamp; error → red `Error` stamp (and auto-opens). Input/output both render in Courier Prime with tabular-nums.
+  Rationale: Paper-clipped floats are for *modals* and drill-ins (§4.7) — a tool call is mid-narrative chrome, not a surface to be lifted. Inline receipts also avoid hit-test and z-index fights with the sticky compose slip. `<details>` is keyboard-native and announces state changes without custom ARIA. Rejected: the ai-elements `<Tool>` + `<Collapsible>` pair (would re-introduce shadcn chrome the §5.3 split just removed).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+## 2026-04-21 · Phase 5.3 · document scroll + sticky compose slip, no stick-to-bottom container
+
+  Context:   Swiss `/chat` uses `use-stick-to-bottom` inside a bounded `h-dvh` flex column: header / scrollable conversation / fixed input. Paper Ledger wants a "running correspondence book" read — the page is a long document that grows downward, not a three-row app shell.
+  Decision:  The Paper chat inherits the document scroll container. Conversation is a flowing `<ol>` inside `<Page>`'s main; the compose slip uses `position: sticky; bottom: 16px` so it rides the viewport bottom once the page is long enough to scroll. Auto-scroll to bottom runs on `messages.at(-1)?.id` change — every new message id, never on token delta — so streaming doesn't yank users who've scrolled up.
+  Rationale: The three-pane shell is a chat-app idiom; Paper Ledger is a page metaphor. Document scroll also keeps the `<Page>` tape strips and ruled lines visible during normal use. `use-stick-to-bottom` auto-scrolls on every render, which on a streaming reply means ~5–20 scroll events per second — noticeable in dev. Per-message-id scrolling is one event per turn, which matches the "new entry lands" rhythm of the rest of the app. Rejected: bounded conversation container (loses the page read); rejected: removing the sticky input (forces the user to scroll for the next entry on long conversations).
+  Reviewer:  Ledger-keeper (pending Chien)
+
 ## 2026-04-21 · Phase 5.2 · hero shows estimated monthly outlay, not raw sum of active amounts
 
   Context:   The Swiss page shows `sum(active.amount)` as the "monthly total." That's correct only when every active order is monthly — a yearly order of 7.200.000 ₫ would inflate the number as if the user paid 7.2M every month. As the register grows to mix daily/weekly/yearly cycles, the single-sum heuristic drifts further from what "on rotation per month" means.

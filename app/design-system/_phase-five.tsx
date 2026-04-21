@@ -7,6 +7,7 @@ import { MarginNote } from '@/app/_components/paper/MarginNote';
 import { Glyph } from '@/app/_components/paper/Glyph';
 import { TornCorner } from '@/app/_components/paper/TornCorner';
 import { TallyMarks } from '@/app/_components/paper/TallyMarks';
+import { EraserMarks } from '@/app/_components/paper/EraserMarks';
 import { tiltFor } from '@/lib/seed-rotation';
 import { formatVND } from '@/lib/dashboard/utils';
 import { formatPrintedDate } from '@/lib/paper-format';
@@ -66,6 +67,22 @@ export function PhaseFive() {
       </p>
       <ThemeFork id="recurring-showcase">
         <RecurringStates />
+      </ThemeFork>
+
+      <SectionTitle id="chat" number="§5.3">
+        /chat
+      </SectionTitle>
+      <p className="max-w-prose text-body-l leading-relaxed text-ink">
+        Correspondence with the Ledger-keeper. The user writes in Patrick
+        Hand pen-navy (safe for Vietnamese); the Ledger-keeper replies in
+        printed Crimson and signs off with <em>— LK</em> in Caveat once
+        the ink has dried. Tool calls fold out as typewritten receipts
+        clipped into the margin of the reply. The compose slip is the
+        same pink carbon form that stamps entries on <code className="font-typewriter text-[13px]">/login</code>{' '}
+        and <code className="font-typewriter text-[13px]">/dashboard/recurring</code>.
+      </p>
+      <ThemeFork id="chat-showcase">
+        <ChatStates />
       </ThemeFork>
     </>
   );
@@ -576,4 +593,319 @@ function monthlySampleAmount(item: (typeof RECURRING_SAMPLE)[number]): number {
     default:
       return item.amount;
   }
+}
+
+/**
+ * Phase 5.3 — `/chat` visual regression.
+ *
+ * Four states cover the correspondence end-to-end: empty (ask-the-
+ * Ledger-keeper prompt), a plain exchange (user question, printed
+ * reply with signature), a reply that calls executeSQL and folds out
+ * a receipt, and a mid-stream state showing EraserMarks + the stop
+ * button in the compose slip. Data is static; no `/api/chat` traffic.
+ */
+type ChatDemo = 'empty' | 'exchange' | 'tool-call' | 'streaming';
+
+function ChatStates() {
+  const [demo, setDemo] = useState<ChatDemo>('exchange');
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)]">
+        {(['empty', 'exchange', 'tool-call', 'streaming'] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => setDemo(d)}
+            className={`paper-focusable paper-pressable border border-ink px-3 py-1 ${
+              demo === d
+                ? 'bg-ink text-paper'
+                : 'bg-paper text-ink hover:bg-paper-2'
+            }`}
+          >
+            {d}
+          </button>
+        ))}
+      </div>
+
+      <Sample label={`/chat · ${demo}`}>
+        <div className="flex min-h-[720px]">
+          <Page
+            formCode="CHN-CHAT"
+            pageNumber="∞"
+            tape
+            title="Correspondence"
+            headerMeta="Mon, 20 Apr 2026"
+            className="flex-1"
+          >
+            <ChatStub state={demo} />
+          </Page>
+        </div>
+      </Sample>
+    </div>
+  );
+}
+
+function ChatStub({ state }: { state: ChatDemo }) {
+  const showExchange = state !== 'empty';
+  const showTool = state === 'tool-call';
+  const showStreaming = state === 'streaming';
+
+  return (
+    <div className="flex flex-col">
+      <div className="mb-6 flex items-baseline justify-between gap-4">
+        <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+          &larr; Daybook
+        </span>
+        <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+          Close the book
+        </span>
+      </div>
+
+      {state === 'empty' ? (
+        <div className="flex items-start gap-3 pb-6">
+          <Glyph name="pen" size={18} className="mt-[2px] text-pencil-gray" />
+          <p className="font-hand-signature text-hand-signature text-ink-faint">
+            Nothing on this page yet. Ask the Ledger-keeper below.
+          </p>
+        </div>
+      ) : (
+        <ol className="mt-2 space-y-10 pb-4">
+          <StubUserEntry
+            id="demo-user-1"
+            time="14:32"
+            text="Tuần này tôi đã tiêu bao nhiêu cho Phở bò và Cà phê sữa đá?"
+          />
+          {showExchange && !showStreaming && (
+            <StubAssistantEntry
+              id="demo-ai-1"
+              time="14:33"
+              body={
+                <>
+                  <p>
+                    On this page, the entries for <em>Phở bò</em> and{' '}
+                    <em>Cà phê sữa đá</em> between Mon, 14 Apr and Sun, 20 Apr:
+                  </p>
+                  <ul>
+                    <li>Phở bò — 310.000 ₫ across 4 entries</li>
+                    <li>Cà phê sữa đá — 148.000 ₫ across 6 entries</li>
+                  </ul>
+                  <p>
+                    Settled total on these two lines: <strong>458.000 ₫</strong>.
+                  </p>
+                </>
+              }
+              tool={showTool ? 'done' : undefined}
+              signed
+            />
+          )}
+          {showStreaming && (
+            <StubAssistantEntry
+              id="demo-ai-stream"
+              time="14:33"
+              body={
+                <p>
+                  Looking through this week&apos;s entries now — one moment
+                  while I
+                </p>
+              }
+              tool="running"
+              streaming
+            />
+          )}
+        </ol>
+      )}
+
+      <div className="mt-6">
+        <StubComposeSlip streaming={showStreaming} />
+      </div>
+    </div>
+  );
+}
+
+function StubUserEntry({
+  id,
+  time,
+  text,
+}: {
+  id: string;
+  time: string;
+  text: string;
+}) {
+  const tilt = tiltFor(`${id}-user`, 1.1);
+  return (
+    <li className="space-y-2">
+      <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+        You · {time}
+      </span>
+      <p
+        data-ledger-tilt
+        className="max-w-prose whitespace-pre-wrap font-hand text-hand leading-snug text-pen-navy"
+        style={{ transform: `rotate(${tilt}deg)`, transformOrigin: 'top left' }}
+      >
+        {text}
+      </p>
+    </li>
+  );
+}
+
+function StubAssistantEntry({
+  id,
+  time,
+  body,
+  tool,
+  signed,
+  streaming,
+}: {
+  id: string;
+  time: string;
+  body: React.ReactNode;
+  tool?: 'running' | 'done' | 'error';
+  signed?: boolean;
+  streaming?: boolean;
+}) {
+  const sigTilt = tiltFor(`${id}-sig`, 1.4);
+  return (
+    <li className="space-y-3">
+      <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-pencil-gray">
+        The Ledger-keeper · {time}
+      </span>
+      <div className="max-w-prose font-serif text-body-l leading-relaxed text-ink [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5">
+        {body}
+      </div>
+      {tool && <StubToolReceipt state={tool} />}
+      {streaming && <EraserMarks showLabel labelText="Still writing…" />}
+      {signed && (
+        <p
+          data-ledger-tilt
+          className="pt-1 font-hand-signature text-hand-signature text-pencil-gray"
+          style={{ transform: `rotate(${sigTilt}deg)` }}
+          aria-label="Signed the Ledger-keeper"
+        >
+          — LK
+        </p>
+      )}
+    </li>
+  );
+}
+
+function StubToolReceipt({ state }: { state: 'running' | 'done' | 'error' }) {
+  return (
+    <details
+      open={state === 'error' || state === 'running'}
+      className="paper-tool-receipt group my-2 max-w-prose border border-ink/30 bg-paper-2"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2">
+        <span className="flex items-baseline gap-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+          <span className="text-ink">Receipt</span>
+          <span aria-hidden="true">·</span>
+          <span>executeSQL</span>
+        </span>
+        <span className="flex items-center gap-3">
+          {state === 'running' && <EraserMarks label="Running the query" />}
+          {state === 'done' && (
+            <Stamp
+              text="Filed"
+              color="navy"
+              wear={0.6}
+              id="demo-filed"
+              className="text-[9px]"
+            />
+          )}
+          {state === 'error' && (
+            <Stamp
+              text="Error"
+              color="red"
+              wear={0.7}
+              id="demo-err"
+              className="text-[9px]"
+            />
+          )}
+          <Glyph
+            name="arrow-up-right"
+            size={12}
+            className="text-ink-mute transition-transform group-[&[open]]:rotate-90"
+          />
+        </span>
+      </summary>
+      <div className="space-y-3 border-t border-ink/20 px-3 py-3">
+        <div>
+          <p className="mb-1 font-typewriter text-[9px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+            Query
+          </p>
+          <pre className="whitespace-pre-wrap font-typewriter text-[12px] leading-relaxed text-ink">
+            {`SELECT description, SUM(amount) AS total, COUNT(*) AS n
+FROM expenses
+WHERE date >= '2026-04-14' AND date <= '2026-04-20'
+  AND description ILIKE ANY (ARRAY['%Phở bò%', '%Cà phê%'])
+GROUP BY description;`}
+          </pre>
+        </div>
+        {state !== 'running' && (
+          <div>
+            <p className="mb-1 font-typewriter text-[9px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+              {state === 'error' ? 'Error' : 'Result'}
+            </p>
+            <pre
+              className={`whitespace-pre-wrap font-typewriter text-[12px] leading-relaxed tabular-nums ${
+                state === 'error' ? 'text-stamp-red' : 'text-ink'
+              }`}
+            >
+              {state === 'error'
+                ? 'relation "expenses" does not exist'
+                : '[\n  { "description": "Phở bò", "total": 310000, "n": 4 },\n  { "description": "Cà phê sữa đá", "total": 148000, "n": 6 }\n]'}
+            </pre>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function StubComposeSlip({ streaming }: { streaming: boolean }) {
+  return (
+    <form
+      aria-label="Write the next entry"
+      onSubmit={(e) => e.preventDefault()}
+      className="relative border px-4 py-4 sm:px-6 sm:py-5"
+      style={{
+        backgroundColor:
+          'color-mix(in srgb, var(--color-stamp-red) 14%, var(--color-paper))',
+        borderColor: 'var(--color-stamp-red)',
+      }}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+          Form · New correspondence
+        </p>
+        {streaming && (
+          <EraserMarks showLabel labelText="Writing…" />
+        )}
+      </div>
+      <div className="mt-3 border-b border-solid border-ink pb-1.5 font-hand text-hand text-pen-navy">
+        {streaming ? 'Phở bò tuần trước…' : 'Ask or log…'}
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+          Enter to send · Shift + Enter for a new line
+        </span>
+        <div className="flex items-center gap-2">
+          {streaming && (
+            <span className="inline-flex items-center gap-2 border border-stamp-red bg-paper px-3 py-1.5 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-stamp-red">
+              <Glyph name="cross" size={12} />
+              <span>Stop</span>
+            </span>
+          )}
+          <span
+            className={`inline-flex items-center gap-2 border-2 border-ink bg-paper px-4 py-2 font-stamp text-[12px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink ${
+              streaming ? 'opacity-60' : ''
+            }`}
+          >
+            <Glyph name="pen" size={13} />
+            <span>Send</span>
+          </span>
+        </div>
+      </div>
+    </form>
+  );
 }
