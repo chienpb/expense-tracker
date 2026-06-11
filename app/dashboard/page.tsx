@@ -120,12 +120,9 @@ export default async function DashboardPage({
           </>
         }
         header={
-          <div className="flex items-start gap-6">
+          <div className="flex items-center gap-6">
             <div className="min-w-0 flex-1">
-              <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
-                Sổ Thu Chi · Personal Expenses · Form CHN-01
-              </p>
-              <h1 className="mt-2 font-serif text-title-1 font-bold text-ink">
+              <h1 className="font-serif text-title-1 font-bold text-ink">
                 {title.main}
                 {title.suffix && (
                   <span className="ml-2 font-hand text-[28px] font-normal text-pen-navy">
@@ -143,9 +140,9 @@ export default async function DashboardPage({
           </div>
         }
       >
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.55fr_1fr] lg:gap-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.55fr_1fr] lg:gap-12">
           {/* LEFT COLUMN */}
-          <div className="flex min-w-0 flex-col gap-10">
+          <div className="flex min-w-0 flex-col gap-7">
             <section aria-labelledby="hero-heading" className="relative">
               <h2
                 id="hero-heading"
@@ -168,7 +165,7 @@ export default async function DashboardPage({
                   </MarginNote>
                 )}
               </p>
-              <div className="mt-4 flex flex-wrap items-baseline gap-x-8 gap-y-2 font-typewriter text-[11px] text-ink-mute">
+              <div className="mt-3 flex flex-wrap items-baseline gap-x-8 gap-y-2 font-typewriter text-[11px] text-ink-mute">
                 {hasPaybacks && (
                   <>
                     <FieldFigure label="gross" value={formatVND(overview.totalSpent)} />
@@ -226,7 +223,7 @@ export default async function DashboardPage({
           </div>
 
           {/* RIGHT COLUMN */}
-          <aside className="flex min-w-0 flex-col gap-8 lg:-ml-6 lg:border-l-2 lg:border-dashed lg:border-ink/80 lg:pl-6">
+          <aside className="flex min-w-0 flex-col gap-6 lg:-ml-6 lg:border-l-2 lg:border-dashed lg:border-ink/80 lg:pl-6">
             <div className="grid grid-cols-3 gap-3">
               <SummaryBox label="Entries" value={overview.count} />
               <SummaryBox label="Daily avg" value={formatVND(dailyAvg)} />

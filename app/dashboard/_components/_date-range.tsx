@@ -1,65 +1,87 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { format, parseISO } from 'date-fns';
+import {
+  PaperSelect,
+  type PaperSelectOption,
+} from '@/app/_components/paper/PaperSelect';
 import { RANGE_LABELS, type RangeKey } from '@/lib/dashboard/utils';
 
 /**
- * `<DateRangeTabs>` — paper-tab range picker.
+ * `<DateRangeTabs>` — compact range chip.
  *
- * Replaces the popover calendar chip from the Swiss dashboard with a
- * flat row of typewriter tabs — one per preset. The current tab fills
- * `ink` / `paper` so it reads as the active surface, the rest sit in
- * `paper-2` with an ink underline. Matches §4.9's file-tab treatment
- * in miniature without claiming to *be* a `<FileTab>`, which is for
- * document-level navigation.
+ * Replaces the original six-pill row with a single paper chip:
+ * `LAST 7 DAYS · APR 15–21 ▾`. Click opens a `<PaperSelect>` listbox of
+ * presets. The chip keeps the label row on one line and removes the
+ * redundancy between overlapping presets ("This week" next to "Last 7
+ * days") by pushing them behind the menu instead of competing for a
+ * button slot.
  *
- * Custom ranges — the Swiss popover let users pick arbitrary date
- * windows. That flow is deferred to Phase 5.5 along with the rest of
- * settings; preset ranges cover the daily use cases and keep the
- * Phase 5.4 diff bounded. Dropping the popover also removes the
- * Radix/shadcn dependency from the paper dashboard.
+ * Custom ranges stay deferred to Phase 5.5 — `custom` is excluded from
+ * the preset list. The component retains the `from` / `to` props so the
+ * trigger can show the active window; they are not yet editable here.
  */
-const PRESETS = (Object.keys(RANGE_LABELS) as RangeKey[]).filter(
+const PRESET_KEYS = (Object.keys(RANGE_LABELS) as RangeKey[]).filter(
   (k) => k !== 'custom',
 );
 
+const PRESET_OPTIONS: PaperSelectOption[] = PRESET_KEYS.map((k) => ({
+  value: k,
+  label: RANGE_LABELS[k],
+}));
+
 type DateRangeTabsProps = {
   current: RangeKey;
-  /** Retained for flag-off parity; ignored in Paper until Phase 5.5. */
   from?: string;
   to?: string;
 };
 
-export function DateRangeTabs({ current }: DateRangeTabsProps) {
+export function DateRangeTabs({ current, from, to }: DateRangeTabsProps) {
   const router = useRouter();
+  const window = formatWindow(from, to);
 
   return (
-    <div
-      role="group"
-      aria-label="Range"
-      className="flex flex-wrap items-center gap-1"
-    >
-      <span className="mr-2 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
+    <div className="flex items-center gap-2">
+      <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
         Range
       </span>
-      {PRESETS.map((key) => {
-        const active = key === current;
-        return (
-          <button
-            key={key}
-            type="button"
-            onClick={() => router.push(`/dashboard?range=${key}`)}
-            aria-pressed={active}
-            className={`paper-focusable paper-pressable border border-ink/50 px-2.5 py-1 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] transition-colors ${
-              active
-                ? 'border-ink bg-ink text-paper'
-                : 'bg-paper-2 text-ink-mute hover:bg-paper hover:text-ink'
-            }`}
-          >
-            {RANGE_LABELS[key]}
-          </button>
-        );
-      })}
+      <PaperSelect
+        aria-label="Select date range"
+        variant="chip"
+        value={current}
+        onChange={(next) => router.push(`/dashboard?range=${next}`)}
+        options={PRESET_OPTIONS}
+        className="min-w-[15rem]"
+        renderTrigger={(selected) => (
+          <span className="inline-flex items-baseline gap-2">
+            <span>{selected?.label ?? RANGE_LABELS[current]}</span>
+            {window && (
+              <span
+                className="font-typewriter text-[10px] normal-case tracking-normal text-ink-mute"
+                aria-hidden
+              >
+                · {window}
+              </span>
+            )}
+          </span>
+        )}
+      />
     </div>
   );
+}
+
+function formatWindow(from?: string, to?: string): string | null {
+  if (!from || !to) return null;
+  try {
+    const f = parseISO(from);
+    const t = parseISO(to);
+    if (from === to) return format(f, 'MMM d');
+    if (f.getMonth() === t.getMonth() && f.getFullYear() === t.getFullYear()) {
+      return `${format(f, 'MMM d')}–${format(t, 'd')}`;
+    }
+    return `${format(f, 'MMM d')} – ${format(t, 'MMM d')}`;
+  } catch {
+    return null;
+  }
 }

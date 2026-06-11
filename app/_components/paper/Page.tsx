@@ -97,7 +97,7 @@ export function Page({
       )}
 
       <header
-        className={`relative z-10 border-b-2 border-ink ${headerPadLeft} pr-4 pt-5 pb-4 sm:pr-8 sm:pt-6 sm:pb-5`}
+        className={`relative z-10 border-b-2 border-ink ${headerPadLeft} pr-4 pt-3 pb-3 sm:pr-8 sm:pt-4 sm:pb-4`}
       >
         {header ?? (
           <>

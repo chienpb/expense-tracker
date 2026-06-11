@@ -6,6 +6,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { Stamp } from '@/app/_components/paper/Stamp';
 import { MarginNote } from '@/app/_components/paper/MarginNote';
 import { Glyph } from '@/app/_components/paper/Glyph';
+import { PaperSelect, type PaperSelectOption } from '@/app/_components/paper/PaperSelect';
 
 /**
  * `<NewStandingOrderSlip>` — carbon-slip Quick-Add form (§4.8).
@@ -144,29 +145,17 @@ export function NewStandingOrderSlip() {
             onChange={setCategory}
             disabled={locked}
             required
-          >
-            <option value="" disabled>
-              — choose —
-            </option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </SlipSelect>
+            placeholder="— choose —"
+            options={categories.map((c) => ({ value: c, label: c }))}
+          />
           <SlipSelect
             id="so-frequency"
             label="Cycle"
             value={frequency}
             onChange={(v) => setFrequency(v as (typeof FREQUENCIES)[number])}
             disabled={locked}
-          >
-            {FREQUENCIES.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </SlipSelect>
+            options={FREQUENCIES.map((f) => ({ value: f, label: f }))}
+          />
           <SlipField
             id="so-next-due"
             label="First due"
@@ -269,17 +258,19 @@ function SlipSelect({
   label,
   value,
   onChange,
+  options,
+  placeholder,
   disabled,
   required,
-  children,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
+  options: PaperSelectOption[];
+  placeholder?: string;
   disabled?: boolean;
   required?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -289,17 +280,15 @@ function SlipSelect({
       >
         {label}
       </label>
-      <select
+      <PaperSelect
         id={id}
-        name={id}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
         disabled={disabled}
         required={required}
-        className="paper-focusable w-full border-0 border-b border-solid border-ink bg-transparent pb-1.5 font-hand text-hand text-pen-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {children}
-      </select>
+      />
     </div>
   );
 }

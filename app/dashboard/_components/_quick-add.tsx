@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CATEGORIES } from '@/lib/categories';
 import { CarbonSlip } from '@/app/_components/paper/CarbonSlip';
 import { PaperClip } from '@/app/_components/paper/PaperClip';
+import { PaperSelect, type PaperSelectOption } from '@/app/_components/paper/PaperSelect';
 import { Stamp } from '@/app/_components/paper/Stamp';
 
 /**
@@ -110,16 +111,9 @@ export function QuickAdd() {
               value={category}
               onChange={setCategory}
               disabled={locked}
-            >
-              <option value="" disabled>
-                — choose —
-              </option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </SlipSelectLine>
+              placeholder="— choose —"
+              options={categories.map((c) => ({ value: c, label: c }))}
+            />
             <SlipLine
               id="qa-description"
               label="desc."
@@ -205,15 +199,17 @@ function SlipSelectLine({
   label,
   value,
   onChange,
+  options,
+  placeholder,
   disabled,
-  children,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
+  options: PaperSelectOption[];
+  placeholder?: string;
   disabled?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <div className="grid grid-cols-[5rem_minmax(0,1fr)] items-baseline gap-3">
@@ -223,16 +219,14 @@ function SlipSelectLine({
       >
         {label}:
       </label>
-      <select
+      <PaperSelect
         id={id}
-        name={id}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
         disabled={disabled}
-        className="paper-focusable w-full border-0 border-b border-solid border-ink bg-transparent pb-1 font-hand text-hand text-pen-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {children}
-      </select>
+      />
     </div>
   );
 }

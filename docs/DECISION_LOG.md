@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-04-21 · Dashboard · Native `<select>` replaced by `<PaperSelect>`; range picker collapses to a chip
+
+  Context:   The dashboard's six-pill range picker wrapped to two rows and duplicated overlapping presets ("This week" alongside "Last 7 days"). The three form selects — `<QuickAdd>`, `<EntrySlip>`, `<Slip>` (recurring) — used native `<select>`, so their menus popped as the host OS dropdown and broke the paper aesthetic in a way no styling could fix.
+  Decision:  Ship `app/_components/paper/PaperSelect.tsx` — a custom combobox/listbox primitive with two variants: `field-line` (underlined handwritten trigger, used by the three forms) and `chip` (bordered paper pill, used by the new range picker). All four call sites migrated in one pass. `<DateRangeTabs>` now renders a single chip `LAST 7 DAYS · Apr 15–21 ▾` driven by `PaperSelect`, replacing the six pills. Mobile variant deliberately not specialised — scope-bounded per Chien.
+  Rationale: Doing the migration in one PR avoids a dangling "some selects are paper, some are native" state. `PaperSelect` is the natural home for the paper listbox — every previous form select already leaned on the same underlined-handwritten treatment, so the field-line variant is a direct translation with no styling debt. The chip variant falls out of the same primitive via `renderTrigger`, which is cheaper than building a second popover from scratch. Keyboard model mirrors native `<select>` (Space/Enter/↑/↓/Home/End/Esc) so muscle memory carries over.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-04-21 · Phase 6 · Ledger-keeper voice lives in `lib/ledger-keeper-prompt.ts`; `formatVND` gains a space
 
   Context:   Phase 6 asks for a single clerical-1962 voice across every AI surface (`/api/log`, `/api/report`, `/api/custom`, chat agent) so the Ledger-keeper persona reads consistently regardless of which endpoint the user hits. The four endpoints historically grew their own instruction blocks — each drifting on amount formatting (`đ` vs `₫`, no space vs space) and signing off differently.
