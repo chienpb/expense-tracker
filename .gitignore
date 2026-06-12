@@ -44,3 +44,4 @@ next-env.d.ts
 .playwright-cli/
 .claude/skills/playwright-cli/state/
 .screenshots/
+handoff.md

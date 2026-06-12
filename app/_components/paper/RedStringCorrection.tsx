@@ -105,7 +105,7 @@ function StruckValue({
         focusable="false"
         viewBox="0 0 100 6"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-[0.35em] -translate-y-1/2"
+        className="pointer-events-none absolute left-0 top-1/2 h-[0.35em] w-full -translate-y-1/2"
       >
         <path
           d="M 1 3 Q 30 1 55 4 T 99 2"

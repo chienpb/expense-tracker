@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-12 · Phase 7 · A11 ships as `<AnnotationArrow>` with an open flick arrowhead; A12 as `<EmphasisUnderline>`
+
+  Context:   The last two open assets. A11 (curved annotation arrow) blocks the dashed-ellipse chart callout (DASHBOARD_REDESIGN C6); A12 (underline strokes) was optional, extracted while the pattern was fresh.
+  Decision:  `<AnnotationArrow>`: three quadratic shaft variants picked by seed (FNV-1a, same pattern as InkBlot/TapeStrip), all pointing upper-right; callers aim with `rotation` + `flip` on top of a seeded ±5° waver. The arrowhead is two short curved flicks off the tip, drawn slightly heavier (2 vs 1.8 stroke-width), never a closed/filled triangle. `<EmphasisUnderline>`: inline wrapper; `single` is `RedStringCorrection`'s stroke verbatim, `double` adds a thinner counter-drifting pass, `wobbly` tightens the waver. Both run through `#hand-wobble`.
+  Rationale: A filled triangular head is the one detail that instantly reads "vector marker library" — flicks keep it a pen. Fixing the unrotated direction (upper-right) and aiming via props keeps seeds purely cosmetic, so a re-seed never re-aims an arrow at the wrong thing. The ±5° cap (vs InkBlot's 12°) exists because an arrow's rotation carries meaning. C6 is now unblocked; `<HandDrawnChart>`'s inline annotation `<line>` can be replaced by the arrow when C6 lands.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-06-12 · Phase 7 · Assets are SVG-first; A2–A8 drawn in-code; PNG bake exists as tooling only
 
   Context:   The asset inventory assumed Chien would hand-draw raster/vector files and deliver them for swap-in. Chien opted to have the assets drawn in-code as SVG instead (subagent pass, 2026-06-12), and asked whether anything still needs to be a PNG.

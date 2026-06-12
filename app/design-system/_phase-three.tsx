@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { AnnotationArrow } from '@/app/_components/paper/AnnotationArrow';
 import { CarbonSlip } from '@/app/_components/paper/CarbonSlip';
+import { EmphasisUnderline } from '@/app/_components/paper/EmphasisUnderline';
 import { CoffeeRing } from '@/app/_components/paper/CoffeeRing';
 import { FieldLine } from '@/app/_components/paper/FieldLine';
 import { FileTab } from '@/app/_components/paper/FileTab';
@@ -146,6 +148,38 @@ export function PhaseThree() {
       </p>
       <ThemeFork id="coffee-ring-showcase">
         <CoffeeRingSamples />
+      </ThemeFork>
+
+      <SectionTitle id="annotation-arrow" number="§5 · A11">
+        &lt;AnnotationArrow&gt;
+      </SectionTitle>
+      <p className="max-w-prose text-body-l leading-relaxed text-ink">
+        Asset A11 — a curved pen stroke with an open two-flick arrowhead,
+        for pointing annotations at things. Three seeded shaft curvatures;
+        aim with <code className="font-typewriter text-[13px]">rotation</code>{' '}
+        and <code className="font-typewriter text-[13px]">flip</code>. Pairs
+        with the dashed-ellipse chart annotation (DASHBOARD_REDESIGN C6).
+      </p>
+      <ThemeFork id="annotation-arrow-showcase">
+        <AnnotationArrowSamples />
+      </ThemeFork>
+
+      <SectionTitle id="emphasis-underline" number="§5 · A12">
+        &lt;EmphasisUnderline&gt;
+      </SectionTitle>
+      <p className="max-w-prose text-body-l leading-relaxed text-ink">
+        Asset A12 — hand-drawn underline strokes, extracted from{' '}
+        <code className="font-typewriter text-[13px]">
+          {'<RedStringCorrection>'}
+        </code>
+        &apos;s pen stroke. Three weights:{' '}
+        <code className="font-typewriter text-[13px]">single</code>,{' '}
+        <code className="font-typewriter text-[13px]">double</code>,{' '}
+        <code className="font-typewriter text-[13px]">wobbly</code>. Inline —
+        wrap the words, not the block.
+      </p>
+      <ThemeFork id="emphasis-underline-showcase">
+        <EmphasisUnderlineSamples />
       </ThemeFork>
     </>
   );
@@ -565,6 +599,108 @@ function CoffeeRingSamples() {
             The stain sits behind the printed layer and under the reader&apos;s
             notice — decorative only, never for data.
           </div>
+        </div>
+      </Sample>
+    </div>
+  );
+}
+
+/* ==============================================================
+ * AnnotationArrow
+ * ============================================================ */
+
+function AnnotationArrowSamples() {
+  return (
+    <div className="space-y-8">
+      <Sample label="All three seeded variants — default size & ink">
+        <div className="flex items-end gap-10">
+          {['fig-1-peak', 'note-margin', 'see-also'].map((seed) => (
+            <div key={seed} className="flex flex-col items-center gap-2">
+              <AnnotationArrow seed={seed} />
+              <span className="font-typewriter text-[10px] text-ink-mute">
+                seed=&quot;{seed}&quot;
+              </span>
+            </div>
+          ))}
+        </div>
+      </Sample>
+
+      <Sample label="Aimed — rotation / flip, stamp-red ink, 60px">
+        <div className="flex items-center gap-10">
+          <AnnotationArrow seed="aim-down" rotation={90} size={60} />
+          <AnnotationArrow seed="aim-left" flip size={60} />
+          <AnnotationArrow
+            seed="aim-red"
+            rotation={45}
+            size={60}
+            color="var(--color-stamp-red)"
+          />
+        </div>
+      </Sample>
+
+      <Sample label="In context — callout pointing at a figure">
+        <div className="relative inline-block border border-ink/25 bg-paper p-6 pr-28">
+          <div className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+            Fig. 1 — daily
+          </div>
+          <div className="mt-2 font-hand text-hand text-pen-navy">
+            Thu 16 · 1.180.000₫
+          </div>
+          <AnnotationArrow
+            seed="fig-1-callout"
+            flip
+            rotation={20}
+            className="absolute right-16 top-9"
+          />
+          <span className="absolute right-3 top-2 font-hand-signature text-[24px] text-pen-navy">
+            ouch
+          </span>
+        </div>
+      </Sample>
+    </div>
+  );
+}
+
+/* ==============================================================
+ * EmphasisUnderline
+ * ============================================================ */
+
+function EmphasisUnderlineSamples() {
+  return (
+    <div className="space-y-8">
+      <Sample label="Three weights — serif body, pen-navy">
+        <div className="max-w-prose space-y-3 font-serif text-body-l text-ink">
+          <p>
+            Groceries came in{' '}
+            <EmphasisUnderline variant="single">
+              under budget
+            </EmphasisUnderline>{' '}
+            this week.
+          </p>
+          <p>
+            The deposit is{' '}
+            <EmphasisUnderline variant="double">
+              due on the 25th
+            </EmphasisUnderline>
+            , not the 28th.
+          </p>
+          <p>
+            <EmphasisUnderline variant="wobbly">
+              Do not forget the rent.
+            </EmphasisUnderline>
+          </p>
+        </div>
+      </Sample>
+
+      <Sample label="Stamp-red, on handwriting">
+        <div className="font-hand text-hand text-pen-navy">
+          Taxi về nhà —{' '}
+          <EmphasisUnderline
+            variant="double"
+            color="var(--color-stamp-red)"
+          >
+            210.000₫
+          </EmphasisUnderline>
         </div>
       </Sample>
     </div>

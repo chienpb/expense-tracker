@@ -239,10 +239,10 @@ Status per asset:
 8. [x] Torn-corner (A7) — fiber-jag tear + lifted-fiber understroke. 2026-06-12.
 9. [x] Wax seal (A9) — not an asset; composition rule `<Stamp color="gold" wear={0}>` already ships.
 10. [x] Signature flourish (A10) — not an asset; Caveat text per Phase 5.3 decision.
-11. [ ] Curved arrow (A11) — open. Blocks the dashed-ellipse chart annotation (DASHBOARD_REDESIGN C6).
-12. [ ] Underline strokes (A12) — open, optional; extract from `RedStringCorrection`'s stroke.
+11. [x] Curved arrow (A11) — `<AnnotationArrow>`, 3 seeded shaft variants + open flick arrowhead. Unblocks DASHBOARD_REDESIGN C6. 2026-06-12.
+12. [x] Underline strokes (A12) — `<EmphasisUnderline>` (single / double / wobbly), extracted from `RedStringCorrection`'s stroke. 2026-06-12.
 
-**Asset dependency.** Closed except A1 (waiting on a real grain, SVG fine meanwhile), A11, A12.
+**Asset dependency.** Closed except A1 (waiting on a real grain, SVG fine meanwhile).
 
 ---
 
