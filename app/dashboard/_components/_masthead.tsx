@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { PageTurnLink } from '@/app/_components/page-turn-link';
 
 const TABS = [
   { id: 'ledger', label: 'Ledger', href: '/dashboard' },
@@ -18,6 +18,9 @@ const TABS = [
  * Kept inline in `app/dashboard/_components/` rather than generalized
  * into `paper/` because the OUT-as-tab affordance is specific to this
  * masthead — FileTab's router-agnostic contract stays clean.
+ *
+ * The three route tabs navigate through `<PageTurnLink>` — the WebGL
+ * page-turn (docs/PAGE_FLIP.md). OUT signs out plainly; it never flips.
  */
 export function Masthead() {
   const pathname = usePathname();
@@ -46,7 +49,7 @@ export function Masthead() {
             ? pathname === '/dashboard'
             : pathname?.startsWith(tab.href) ?? false;
         return (
-          <Link
+          <PageTurnLink
             key={tab.id}
             href={tab.href}
             role="tab"
@@ -57,7 +60,7 @@ export function Masthead() {
             style={{ borderTopLeftRadius: 3, borderTopRightRadius: 3 }}
           >
             {tab.label}
-          </Link>
+          </PageTurnLink>
         );
       })}
       <button

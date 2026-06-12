@@ -2,8 +2,8 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type ToolUIPart } from 'ai';
-import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import { PageTurnLink } from '@/app/_components/page-turn-link';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -136,12 +136,12 @@ export function PaperChat() {
 function NavRow() {
   return (
     <div className="mb-6 flex items-baseline justify-between gap-4">
-      <Link
+      <PageTurnLink
         href="/dashboard"
         className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
       >
         &larr; Daybook
-      </Link>
+      </PageTurnLink>
       <button
         type="button"
         onClick={() => signOut({ callbackUrl: '/login' })}

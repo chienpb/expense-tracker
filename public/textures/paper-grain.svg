@@ -8,7 +8,8 @@
       → composed at low alpha for a 6% effective tint on paper.
 
   Tileable: `stitchTiles="stitch"` guarantees seamless 200×200 repeats.
-  Transparent background — layer over `--color-paper` (#f6efe0) via
+  Transparent background — layer over the paper color token (#f6efe0,
+  CSS custom property "color-paper") via
   `background-image: url("/textures/paper-grain.svg")` on any surface.
 
   Roadmap swap-out: Phase 2.2 bakes this to `paper-grain.png` at build

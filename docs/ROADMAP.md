@@ -258,7 +258,7 @@ Status per asset:
 
 ### 8.2 Motion review
 - [ ] Every animation matches §8 (180–240ms, ink-drying easing). Rip out anything spring-y or bouncing.
-- [ ] Page-flip transition between major sections (Dashboard ↔ Recurring) per §8. Make it subtle — 400ms `rotateY`.
+- [x] Page-flip transition between major sections (Daybook ↔ Standing Orders ↔ Correspondence) — shipped as the WebGL page-turn per [`PAGE_FLIP.md`](PAGE_FLIP.md); the original 400ms `rotateY` survives as the fallback when capture/WebGL is unavailable. 2026-06-12.
 
 **Exit criteria.** Desktop feels right. No perf regressions against the Swiss baseline.
 

@@ -13,6 +13,44 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-12 · Phase 8.2 · The "blue page" mid-turn: `<RuledLines>` becomes an inline SVG pattern; capture pre-pass inlines `var()` in background-image
+
+  Context:   Chien (browsing in Zen, Gecko engine) saw a solid rule-blue page on the turning leaf mid-animation. Pixel analysis of the screenshot showed the leaf's front texture had the entire `<RuledLines>` layer rasterized as solid `rule-blue` with content layers intact on top — a capture artifact, not a shader bug. The page-flip capture serializes the DOM through SVG `foreignObject`, and some engines rasterize the `repeating-linear-gradient` there with a collapsed period, filling the layer with the first color. Not reproducible in Playwright Chromium, WebKit 26, or Firefox 149 — engine/version-specific, which is exactly why it slipped through.
+  Decision:  Two layers. (1) `<RuledLines>` no longer uses a CSS gradient at all — it draws the same 1px/32px lines as an inline `<svg>` pattern (`fill: var(--color-rule-blue)`), the capture path already proven by the hand-drawn charts in every engine. Visually identical; stays a server component (id derived from props, not `useId`). (2) `capture.ts` keeps a pre-pass that rewrites any computed `background-image` still containing `var(` to its resolved literal for the duration of serialization (restored in `finally`) — covers the `.paper-row-interactive` highlighter gradient and future gradient uses against the Safari-class var-resolution variant of the same bug. Dev-only debug hooks (`__pageFlipCapture`, `__pageFlipForceHold`, fallback-reason console.warn) stay; they gate on NODE_ENV and made this diagnosable.
+  Rationale: The decoration layer that every page sits on cannot depend on the single least-interoperable rasterization path (repeating gradients inside `foreignObject`). Moving the structure to inline SVG fixes every engine at the source instead of enumerating browser quirks in the capture code; the pre-pass stays because it defends the *class* of bug for one-off gradients that don't justify componentization. Known residue: html-to-image's font-embedding throws in Playwright Firefox 149 dev (`normalizeFontFamily` on an undefined family) — the fallback chain catches it (CSS rotateY), revisit if it shows up in production builds.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-12 · Phase 8.2 · 3D rendering admitted for the page-turn only (rule exception)
+
+  Context:   PAGE_FLIP.md replaces the planned 400ms CSS `rotateY` section transition with a WebGL page-turn. The design system has no sanctioned 3D anywhere; "nothing floats" (§0.5) and the anti-pattern list lean hard against effects-for-effect's-sake.
+  Decision:  three.js is admitted for exactly one surface: the turning leaf between the three major sections (Daybook ↔ Standing Orders ↔ Correspondence). Vanilla three (no r3f), dynamically imported on first tab hover, orthographic camera, matte shading only, fully disposed after every turn. Nothing else in the app may render 3D; future 3D ideas (PAGE_FLIP.md §7) each need their own logged exception.
+  Rationale: Flat `rotateY` rotates rigidly; paper bends. The 3D exists to make the ledger metaphor *more* honest, not less — and it is bounded: zero three.js bytes in any route's initial JS (verified: the only chunk containing three is the lazy one, ~130KB gz against the 180KB budget), and the fallback chain (CSS rotateY → instant swap) means navigation never depends on it.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-12 · Phase 8.2 · Spike S7 verdicts — html-to-image capture, curl shader, capture cost
+
+  Context:   PAGE_FLIP.md §5 step 1 gates implementation on three proofs at `/spikes/page-flip`.
+  Result:    (a) Capture fidelity — PASS. `html-to-image` `toCanvas` reproduces Crimson Pro / Patrick Hand (stacked Vietnamese diacritics) / Courier Prime and the `#hand-wobble`-filtered chart, including mid-scroll viewports via a `translate(-scroll)` style override on the clone. One blocker found and fixed: `public/textures/paper-grain.svg` failed to decode as an `<img>` because an XML comment contained a double hyphen (in the CSS custom property name for paper) — illegal in strict XML, the same class of issue resvg hit in the bake script. CSS `background-image` parsing was lenient; `<img>` was not. Comment reworded; no consumer changed.
+             (b) Curl shader — reads as paper: corner-tilted axis, varying radius, back face with mirrored rules + ink-bleed ghost, mid-turn hold + sway verified in both themes (screenshots in `.screenshots/`). Visual sign-off on a recording: pending Chien.
+             (c) Capture cost — 106–180ms on a spike-sized DOM at 2× (first capture pays font embedding; later ones are cheaper). Past the 150ms guideline the next capture degrades to 1× per spec. 10 consecutive flips: `renderer.info` stable at geom:2 tex:2 prog:2 — no leaks; context created and disposed per turn.
+  Decision:  Proceed with the library + wiring (shipped same day). Spike route stays as the shader's visual-regression surface until Phase 11.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-12 · Phase 8.2 · Page-flip implementation divergences from PAGE_FLIP.md
+
+  Context:   Three small departures surfaced during implementation; the spec asks for anything that diverged to be logged.
+  Decision:  (1) Trigger surface: the spec names the masthead as the only trigger, but the Masthead currently renders only on `/dashboard` — Standing Orders and Correspondence navigate back via "← Daybook" typewriter links. Those two links route through the same `<PageTurnLink>` so the backward turn exists at all; every other link still navigates plainly. (2) Capture invalidation: "data change" is detected via a MutationObserver on the captured subtree plus a 10s TTL, rather than data-layer hooks. (3) The §1.6 grain on the leaf's front face ramps in with deformation instead of sitting at a constant 6% — a constant overlay would break the spec's own "flat leaf is pixel-identical to the DOM" requirement at turn start; the back face carries the full 6%.
+  Rationale: Each keeps a harder requirement intact (backward turns existing at all, capture freshness without coupling to the data layer, pixel-identity at t=0). If the Masthead later ships on all three sections, the back-links can return to plain `<Link>`s.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-06-12 · Phase 7 · A11 ships as `<AnnotationArrow>` with an open flick arrowhead; A12 as `<EmphasisUnderline>`
 
   Context:   The last two open assets. A11 (curved annotation arrow) blocks the dashed-ellipse chart callout (DASHBOARD_REDESIGN C6); A12 (underline strokes) was optional, extracted while the pattern was fresh.

@@ -9,6 +9,7 @@ const SPIKES = [
   { slug: 'numerals', label: 'S4 · Numeral alignment' },
   { slug: 'theme', label: 'S5 · Day/Midnight theme' },
   { slug: 'motion', label: 'S6 · Reduce motion/skew' },
+  { slug: 'page-flip', label: 'S7 · Page flip (WebGL)' },
 ];
 
 export default function SpikesLayout({ children }: { children: React.ReactNode }) {

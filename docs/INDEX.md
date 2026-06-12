@@ -26,6 +26,7 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 | [`ROADMAP.md`](ROADMAP.md) | Planning or executing a Paper Ledger phase; checking what ships when. |
 | [`DASHBOARD_REDESIGN.md`](DASHBOARD_REDESIGN.md) | Touching `/dashboard` layout/chrome to match the desk-blotter spread reference. Chunked refactor plan. |
 | [`DASHBOARD_NARRATOR.md`](DASHBOARD_NARRATOR.md) | Adding / changing the handwritten commentary on `/dashboard` (margin notes, delta lines, peak callouts). Placeholder for the narrator module. |
+| [`PAGE_FLIP.md`](PAGE_FLIP.md) | Implementing or touching the WebGL page-turn navigation between major sections (ROADMAP Phase 8.2). Full spec + quality bar. |
 | [`DECISION_LOG.md`](DECISION_LOG.md) | Recording a non-trivial trade-off or spike verdict. |
 | [`swiss-design-system-archive.md`](swiss-design-system-archive.md) | Historical only — the retired Swiss dashboard system. Portfolio reference. |
 

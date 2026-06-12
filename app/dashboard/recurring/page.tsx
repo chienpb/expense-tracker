@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getSupabase } from '@/lib/supabase';
+import { PageTurnLink } from '@/app/_components/page-turn-link';
 import { Page } from '@/app/_components/paper/Page';
 import { TallyMarks } from '@/app/_components/paper/TallyMarks';
 import { formatVND } from '@/lib/dashboard/utils';
@@ -55,12 +55,12 @@ export default async function RecurringPage() {
         className="flex-1"
       >
         <div className="mb-6 flex items-baseline justify-between gap-4">
-          <Link
+          <PageTurnLink
             href="/dashboard"
             className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
           >
             &larr; Daybook
-          </Link>
+          </PageTurnLink>
           <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
             Kept on rotation
           </span>

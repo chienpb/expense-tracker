@@ -528,3 +528,45 @@
     transition: none !important;
   }
 }
+
+/* =====================================================================
+ * Page-flip CSS fallback (docs/PAGE_FLIP.md §2 fallback chain).
+ *
+ * Used only when the WebGL leaf can't run (capture failed, context
+ * refused): the original Phase 8.2 plan — a subtle 400ms rotateY on
+ * the incoming page. The orchestrator sets `data-page-flip` on <html>
+ * for the duration; the §3 gates were already checked before reaching
+ * this point, but reduced-motion is re-guarded here for safety.
+ * =================================================================== */
+@keyframes page-flip-css-forward {
+  from {
+    transform: perspective(2400px) rotateY(10deg);
+  }
+  to {
+    transform: perspective(2400px) rotateY(0deg);
+  }
+}
+@keyframes page-flip-css-backward {
+  from {
+    transform: perspective(2400px) rotateY(-10deg);
+  }
+  to {
+    transform: perspective(2400px) rotateY(0deg);
+  }
+}
+html[data-page-flip='forward'] body {
+  transform-origin: left center;
+  animation: page-flip-css-forward 400ms var(--ease-ink);
+}
+html[data-page-flip='backward'] body {
+  transform-origin: right center;
+  animation: page-flip-css-backward 400ms var(--ease-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-page-flip] body {
+    animation: none !important;
+  }
+}
+html[data-reduce-motion='1'][data-page-flip] body {
+  animation: none !important;
+}
