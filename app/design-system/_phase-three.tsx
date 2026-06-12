@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CarbonSlip } from '@/app/_components/paper/CarbonSlip';
+import { CoffeeRing } from '@/app/_components/paper/CoffeeRing';
 import { FieldLine } from '@/app/_components/paper/FieldLine';
 import { FileTab } from '@/app/_components/paper/FileTab';
 import { FoldCrease } from '@/app/_components/paper/FoldCrease';
@@ -129,6 +130,20 @@ export function PhaseThree() {
       </p>
       <ThemeFork id="attachments-showcase">
         <AttachmentSamples />
+      </ThemeFork>
+
+      <SectionTitle id="coffee-ring" number="§1 · A2">
+        &lt;CoffeeRing&gt;
+      </SectionTitle>
+      <p className="max-w-prose text-body-l leading-relaxed text-ink">
+        Coded placeholder for Asset A2 — a cup once sat here. Two
+        overlapping imperfect rim strokes (with lift-gaps) over a faint
+        inner wash, all in the{' '}
+        <code className="font-typewriter text-[13px]">coffee-stain</code>{' '}
+        token at ~12% opacity. Decorative only; never for data.
+      </p>
+      <ThemeFork id="coffee-ring-showcase">
+        <CoffeeRingSamples />
       </ThemeFork>
     </>
   );
@@ -524,6 +539,29 @@ function AttachmentSamples() {
             <div className="mt-2 font-hand text-hand text-pen-navy">
               Cà phê — 38.000₫
             </div>
+          </div>
+        </div>
+      </Sample>
+    </div>
+  );
+}
+
+/* ==============================================================
+ * CoffeeRing
+ * ============================================================ */
+
+function CoffeeRingSamples() {
+  return (
+    <div className="space-y-8">
+      <Sample label="On a page corner — default size & opacity, seeded turn">
+        <div className="relative h-64 overflow-hidden border border-ink/25 bg-paper p-6">
+          <CoffeeRing top={-30} right={-26} seed="coffee-ring-showcase" />
+          <div className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+            Monthly summary · Apr 2026
+          </div>
+          <div className="mt-2 max-w-prose font-serif text-body text-ink">
+            The stain sits behind the printed layer and under the reader&apos;s
+            notice — decorative only, never for data.
           </div>
         </div>
       </Sample>
