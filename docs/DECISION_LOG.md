@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-12 · Middleware · Public asset files exempted from the auth matcher
+
+  Context:   Asset A8 (the hand-drawn glyph sprite) never rendered for unauthenticated visitors: `<use href="/glyphs.svg#…">` fetches the sprite without a session, the middleware matcher caught `/glyphs.svg`, and the redirect handed the browser the login page's HTML instead of SVG — so every `<use>` silently rendered nothing on `/login`, `/spikes/*`, and `/design-system`. Authenticated pages masked the bug. (The sprite root also carried `style="display:none"`, which Chromium honours for externally referenced symbols; swapped for the standard zero-size root while debugging.)
+  Decision:  Add `glyphs\.svg` and `textures/` to the middleware matcher's exclusion group, alongside the existing `_next/static` / icon exemptions. Public static art is now served without touching auth.
+  Rationale: The "auth is centralized in middleware.ts" invariant is about routes and data, not decorative static files — excluding them at the matcher keeps the auth code path untouched. Listing the two names explicitly (rather than excluding any path with a dot) keeps the matcher auditable: adding a new public asset is a deliberate one-line change.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-04-21 · Dashboard · Native `<select>` replaced by `<PaperSelect>`; range picker collapses to a chip
 
   Context:   The dashboard's six-pill range picker wrapped to two rows and duplicated overlapping presets ("This week" alongside "Last 7 days"). The three form selects — `<QuickAdd>`, `<EntrySlip>`, `<Slip>` (recurring) — used native `<select>`, so their menus popped as the host OS dropdown and broke the paper aesthetic in a way no styling could fix.
