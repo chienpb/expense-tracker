@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-12 · Phase 7 · Assets are SVG-first; A2–A8 drawn in-code; PNG bake exists as tooling only
+
+  Context:   The asset inventory assumed Chien would hand-draw raster/vector files and deliver them for swap-in. Chien opted to have the assets drawn in-code as SVG instead (subagent pass, 2026-06-12), and asked whether anything still needs to be a PNG.
+  Decision:  SVG is the canonical format for every Paper Ledger asset. A2–A8 shipped as drawn SVG paths inside their components (A8 in `public/glyphs.svg`). Added `scripts/bake-assets.mjs` (`pnpm bake:assets`, `@resvg/resvg-js` devDependency) to rasterize any asset SVG to PNG on demand. Baked the A1 grain as a trial: 94KB against the 30KB budget — noise doesn't PNG-compress — so the 1.5KB SVG tile stays at runtime and the PNG was discarded. A1's real swap now waits on a photographed grain; A11 (curved arrow) and A12 (underlines) remain open.
+  Rationale: The browser bitmap-caches the SVG background tile after one rasterization, so the PNG's only win was decode predictability — not worth 60× the bytes. Keeping the bake script costs one devDependency and gives a one-command path to raster output whenever a future asset (photographed grain, social previews) genuinely needs it. resvg implements SVG 1.1 filters, so even `feTurbulence` textures bake correctly; note it rejects `--` inside XML comments, which the script strips before parsing.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-06-12 · Middleware · Public asset files exempted from the auth matcher
 
   Context:   Asset A8 (the hand-drawn glyph sprite) never rendered for unauthenticated visitors: `<use href="/glyphs.svg#…">` fetches the sprite without a session, the middleware matcher caught `/glyphs.svg`, and the redirect handed the browser the login page's HTML instead of SVG — so every `<use>` silently rendered nothing on `/login`, `/spikes/*`, and `/design-system`. Authenticated pages masked the bug. (The sprite root also carried `style="display:none"`, which Chromium honours for externally referenced symbols; swapped for the standard zero-size root while debugging.)

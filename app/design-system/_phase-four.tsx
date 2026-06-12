@@ -80,10 +80,9 @@ export function PhaseFour() {
         &lt;InkBlot&gt;
       </SectionTitle>
       <p className="max-w-prose text-body-l leading-relaxed text-ink">
-        Coded{' '}
-        <code className="font-typewriter text-[13px]">feTurbulence</code>
-        {' '}placeholder for Asset A3. The error-state marker per §6.7; real
-        meaning lives in the adjacent margin note.
+        Asset A3 — five hand-inked splatter variants, seed-picked so the
+        same field always shows the same blot. The error-state marker per
+        §6.7; real meaning lives in the adjacent margin note.
       </p>
       <ThemeFork id="ink-blot-showcase">
         <InkBlotSamples />

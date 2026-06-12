@@ -89,9 +89,10 @@ export function PhaseThree() {
         &lt;TapeStrip&gt;
       </SectionTitle>
       <p className="max-w-prose text-body-l leading-relaxed text-ink">
-        Coded placeholder — a highlighter-yellow rectangle with two faint
-        stripes. Chien&apos;s hand-drawn tape swaps in with a single SVG-body
-        replacement; the API holds.
+        Hand-drawn masking tape in three seeded variants — torn ends,
+        crease lines, edge ridges — on the{' '}
+        <code className="font-typewriter text-[13px]">highlighter</code>{' '}
+        token. Same seed, same tape; the API holds.
       </p>
       <ThemeFork id="tape-showcase">
         <TapeStripSamples />
@@ -125,8 +126,9 @@ export function PhaseThree() {
         &lt;PaperClip&gt; · &lt;TornCorner&gt; · &lt;FoldCrease&gt;
       </SectionTitle>
       <p className="max-w-prose text-body-l leading-relaxed text-ink">
-        Three coded placeholders for Assets A6, A7, A4. Every corner supported;
-        when Chien ships the hand-drawn versions, only the SVG paths swap.
+        Assets A6, A7, A4 in their hand-drawn form — a wire gem clip wound
+        as one stroke, a fiber-torn corner, a softly bowed fold. Every
+        corner supported; redraws swap only the SVG paths.
       </p>
       <ThemeFork id="attachments-showcase">
         <AttachmentSamples />
@@ -136,7 +138,7 @@ export function PhaseThree() {
         &lt;CoffeeRing&gt;
       </SectionTitle>
       <p className="max-w-prose text-body-l leading-relaxed text-ink">
-        Coded placeholder for Asset A2 — a cup once sat here. Two
+        Asset A2 — a cup once sat here. Two
         overlapping imperfect rim strokes (with lift-gaps) over a faint
         inner wash, all in the{' '}
         <code className="font-typewriter text-[13px]">coffee-stain</code>{' '}

@@ -226,27 +226,23 @@ For each page:
 
 Happens incrementally throughout Phases 3–7 as assets arrive, but this phase is the formal sweep + polish.
 
-For each asset in the inventory table:
-- [ ] Chien delivers the file to `public/textures/` or `public/glyphs.svg` or `app/_components/paper/assets/`.
-- [ ] I swap the placeholder. Single-file change if the API holds.
-- [ ] Visual regression check in `/design-system`. Tune rotation / turbulence / opacity if needed.
-- [ ] DECISION_LOG entry recording the swap date + any adjustments.
+> **2026-06-12 update.** The assets were drawn in-code as SVG rather than hand-delivered files — see DECISION_LOG. All assets are SVG-first; `pnpm bake:assets` (`scripts/bake-assets.mjs`, resvg) rasterizes any SVG to PNG if a baked tile ever wins on perf.
 
-Ordering (easiest hand-off to hardest):
-1. Paper grain texture (A1)
-2. Coffee ring (A2)
-3. Ink blots (A3)
-4. Fold crease (A4)
-5. Glyph sprite (A8) — biggest wins; replaces ~12 Unicode fallbacks
-6. Tape strips (A5)
-7. Paper-clip (A6)
-8. Torn-corner (A7)
-9. Wax seal (A9) — only after milestone screens exist
-10. Signature flourish (A10)
-11. Curved arrow (A11)
-12. Underline strokes (A12)
+Status per asset:
+1. [ ] Paper grain texture (A1) — still the `feTurbulence` SVG tile. PNG bake measured at 94KB (>30KB budget); SVG stays. Revisit only with a photographed grain.
+2. [x] Coffee ring (A2) — `<CoffeeRing>` created (it never existed) + drawn. 2026-06-12.
+3. [x] Ink blots (A3) — 5 seeded splatter variants. 2026-06-12.
+4. [x] Fold crease (A4) — curved fold + flap + pressure marks. 2026-06-12.
+5. [x] Glyph sprite (A8) — all 12 Unicode fallbacks replaced with pen-stroke paths. 2026-06-12.
+6. [x] Tape strips (A5) — 3 seeded variants, torn ends + creases. 2026-06-12.
+7. [x] Paper-clip (A6) — gem clip wound as one continuous stroke. 2026-06-12.
+8. [x] Torn-corner (A7) — fiber-jag tear + lifted-fiber understroke. 2026-06-12.
+9. [x] Wax seal (A9) — not an asset; composition rule `<Stamp color="gold" wear={0}>` already ships.
+10. [x] Signature flourish (A10) — not an asset; Caveat text per Phase 5.3 decision.
+11. [ ] Curved arrow (A11) — open. Blocks the dashed-ellipse chart annotation (DASHBOARD_REDESIGN C6).
+12. [ ] Underline strokes (A12) — open, optional; extract from `RedStringCorrection`'s stroke.
 
-**Asset dependency.** This IS the asset phase. But because every placeholder already works, the timeline is elastic — I keep building against placeholders, Chien ships assets when ready, and each swap is a small, isolated PR.
+**Asset dependency.** Closed except A1 (waiting on a real grain, SVG fine meanwhile), A11, A12.
 
 ---
 

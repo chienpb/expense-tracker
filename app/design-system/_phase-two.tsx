@@ -48,12 +48,13 @@ export function PhaseTwo() {
         Glyph sprite
       </SectionTitle>
       <p className="max-w-prose text-body-l leading-relaxed text-ink">
-        Twelve Unicode fallbacks wrapped in{' '}
+        Twelve hand-drawn pen-stroke glyphs wrapped in{' '}
         <code className="font-typewriter text-[13px]">{'<symbol>'}</code>{' '}
         elements inside{' '}
         <code className="font-typewriter text-[13px]">public/glyphs.svg</code>.
-        When Chien&apos;s hand-drawn set lands, the paths swap but the ids —
-        and therefore every consumer — stay put.
+        Ids are frozen per{' '}
+        <code className="font-typewriter text-[13px]">GLYPH_NAMES</code> — a
+        future redraw swaps the paths and every consumer stays put.
       </p>
       <ThemeFork>
         <GlyphGrid />
