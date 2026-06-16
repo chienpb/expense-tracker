@@ -29,7 +29,7 @@ export function Masthead() {
     return [
       'group relative -mb-[2px] inline-flex items-end px-5 pt-2.5 pb-2',
       'font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)]',
-      'border border-b-0 transition-colors duration-150',
+      'border border-b-0 transition-colors',
       'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pen-navy',
       active
         ? 'z-10 border-ink bg-paper text-ink border-b-paper'

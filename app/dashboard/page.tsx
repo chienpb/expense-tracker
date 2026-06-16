@@ -113,7 +113,7 @@ export default async function DashboardPage({
         footer={
           <>
             <span>Pg. {pageNumber(today)} / 52</span>
-            <span className="mx-auto font-serif text-caption italic text-ink-mute">
+            <span className="mx-auto font-serif-italic text-caption text-ink-mute">
               — balanced ✓
             </span>
             <span className="ml-auto">Initials ___</span>
@@ -253,7 +253,7 @@ export default async function DashboardPage({
               </h3>
               <ul className="flex flex-col gap-2">
                 {tallyRows.length === 0 && (
-                  <li className="font-serif text-body italic text-ink-mute">
+                  <li className="font-serif-italic text-body text-ink-mute">
                     No entries in this range.
                   </li>
                 )}

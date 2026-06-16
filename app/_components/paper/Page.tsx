@@ -134,7 +134,7 @@ export function Page({
             ) : (
               <>
                 <span aria-hidden="true" className="h-px w-24 border-b border-ink/40" />
-                <span className="font-serif text-caption italic text-ink-mute">
+                <span className="font-serif-italic text-caption text-ink-mute">
                   (signed)
                 </span>
                 <span className="ml-auto">Page {pageNumber}</span>

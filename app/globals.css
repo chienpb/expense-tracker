@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 /* Paper Ledger drives dark mode via data-theme="night" on <html>.
    Redefine the dark variant so existing shadcn `dark:*` utilities keep
@@ -15,8 +13,8 @@
    *   --font-*-face variables (see lib/paper-fonts.ts) and bridged
    *   here so `font-serif`, `font-hand`, etc. resolve correctly.
    * ------------------------------------------------------------- */
-  --font-sans: var(--font-geist-sans), "Helvetica Neue", "Inter", sans-serif;
-  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
+  --font-sans: "Helvetica Neue", "Inter", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", monospace;
   --font-serif: var(--font-serif-face), Georgia, "Times New Roman", serif;
   --font-typewriter: var(--font-typewriter-face), "Courier New", monospace;
   --font-hand: var(--font-hand-face), "Comic Sans MS", cursive;
@@ -277,6 +275,14 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 
+/* True Crimson italic, loaded lazily (preload:false — see lib/paper-fonts.ts).
+ * Use in place of `font-serif … italic` so the dedicated italic face engages
+ * and the upright serif's preload stays lean. Falls back to Georgia italic. */
+@utility font-serif-italic {
+  font-family: var(--font-serif-italic-face), Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+
 /* ---------------------------------------------------------------------
  * Reduce-skew — §9 · roadmap Phase 7. Any element tilted via
  * `tiltFor` / `stampRotationFor` / ad-hoc inline transform marks
@@ -306,6 +312,10 @@
  * =================================================================== */
 @theme inline {
   --ease-ink: cubic-bezier(0.2, 0, 0, 1);
+  /* §8 — every Tailwind transition utility defaults to the ink-drying
+     curve at 200ms; no per-callsite duration/easing needed. */
+  --default-transition-timing-function: var(--ease-ink);
+  --default-transition-duration: 200ms;
 }
 
 @keyframes paper-highlighter-swipe {
@@ -385,9 +395,11 @@
   animation: paper-slide-up 220ms var(--ease-ink) both;
 }
 
-/* §4.13 — eraser pulse for loading. */
+/* §4.13 — eraser pulse for loading. §8 specifies ease-in-out here —
+   the ink curve is asymmetric and makes a symmetric pulse feel
+   lopsided. */
 .paper-eraser-pulse {
-  animation: paper-eraser-pulse 1000ms var(--ease-ink) infinite;
+  animation: paper-eraser-pulse 1000ms ease-in-out infinite;
 }
 
 /* §6.8 — stamp thumps down on success. Applied to `<Stamp>` when

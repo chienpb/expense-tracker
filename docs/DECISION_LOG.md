@@ -13,6 +13,42 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-16 · Phase 8.1 · Bundle audit — Swiss component tree + 12 dependencies deleted
+
+  Context:   Phase 5.6 collapsed every `/foo-paper` route onto its real path and deleted the `_swiss.tsx` page fallbacks, but the shadcn/ai-elements component library under `components/` (33 files), `components.json`, `lib/utils.ts` (the `cn` helper), and the Swiss-era dependency set were never removed. A `grep` for live imports of `@/components/*` returned zero hits across `app/` and `lib/`.
+  Decision:  Deleted `components/`, `components/ai-elements/`, `components.json`, `lib/utils.ts`. Removed 12 now-unused deps: `recharts`, `react-day-picker`, `cmdk`, `radix-ui`, `lucide-react`, `class-variance-authority`, `shadcn`, `tw-animate-css`, `nanoid`, `use-stick-to-bottom`, `clsx`, `tailwind-merge`. Dropped the `@import "tw-animate-css"` and `@import "shadcn/tailwind.css"` lines from `globals.css` and the Geist/Geist_Mono `next/font` loads from `layout.tsx` (charts ship raw SVG per Phase 4; `--font-sans`/`--font-mono` now resolve to system stacks for the few remaining non-Paper utility uses).
+  Rationale: Dead code is the cheapest perf win and the largest. The Paper system draws its own charts (raw SVG, `#hand-wobble`), its own select (`PaperSelect`), its own everything — nothing consumed the shadcn primitives anymore. Build stays green; no runtime import touched the deleted tree. Swiss-token CSS custom properties in `globals.css` are left for the Phase 11 cleanup sweep (they cost nothing at runtime).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-16 · Phase 8.1 · Font subset + weight diet → 158KB eager (budget <200KB)
+
+  Context:   §8.1 caps total font weight at <200KB and mandates "Vietnamese + Latin only" subsetting. The pre-audit build preloaded 222.8KB of woff2 on every page. Crimson Pro is a *variable* font, so weight trimming is free (one file per style+subset covers 400–700) — the real waste was elsewhere.
+  Decision:  (1) Dropped `latin-ext` from every font (`vietnamese` carries the tone block + ₫ U+20AB; `latin-ext` is Central/Eastern-European, unused). (2) Courier trimmed to weight 400/700 (700 needed: the selected `PaperSelect` option is `font-typewriter font-semibold`, and 600 maps to 700 with no 600 face), Caveat to 400 only (every callsite renders default weight). (3) **Crimson italic split into its own `preload:false` face** exposed via a new `.font-serif-italic` utility — italic's latin+vietnamese subsets (~64KB) were being preloaded on every page for ~5 caption/fallback callsites; now they load lazily only when an italic serif glyph renders. (4) Homemade Apple (`--font-hand-hurried`) removed from the loaded set — no production surface uses it; the token falls back to `cursive` for the dev-only design-system deck.
+  Rationale: Eager preload dropped 222.8KB → 158.4KB (8 files, latin+vietnamese only), comfortably under budget, with zero visible change (true Crimson italic preserved, just lazy). Measured against the rendered HTML's `rel=preload` set on a production server, not the generated-file total (which includes never-downloaded latin-ext and unused variable-italic combos gated by `unicode-range`).
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-16 · Phase 8.1 · `robots.ts` added (permissive) — SEO audit; no texture-PNG `next/image` (N/A)
+
+  Context:   Authenticated Lighthouse on `/dashboard` (desktop preset, session cookie held in-memory only): best-practices 100, SEO initially 91. The miss was `/robots.txt` — the auth middleware redirected it to `/login`, which Lighthouse parsed as an invalid robots.txt. A first attempt with `Disallow: /` *dropped* SEO to 63 (failed `is-crawlable`).
+  Decision:  Ship `app/robots.ts` returning a valid **permissive** (`Allow: /`) robots.txt and exempt `/robots.txt` from auth in `middleware.ts` (early-return + matcher negative-lookahead). Privacy is enforced by auth, not robots — crawlers hit `/login` and can't reach protected content regardless — so the permissive policy is safe and satisfies both `robots-txt` and `is-crawlable`. Result: dashboard SEO 100, best-practices 100, performance 94–96. The `next/image`-for-texture-PNG item is **N/A**: no paper-texture PNG exists (A1 stayed an SVG tile per Phase 7), and the SVG tiles via CSS `background-repeat` per Spike 2's perf verdict.
+  Rationale: Performance's sub-95 dips trace to `server-response-time` (~2.6s local SSR with live Supabase round-trips) feeding Speed Index — an environment artifact Vercel's warm edge functions + regional DB resolve; the only deployment-independent flags (`legacy-javascript` 13KB, `unused-javascript` 28KB) both land inside the 227KB React/Next framework chunk and aren't actionable without leaving framework defaults. SVG-filter perf needs no fresh pass — Spike 2 already chose the tiled CSS-repeat path over full-element filtering.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
+## 2026-06-16 · Phase 8.2 · Motion default centralized on the ink curve
+
+  Context:   §8 mandates 180–240ms at `cubic-bezier(0.2,0,0,1)` for every animation. An audit found four callsites using `transition-colors duration-150` (FileTab, masthead tabs) or a bare `transition-transform` with no explicit duration/easing (chat `<details>` chevron, PaperSelect caret), and the eraser pulse used `var(--ease-ink)` where §8 specifies ease-in-out.
+  Decision:  Set Tailwind's `--default-transition-duration: 200ms` and `--default-transition-timing-function: var(--ease-ink)` in the `@theme` block, then stripped the per-callsite duration/easing overrides so every bare `transition-*` utility lands in spec by default. Eraser pulse switched to `ease-in-out` (a symmetric pulse on the asymmetric ink curve reads lopsided). Confirmed zero spring/bounce/shimmer/scale-pop/`animate-pulse|spin|ping` in production code.
+  Rationale: One source of truth beats N annotated callsites; a future `transition` utility is automatically on-spec. Keyframe animations already used `var(--ease-ink)` at 180–220ms and were left as-is.
+  Reviewer:  Ledger-keeper (pending Chien)
+
+---
+
 ## 2026-06-12 · Phase 8.2 · The "blue page" mid-turn: `<RuledLines>` becomes an inline SVG pattern; capture pre-pass inlines `var()` in background-image
 
   Context:   Chien (browsing in Zen, Gecko engine) saw a solid rule-blue page on the turning leaf mid-animation. Pixel analysis of the screenshot showed the leaf's front texture had the entire `<RuledLines>` layer rasterized as solid `rule-blue` with content layers intact on top — a capture artifact, not a shader bug. The page-flip capture serializes the DOM through SVG `foreignObject`, and some engines rasterize the `repeating-linear-gradient` there with a collapsed period, filling the layer with the first color. Not reproducible in Playwright Chromium, WebKit 26, or Firefox 149 — engine/version-specific, which is exactly why it slipped through.

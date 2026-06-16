@@ -53,7 +53,7 @@ export function EraserMarks({
     >
       <Smudge />
       {showLabel && (
-        <span className="font-serif text-caption italic text-ink-mute">
+        <span className="font-serif-italic text-caption text-ink-mute">
           {labelText}
         </span>
       )}

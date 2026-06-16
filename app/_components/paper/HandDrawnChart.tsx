@@ -67,7 +67,7 @@ export function HandDrawnChart({
   if (data.length === 0) {
     return (
       <div
-        className={`font-serif italic text-caption text-ink-faint ${className ?? ''}`}
+        className={`font-serif-italic text-caption text-ink-faint ${className ?? ''}`}
       >
         Nothing on this line yet.
       </div>

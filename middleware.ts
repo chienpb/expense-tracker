@@ -6,6 +6,7 @@ export default auth((req) => {
   // Public routes
   if (
     pathname === '/login' ||
+    pathname === '/robots.txt' ||
     pathname === '/api/health' ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/spikes') ||
@@ -40,6 +41,6 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|glyphs\\.svg|textures/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|robots\\.txt|glyphs\\.svg|textures/).*)',
   ],
 };
