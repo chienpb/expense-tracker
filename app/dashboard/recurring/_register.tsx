@@ -7,6 +7,7 @@ import { formatPrintedDate } from '@/lib/paper-format';
 import { tiltFor } from '@/lib/seed-rotation';
 import { Stamp } from '@/app/_components/paper/Stamp';
 import { TornCorner } from '@/app/_components/paper/TornCorner';
+import { TornTopEdge } from '@/app/_components/paper/TornTopEdge';
 import { EmptyLine } from '@/app/_components/paper/EmptyLine';
 import { EraserMarks } from '@/app/_components/paper/EraserMarks';
 import type { RecurringExpense } from './page';
@@ -115,7 +116,22 @@ function ActiveTable({
     );
   }
   return (
-    <div className="paper-ledger-table w-full overflow-x-auto">
+    <>
+    {/* Mobile — torn-edge receipt cards (§3.4, <640px). */}
+    <ul className="flex list-none flex-col gap-3 p-0 sm:hidden">
+      {items.map((item) => (
+        <li key={item.id} className="list-none">
+          <ActiveCard
+            item={item}
+            busy={busyId === item.id}
+            onPause={onPause!}
+            onDiscard={onDiscard}
+          />
+        </li>
+      ))}
+    </ul>
+    {/* Desktop / tablet — the ruled six-column table (≥640px). */}
+    <div className="paper-ledger-table hidden w-full overflow-x-auto sm:block">
       <table className="w-full border-collapse nums-oldstyle-tabular">
         <caption className="sr-only">Active standing orders</caption>
         <thead>
@@ -142,6 +158,86 @@ function ActiveTable({
           ))}
         </tbody>
       </table>
+    </div>
+    </>
+  );
+}
+
+/**
+ * `<ActiveCard>` — mobile (<640px) receipt-card form of an active
+ * standing order. The six table columns fold into a torn-topped card:
+ * category · cycle across the top, description and amount squared off
+ * below, then the next-due date with the ACTIVE stamp and the
+ * pause / discard actions.
+ */
+function ActiveCard({
+  item,
+  busy,
+  onPause,
+  onDiscard,
+}: {
+  item: RecurringExpense;
+  busy: boolean;
+  onPause: (id: string, active: boolean) => void;
+  onDiscard: (id: string) => void;
+}) {
+  const descTilt = tiltFor(`${item.id}-desc`, 1.2);
+  return (
+    <div
+      className="relative mt-2 border border-ink/25 bg-paper-2 px-3 py-2.5"
+      data-busy={busy || undefined}
+    >
+      <TornTopEdge background="var(--color-paper-2)" />
+      <div className="flex items-baseline justify-between gap-3 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+        <span>
+          {item.category}
+          {item.subcategory && ` · ${item.subcategory}`}
+        </span>
+        <span>{FREQ_LABEL[item.frequency] ?? item.frequency}</span>
+      </div>
+      <div className="mt-1.5 flex items-baseline justify-between gap-3">
+        {busy ? (
+          <EraserMarks variant="inline" label="Updating order" />
+        ) : (
+          <span
+            data-ledger-tilt
+            className="inline-block origin-left font-hand text-hand text-pen-navy"
+            style={{ transform: `rotate(${descTilt}deg)` }}
+          >
+            {item.description}
+          </span>
+        )}
+        <span className="shrink-0 font-serif text-body font-bold nums-oldstyle-tabular text-ink">
+          {formatVND(item.amount)}
+        </span>
+      </div>
+      <div className="mt-3 space-y-2 border-t border-ink/15 pt-2">
+        <div className="flex items-center gap-3">
+          <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+            Next {formatPrintedDate(item.next_due)}
+          </span>
+          <Stamp
+            text="Active"
+            color="navy"
+            wear={0.5}
+            id={`${item.id}-active-stamp-m`}
+            className="ml-auto text-[9px]"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <TextAction
+            label="Pause"
+            onClick={() => onPause(item.id, item.active)}
+            disabled={busy}
+          />
+          <TextAction
+            label="Discard"
+            tone="danger"
+            onClick={() => onDiscard(item.id)}
+            disabled={busy}
+          />
+        </div>
+      </div>
     </div>
   );
 }

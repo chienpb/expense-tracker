@@ -6,6 +6,7 @@ import { tiltFor } from '@/lib/seed-rotation';
 import { EraserMarks } from './EraserMarks';
 import { RedStringCorrection } from './RedStringCorrection';
 import { Stamp, type StampColor } from './Stamp';
+import { TornTopEdge } from './TornTopEdge';
 
 /**
  * `<LedgerTable>` — the transactions table (§4.3).
@@ -35,6 +36,12 @@ import { Stamp, type StampColor } from './Stamp';
  * Drill-in (§4.3) is delegated: when `onDrillIn` is set, each row
  * becomes keyboard-activatable (Enter/Space). The consumer mounts a
  * `<PaperClip>`-topped detail card above the page.
+ *
+ * Mobile (§3.4): below 640px the `<table>` is replaced by a stack of
+ * torn-edge receipt cards — one per row, each topped with
+ * `<TornTopEdge>`. Same data, same states (interactive / ai-suggested /
+ * deleted-recently / edit history / stamp), laid out for a 375px column
+ * instead of five squeezed table columns.
  */
 export type LedgerRowStatus = 'default' | 'ai-suggested' | 'deleted-recently';
 
@@ -105,7 +112,8 @@ export function LedgerTable({
 
   return (
     <div className={`paper-ledger-table w-full ${className ?? ''}`}>
-      <table className="w-full border-collapse nums-oldstyle-tabular">
+      {/* Desktop / tablet — the ruled five-column table (≥640px). */}
+      <table className="hidden w-full border-collapse nums-oldstyle-tabular sm:table">
         {caption && <caption className="sr-only">{caption}</caption>}
 
         {!hideHeader && (
@@ -158,7 +166,133 @@ export function LedgerTable({
           )}
         </tbody>
       </table>
+
+      {/* Mobile — a stack of torn-edge receipt cards (§3.4, <640px). */}
+      <div className="sm:hidden">
+        {loading ? (
+          <ul className="flex flex-col gap-3" aria-label={caption}>
+            {Array.from({ length: skeletonRows }).map((_, i) => (
+              <li
+                key={`skeleton-card-${i}`}
+                className="relative mt-2 border border-ink/25 bg-paper-2 px-3 py-3"
+              >
+                <TornTopEdge background="var(--color-paper-2)" />
+                <EraserMarks variant="inline" label="Loading entry" />
+              </li>
+            ))}
+          </ul>
+        ) : rows.length === 0 ? (
+          <p className="px-1 py-4 text-center font-hand-signature text-hand-signature text-ink-faint">
+            {emptyText}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3" aria-label={caption}>
+            {rows.map((row) => (
+              <ReceiptCard
+                key={row.id}
+                row={row}
+                columns={columns}
+                interactive={interactive}
+                active={row.id === activeRowId}
+                onDrillIn={onDrillIn}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
+  );
+}
+
+/**
+ * `<ReceiptCard>` — the mobile (<640px) stand-in for a `<LedgerTable>`
+ * row. A torn-off receipt: date · time and category printed across the
+ * top, the description and amount squared off below. Carries the same
+ * state surface as the table `<Row>` — interactive drill-in, the
+ * pencil-gray AI tint, the voided strike + fade, edit-history and inline
+ * stamp — adapted from `> td` selectors to the card element itself.
+ */
+function ReceiptCard({
+  row,
+  columns,
+  interactive,
+  active,
+  onDrillIn,
+}: {
+  row: LedgerRow;
+  columns: readonly LedgerColumn[];
+  interactive: boolean;
+  active: boolean;
+  onDrillIn?: (row: LedgerRow) => void;
+}) {
+  const status = row.status ?? 'default';
+  const refund = isRefund(row.amount);
+  const voided = status === 'deleted-recently';
+  const ai = status === 'ai-suggested';
+
+  const showDate = columns.includes('date');
+  const showTime = columns.includes('time') && !!row.time;
+  const showCategory = columns.includes('category') && !!row.category;
+  const showDescription = columns.includes('description');
+  const showAmount = columns.includes('amount');
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!interactive) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onDrillIn?.(row);
+    }
+  };
+
+  const meta = (
+    <div className="flex items-baseline justify-between gap-3 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
+      {(showDate || showTime) && (
+        <span className="tabular-nums">
+          {showDate && row.date}
+          {showDate && showTime && ' · '}
+          {showTime && row.time}
+        </span>
+      )}
+      {showCategory && <span className="text-right">{row.category}</span>}
+    </div>
+  );
+
+  return (
+    <li className="list-none">
+      <div
+        data-row-id={row.id}
+        data-status={status}
+        data-active={active || undefined}
+        role={interactive ? 'button' : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        onClick={interactive ? () => onDrillIn?.(row) : undefined}
+        onKeyDown={interactive ? onKeyDown : undefined}
+        className={[
+          'relative mt-2 border border-ink/25 bg-paper-2 px-3 py-2.5',
+          interactive ? 'paper-focusable paper-pressable cursor-pointer' : '',
+          active ? 'bg-[color-mix(in_srgb,var(--color-highlighter)_35%,transparent)]' : '',
+          ai ? 'paper-pencil' : '',
+          voided ? 'paper-row-voided text-ink-faint' : '',
+        ].join(' ')}
+      >
+        <TornTopEdge background="var(--color-paper-2)" />
+        {(showDate || showTime || showCategory) && meta}
+        <div className="mt-1.5 flex items-baseline justify-between gap-3">
+          {showDescription ? (
+            <span className="min-w-0 [&>span]:whitespace-normal">
+              <Description row={row} />
+            </span>
+          ) : (
+            <span />
+          )}
+          {showAmount && (
+            <span className="shrink-0 text-right">
+              <Amount row={row} refund={refund} />
+            </span>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }
 

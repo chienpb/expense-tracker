@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { PaperTagSelect } from './PaperTagSelect';
 
 /**
  * `<FileTab>` — manila-folder navigation (§4.9).
@@ -17,8 +19,11 @@ import type { ReactNode } from 'react';
  * `onChange(id)`. Keyboard: ← / → move focus between tabs, Home/End
  * jump to the ends, Enter/Space activate (Link navigates natively).
  *
- * Mobile (§3.4): the full tablist stays visible; the collapsed paper-tag
- * `<select>` variant lands with the per-page migration in Phase 5.
+ * Mobile (§3.4): below 640px the strip can't fit at 375px, so it
+ * collapses to a `<PaperTagSelect>` paper tag. `href` tabs navigate via
+ * the router on change; otherwise `onChange(id)` fires, matching the
+ * desktop contract. `label` is coerced to a string for the select, so
+ * tab labels should stay text on routes that rely on the mobile collapse.
  */
 export type FileTabItem = {
   id: string;
@@ -41,12 +46,34 @@ export function FileTab({
   'aria-label': ariaLabel,
   className,
 }: FileTabProps) {
+  const router = useRouter();
+
+  function handleSelect(id: string) {
+    const tab = tabs.find((t) => t.id === id);
+    if (tab?.href) {
+      router.push(tab.href);
+    } else {
+      onChange?.(id);
+    }
+  }
+
   return (
-    <div
-      role="tablist"
-      aria-label={ariaLabel}
-      className={`relative flex items-end gap-1 border-b-2 border-ink ${className ?? ''}`}
-    >
+    <>
+      {/* Mobile — collapsed paper tag (<640px). */}
+      <PaperTagSelect
+        aria-label={ariaLabel}
+        value={activeId}
+        onChange={handleSelect}
+        options={tabs.map((t) => ({ value: t.id, label: String(t.label) }))}
+        className={`sm:hidden ${className ?? ''}`}
+      />
+
+      {/* Desktop / tablet — the manila tab strip (≥640px). */}
+      <div
+        role="tablist"
+        aria-label={ariaLabel}
+        className={`relative hidden items-end gap-1 border-b-2 border-ink sm:flex ${className ?? ''}`}
+      >
       {tabs.map((tab) => {
         const active = tab.id === activeId;
         const shared = [
@@ -90,6 +117,7 @@ export function FileTab({
           </button>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }

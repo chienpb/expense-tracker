@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { format as formatDate } from 'date-fns';
 import {
   getExpenses,
@@ -120,12 +119,12 @@ export default async function DashboardPage({
           </>
         }
         header={
-          <div className="flex items-center gap-6">
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+            <div className="min-w-0 sm:flex-1">
               <h1 className="font-serif text-title-1 font-bold text-ink">
                 {title.main}
                 {title.suffix && (
-                  <span className="ml-2 font-hand text-[28px] font-normal text-pen-navy">
+                  <span className="ml-2 font-hand text-[22px] font-normal text-pen-navy sm:text-[28px]">
                     {title.suffix}
                   </span>
                 )}
@@ -133,7 +132,10 @@ export default async function DashboardPage({
             </div>
             <div className="relative shrink-0">
               <Masthead />
-              <div className="pointer-events-none absolute -top-1 right-8 z-20">
+              {/* Today's date stamp overlaps the tab strip; it has no room
+                  beside the collapsed paper tag at 375px, so it rides the
+                  desktop strip only. */}
+              <div className="pointer-events-none absolute -top-1 right-8 z-20 hidden sm:block">
                 <Stamp text={stampText} color="red" wear={0.7} id="today-stamp" />
               </div>
             </div>
@@ -208,7 +210,7 @@ export default async function DashboardPage({
             </section>
 
             <section aria-labelledby="ledger-heading">
-              <div className="mb-4 flex items-baseline justify-between gap-3">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
                 <h3
                   id="ledger-heading"
                   className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"

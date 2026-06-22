@@ -39,26 +39,29 @@ export default async function SettingsPage() {
         className="flex-1"
       >
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-ink/15 pb-4">
-          <nav aria-label="Ledger sections" className="flex items-baseline gap-4">
+          <nav
+            aria-label="Ledger sections"
+            className="flex flex-wrap items-baseline gap-x-4 gap-y-2"
+          >
             <Link
               href="/dashboard"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
+              className="paper-focusable whitespace-nowrap font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
             >
               Daybook
             </Link>
             <Link
               href="/dashboard/recurring"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
+              className="paper-focusable whitespace-nowrap font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
             >
               Standing orders
             </Link>
             <Link
               href="/chat"
-              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
+              className="paper-focusable whitespace-nowrap font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
             >
               Correspondence
             </Link>
-            <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink">
+            <span className="whitespace-nowrap font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink">
               House rules
             </span>
           </nav>

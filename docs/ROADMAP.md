@@ -270,12 +270,12 @@ Status per asset:
 
 **Goal.** Every migrated page gets its mobile variant designed + tested at 375px.
 
-- [ ] Margin rule moves to 36px.
-- [ ] Tape strips removed on <640px.
-- [ ] FileTab collapses to `<select>` styled as a paper tag.
-- [ ] LedgerTable becomes a stack of receipt cards (torn-edge tops).
-- [ ] Per-page audit: `/login`, `/dashboard/recurring`, `/chat`, `/dashboard`, `/settings` at 375×812.
-- [ ] SVG filter perf check on a mid-tier Android; fall back to pre-rendered textures if needed.
+- [x] Margin rule moves to 36px. (`--margin-rule-offset-mobile: 36px`, shipped Phase 1; confirmed live on `<MarginRule>` at <640px.)
+- [x] Tape strips removed on <640px. (`<Page tape>` wraps both strips in `hidden sm:block`, shipped Phase 3; confirmed.)
+- [x] FileTab collapses to `<select>` styled as a paper tag. New `<PaperTagSelect>` (native `<select>`, clipped-corner manila tag + pencil chevron); `<FileTab>` and the dashboard `<Masthead>` render the tab strip at `≥sm` and collapse to the tag below. Masthead mobile path navigates via `router.push`; OUT stays a plain button.
+- [x] LedgerTable becomes a stack of receipt cards (torn-edge tops). New `<TornTopEdge>` primitive + `sm:hidden` `<ReceiptCard>` stack in `<LedgerTable>` (table kept at `≥sm`), same state surface. Recurring's six-column `ActiveTable` gets the matching `<ActiveCard>` treatment.
+- [x] Per-page audit: `/login`, `/dashboard/recurring`, `/chat`, `/dashboard`, `/settings` at 375×812. All five at `scrollWidth === 375` (no horizontal scroll); `/dashboard` header restructured to stack title above nav with the date stamp `hidden sm:block`; settings nav wraps as whole units. DECISION_LOG 2026-06-16.
+- [ ] SVG filter perf check on a mid-tier Android; fall back to pre-rendered textures if needed. *(Deferred — no Android device on hand; Spike 2 already chose tiled CSS `background-repeat` over full-element filtering, so the mobile risk is low. Revisit on real hardware.)*
 
 **Exit criteria.** Every page holds up at 375px without horizontal scroll, broken tables, or unreachable controls.
 
@@ -336,4 +336,4 @@ Out of scope (for this roadmap): backend schema changes, auth changes, new featu
 
 ---
 
-*Last updated: 2026-06-16 · owner: Chien + Ledger-keeper (Claude) · Phases 0–8 complete (Phase 8: dead-code/dep purge, font diet to 158KB eager, dashboard Lighthouse BP 100 / SEO 100 / perf 94–96, motion centralized on the ink curve) · mobile (Phase 9) and accessibility (Phase 10) deferred to the end of the roadmap per owner priority.*
+*Last updated: 2026-06-16 · owner: Chien + Ledger-keeper (Claude) · Phases 0–9 complete (Phase 9: `<LedgerTable>`→torn-edge receipt-card stack via new `<TornTopEdge>`, tabs→`<PaperTagSelect>` manila tag, dashboard header restacked; all five routes verified at 375×812 with zero horizontal overflow — Android SVG-filter perf check deferred for lack of hardware) · accessibility (Phase 10) deferred to the end of the roadmap per owner priority.*

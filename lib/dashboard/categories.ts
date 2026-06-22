@@ -48,9 +48,17 @@ export function groupCategoriesForTally(
   const total = rows.reduce((acc, r) => acc + r.total, 0);
   if (total <= 0) return [];
 
-  const head = rows.slice(0, topN);
-  const tail = rows.slice(topN);
-  const tailTotal = tail.reduce((acc, r) => acc + r.total, 0);
+  // Pull any literal "Other" category out of the ranked list so it folds
+  // into the aggregate bucket below instead of producing a duplicate row
+  // (and a duplicate React key) alongside it.
+  const ranked = rows.filter((r) => r.category !== 'Other');
+  const literalOther = rows
+    .filter((r) => r.category === 'Other')
+    .reduce((acc, r) => acc + r.total, 0);
+
+  const head = ranked.slice(0, topN);
+  const tail = ranked.slice(topN);
+  const tailTotal = tail.reduce((acc, r) => acc + r.total, 0) + literalOther;
 
   const maxAmount = Math.max(
     ...head.map((r) => r.total),

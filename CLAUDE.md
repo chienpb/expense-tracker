@@ -20,7 +20,17 @@ playwright-cli state-load .claude/skills/playwright-cli/state/auth.json
 playwright-cli goto http://localhost:3000/dashboard
 ```
 
-The state file is gitignored. If it expires, re-save it after a manual sign-in with `playwright-cli state-save .claude/skills/playwright-cli/state/auth.json`.
+The state file is gitignored. If it has expired (you land on `/login` instead of the dashboard), re-login using the dev credentials in `.claude/skills/playwright-cli/state/credentials.json` (gitignored, next to `auth.json`) — **without reading or printing the raw values**. Never `cat`/Read the credentials file and never paste credentials literally into a command; let the shell substitute them, and pass `--raw` so playwright-cli doesn't echo the filled values back into the transcript:
+
+```bash
+CREDS=.claude/skills/playwright-cli/state/credentials.json
+playwright-cli goto http://localhost:3000/login
+# find the Name / Seal textbox refs (e<n>, e<m>) via `playwright-cli snapshot`, then:
+playwright-cli --raw fill e<n> "$(jq -r .email "$CREDS")"
+playwright-cli --raw fill e<m> "$(jq -r .password "$CREDS")" --submit
+playwright-cli goto http://localhost:3000/dashboard   # confirm sign-in landed
+playwright-cli state-save .claude/skills/playwright-cli/state/auth.json
+```
 
 **Screenshots** go under `.screenshots/` (gitignored). Name them `<slug>-<YYYYMMDD-HHMMSS>.png` — e.g. `dashboard-20260421-172630.png`. No cleanup needed; the whole directory is ignored.
 

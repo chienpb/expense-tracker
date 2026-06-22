@@ -42,7 +42,7 @@ export function DateRangeTabs({ current, from, to }: DateRangeTabsProps) {
   const window = formatWindow(from, to);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full items-center gap-2 sm:w-auto">
       <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
         Range
       </span>
@@ -52,7 +52,7 @@ export function DateRangeTabs({ current, from, to }: DateRangeTabsProps) {
         value={current}
         onChange={(next) => router.push(`/dashboard?range=${next}`)}
         options={PRESET_OPTIONS}
-        className="min-w-[15rem]"
+        className="min-w-0 flex-1 sm:min-w-[15rem] sm:flex-none"
         renderTrigger={(selected) => (
           <span className="inline-flex items-baseline gap-2">
             <span>{selected?.label ?? RANGE_LABELS[current]}</span>
