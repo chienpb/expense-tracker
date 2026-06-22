@@ -582,3 +582,37 @@ html[data-page-flip='backward'] body {
 html[data-reduce-motion='1'][data-page-flip] body {
   animation: none !important;
 }
+
+/* =====================================================================
+ * Rule-off stroke — "Closing the Books" ceremony (spec: closing-the-books).
+ *
+ * A pen draws a horizontal rule under the last entry before the wax seal
+ * thumps down. The SVG <line> uses pathLength="1" so the dash math is
+ * resolution-independent; the stroke draws on by collapsing the dash
+ * offset to 0. Pair with `url(#hand-wobble)` for the pen waver. New here,
+ * kept inline (not promoted to a shared module — extract on the second
+ * consumer). Reduced motion / reduce-motion override snap it drawn.
+ * =================================================================== */
+@keyframes paper-rule-draw {
+  from {
+    stroke-dashoffset: var(--rule-length, 1);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.paper-rule-off {
+  stroke-dasharray: var(--rule-length, 1);
+  stroke-dashoffset: var(--rule-length, 1);
+  animation: paper-rule-draw 340ms var(--ease-ink) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper-rule-off {
+    animation: none !important;
+    stroke-dashoffset: 0;
+  }
+}
+html[data-reduce-motion='1'] .paper-rule-off {
+  animation: none !important;
+  stroke-dashoffset: 0;
+}

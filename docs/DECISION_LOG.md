@@ -13,6 +13,15 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-22 · Closing the Books — scope split, seal state model, and the summary-page seam
+
+  Context:   First feature off `docs/IDEAS.md` (#1, holistic 8.6). The "after the seal, where does it land?" question opened a much bigger ambition: a Spotify-Wrapped-style month recap, AI-clerk-narrated, calculated and streamed in real time. That is non-trivial and deserves its own spec.
+  Decision:  Cut the work into three pieces with explicit seams. (1) **Closing the Books** (now): the trigger (manual "Settle the books" button + auto-prompt on month rollover, deduped by the persisted flag), the rule-off → wax-seal *thump* ceremony, and persisting a closed flag in a new `sealed_months` table. Lands on a **year calendar** that marks the sealed month done — the calendar is the durable home for the `sealed_months` state and is in scope here. (2) **The Monthly Wrapped** (deferred, its own `/spec`): the real-time-streamed AI recap. It slots into the *seam between the seal-thump and the year calendar* — it plays before the calendar, replacing nothing. The ceremony emits "month M sealed"; the calendar consumes it; Wrapped is a clean insert later, not a rewrite. (3) Idea #7 **Annual Statement** stays untouched and separate — no illuminated/broadsheet work here. **Seal state model:** sealed months are persisted but **not** edit-locked (Shortcuts keep posting). When a new entry lands in a sealed month the seal goes **stale/reopened** (visible crack / "REOPENED" mark, `sealed_at` cleared or superseded) rather than staying silently — per §0.3 "errors and corrections are visible." Re-settling re-seals.
+  Rationale: The persisted flag needs somewhere to be shown on reload; the year calendar is that somewhere, so it earns its place in this spec. Wrapped is pure layered spectacle — specifiable and buildable without touching the ceremony or calendar, so it must not bloat this spec. Stale-seal-over-silent keeps the metaphor honest: a closed book that quietly absorbed new entries would be a silent rewrite, which the system forbids.
+  Reviewer:  Chien
+
+---
+
 ## 2026-06-16 · Phase 9 · Mobile treatment — table→receipt cards, tabs→paper-tag select
 
   Context:   §3.4 asks that the metaphor survive at 375px: margin rule at 36px, tape strips gone, `<FileTab>` collapsed to a `<select>` paper tag, and `<LedgerTable>` rendered as a stack of torn-edge receipt cards. The 36px margin rule (`--margin-rule-offset-mobile`) and the `hidden sm:block` tape strips already shipped in Phases 1–3; the two open items were the tab collapse and the table-to-cards transform. A 375px audit also surfaced one real break: the `/dashboard` header laid the title and the four-tab masthead in one flex row, so at 375px the tabs overlapped the title and the date stamp.

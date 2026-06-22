@@ -1,5 +1,14 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { format as formatDate } from 'date-fns';
+import { auth } from '@/lib/auth-config';
+import {
+  getSealedMonths,
+  getMonthLastEntries,
+  monthStatus,
+  monthKey,
+  priorMonthKey,
+} from '@/lib/dashboard/sealing';
 import {
   getExpenses,
   getSpendingByDay,
@@ -28,6 +37,7 @@ import { DailyChart } from './_components/_daily-chart';
 import { Ledger } from './_components/_ledger';
 import { QuickAdd } from './_components/_quick-add';
 import { Masthead } from './_components/_masthead';
+import { SettleBooks } from './_components/_settle-books';
 
 export const metadata: Metadata = {
   title: 'Daybook · Ledger',
@@ -99,6 +109,26 @@ export default async function DashboardPage({
 
   const today = new Date();
   const stampText = formatDate(today, 'MMM · dd · yyyy').toUpperCase();
+
+  // Closing the Books: auto-surface the close affordance for the prior
+  // month while it's still unsealed (sealed months don't re-prompt — AC#4).
+  const session = await auth();
+  const userId = session?.user?.id ?? '';
+  const [sealedMonths, monthLastEntries] = await Promise.all([
+    getSealedMonths(userId),
+    getMonthLastEntries(),
+  ]);
+  const priorMonth = priorMonthKey(today);
+  const settleCandidate =
+    monthStatus(priorMonth, monthKey(today), sealedMonths, monthLastEntries) === 'open'
+      ? {
+          month: priorMonth,
+          label: formatDate(
+            new Date(today.getFullYear(), today.getMonth() - 1, 1),
+            'MMM yyyy',
+          ),
+        }
+      : null;
 
   const title = renderTitle(range, from, to, selectedDay);
   const counterpartName = topPayback ? extractCounterpart(topPayback.description) : null;
@@ -221,6 +251,28 @@ export default async function DashboardPage({
                 <DateRangeTabs current={range} from={from} to={to} />
               </div>
               <Ledger expenses={expenses} />
+            </section>
+
+            <section
+              aria-label="Close the books"
+              className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-dashed border-ink/40 pt-5"
+            >
+              {settleCandidate ? (
+                <SettleBooks
+                  month={settleCandidate.month}
+                  label={settleCandidate.label}
+                />
+              ) : (
+                <span className="font-serif-italic text-body text-ink-mute">
+                  The books are settled through last month.
+                </span>
+              )}
+              <Link
+                href="/dashboard/year"
+                className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
+              >
+                The year &rarr;
+              </Link>
             </section>
           </div>
 
