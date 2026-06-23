@@ -4,6 +4,9 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Stamp } from '@/app/_components/paper/Stamp';
 import { Glyph } from '@/app/_components/paper/Glyph';
+import { WrappedReveal } from './_wrapped-reveal';
+import { goToYear as goToYearShared } from '@/lib/go-to-year';
+import type { WrappedBundle } from '@/lib/dashboard/wrapped';
 
 /**
  * `<SettleBooks>` — the headline "Closing the Books" ceremony
@@ -18,7 +21,15 @@ import { Glyph } from '@/app/_components/paper/Glyph';
  * prior month on the dashboard; re-settling a stale month happens
  * in-place on a calendar cell (`<MonthCell>`). Both call `POST /api/seal`.
  */
-type Phase = 'idle' | 'ruling' | 'sealing';
+type Phase = 'idle' | 'ruling' | 'sealing' | 'wrapped';
+
+/** `POST /api/seal`'s response, consumed by the Wrapped reveal. */
+type SealResult = {
+  month: string;
+  sealed_at: string;
+  wrapped_text: string | null;
+  bundle: WrappedBundle;
+};
 
 const RULE_MS = 360; // pen draws the rule-off (matches .paper-rule-off)
 const SEAL_MS = 460; // thump (180ms) + a beat to register before the flip
@@ -33,33 +44,19 @@ function motionReduced(): boolean {
 export function SettleBooks({ month, label }: { month: string; label: string }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
+  const [wrapped, setWrapped] = useState<SealResult | null>(null);
 
-  const postSeal = useCallback(async () => {
-    await fetch('/api/seal', {
+  const postSeal = useCallback(async (): Promise<SealResult | null> => {
+    return fetch('/api/seal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month }),
-    }).catch(() => {});
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<SealResult>) : null))
+      .catch(() => null);
   }, [month]);
 
-  const goToYear = useCallback(() => {
-    // Flip only when motion is on and we're on a desk-sized viewport (the
-    // page-turn rig is desktop-only, §3); otherwise plain navigation.
-    if (!motionReduced() && window.innerWidth >= 1024) {
-      import('@/lib/page-flip')
-        .then((flip) =>
-          flip.turnPage({
-            direction: 'forward',
-            captureEl: document.body,
-            navigate: () => router.push('/dashboard/year'),
-            targetPath: '/dashboard/year',
-          }),
-        )
-        .catch(() => router.push('/dashboard/year'));
-    } else {
-      router.push('/dashboard/year');
-    }
-  }, [router]);
+  const goToYear = useCallback(() => goToYearShared(router), [router]);
 
   const settle = useCallback(async () => {
     if (phase !== 'idle') return;
@@ -75,10 +72,18 @@ export function SettleBooks({ month, label }: { month: string; label: string }) 
     window.setTimeout(() => {
       setPhase('sealing');
       window.setTimeout(async () => {
-        await postSeal();
+        const result = await postSeal();
         // seam: Monthly Wrapped plays here, between the seal-thump and the
-        // flip to the year calendar — a clean insert, replacing neither.
-        goToYear();
+        // flip to the year calendar — a clean insert, replacing neither. If
+        // the seal returned its bundle, the wax fractures and the slip is
+        // revealed; `onDone` then continues the flip. No bundle (a seal
+        // hiccup) → flip straight through.
+        if (result?.bundle) {
+          setWrapped(result);
+          setPhase('wrapped');
+        } else {
+          goToYear();
+        }
       }, SEAL_MS);
     }, RULE_MS);
   }, [phase, postSeal, goToYear, router]);
@@ -124,6 +129,15 @@ export function SettleBooks({ month, label }: { month: string; label: string }) 
           <Glyph name="pen" size={14} />
           <span>Settle the books — {label}</span>
         </button>
+      ) : phase === 'wrapped' && wrapped ? (
+        <div aria-live="polite">
+          <WrappedReveal
+            bundle={wrapped.bundle}
+            verdict={wrapped.wrapped_text}
+            label={label}
+            onDone={goToYear}
+          />
+        </div>
       ) : (
         <div className="relative flex h-12 items-center" aria-live="polite">
           {phase === 'sealing' && (

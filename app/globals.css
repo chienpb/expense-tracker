@@ -375,6 +375,28 @@
   }
 }
 
+/* Nib sprite tracking the insertion point while the verdict writes itself on
+   (Typewriter). `left`/`top` are set inline per character; the tip of the SVG
+   is its origin, so translate it onto the caret and let it bob as it writes. */
+.paper-nib {
+  position: absolute;
+  pointer-events: none;
+  /* tip sits at glyph baseline-ish; nudge so it rests on the ink, not above */
+  transform: translate(-1px, -2px);
+  animation: paper-nib-bob 0.32s ease-in-out infinite;
+  will-change: left, top, transform;
+}
+@keyframes paper-nib-bob {
+  50% {
+    transform: translate(-1px, -3.2px) rotate(-1.5deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper-nib {
+    display: none;
+  }
+}
+
 @keyframes paper-void-fade {
   /* Deleted-recently rows cross out, show VOID for ~5s, then fade
      to nothing (§6.11). The strike animates in the first 200ms; the
@@ -615,4 +637,71 @@ html[data-reduce-motion='1'][data-page-flip] body {
 html[data-reduce-motion='1'] .paper-rule-off {
   animation: none !important;
   stroke-dashoffset: 0;
+}
+
+/* =====================================================================
+ * Monthly Wrapped (spec: work/monthly-wrapped).
+ *
+ * Two beats, played once on a live seal: the gold "Settled" wax FRACTURES
+ * along a jagged crack into two halves that part and fall away, then the
+ * verdict line wipes on as INK, left → right. Both are the §8 ink curve;
+ * both snap to their finished state under reduced motion / reduce-motion,
+ * which is the same render the re-read (`?slip`) path already shows.
+ *
+ * The fracture is composed by `_wrapped-reveal.tsx`: it stamps the seal
+ * twice, clips each copy to one side of the crack (inline clip-path), and
+ * parts them with these two keyframes. One crack, one lift — no particles.
+ * =================================================================== */
+@keyframes paper-seal-fracture-l {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-10px, 6px) rotate(-7deg);
+    opacity: 0;
+  }
+}
+@keyframes paper-seal-fracture-r {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(10px, 7px) rotate(8deg);
+    opacity: 0;
+  }
+}
+.paper-seal-fracture-l {
+  animation: paper-seal-fracture-l 520ms var(--ease-ink) forwards;
+}
+.paper-seal-fracture-r {
+  animation: paper-seal-fracture-r 520ms var(--ease-ink) forwards;
+}
+
+@keyframes paper-ink-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.paper-ink-reveal {
+  animation: paper-ink-reveal 700ms var(--ease-ink) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-seal-fracture-l,
+  .paper-seal-fracture-r,
+  .paper-ink-reveal {
+    animation: none !important;
+    clip-path: none !important;
+  }
+}
+html[data-reduce-motion='1'] .paper-seal-fracture-l,
+html[data-reduce-motion='1'] .paper-seal-fracture-r,
+html[data-reduce-motion='1'] .paper-ink-reveal {
+  animation: none !important;
+  clip-path: none !important;
 }

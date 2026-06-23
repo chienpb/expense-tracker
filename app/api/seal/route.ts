@@ -1,5 +1,7 @@
 import { auth } from '@/lib/auth-config';
 import { getSupabase } from '@/lib/supabase';
+import { computeMonthBundle, generateVerdict } from '@/lib/dashboard/wrapped';
+import { format as formatDate } from 'date-fns';
 
 /**
  * `POST /api/seal` — upsert a seal for `(session user, month)`. Sealing
@@ -29,16 +31,32 @@ export async function POST(request: Request) {
   }
 
   const supabase = getSupabase();
+
+  // Monthly Wrapped (spec: work/monthly-wrapped). Compute the deterministic
+  // bundle, then generate the verdict ONCE at seal time and store it. A
+  // re-seal overwrites the prior verdict (DECISION_LOG 2026-06-23). The
+  // numbers are recomputed on every read, so only the prose is persisted.
+  const bundle = await computeMonthBundle(month);
+  const label = formatDate(new Date(`${month}T00:00:00`), 'MMMM yyyy');
+  // The aggregates are never gated on the AI (spec AC#7): on failure we store
+  // null and the slip still stands on the bundle alone.
+  const wrappedText = await generateVerdict(bundle, label).catch(() => null);
+
   const { data, error } = await supabase
     .from('sealed_months')
     .upsert(
-      { user_id: userId, month, sealed_at: new Date().toISOString() },
+      {
+        user_id: userId,
+        month,
+        sealed_at: new Date().toISOString(),
+        wrapped_text: wrappedText,
+      },
       { onConflict: 'user_id,month' },
     )
-    .select('month, sealed_at')
+    .select('month, sealed_at, wrapped_text')
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  // Returns the sealed month so a future Monthly Wrapped can consume it.
-  return Response.json(data, { status: 200 });
+  // The live-seal reveal consumes `bundle` + `wrapped_text` directly.
+  return Response.json({ ...data, bundle }, { status: 200 });
 }

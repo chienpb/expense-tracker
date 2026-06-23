@@ -6,6 +6,7 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 
 | Doc | Read when |
 |---|---|
+| [`NOW.md`](NOW.md) | **First thing in a fresh thread.** Current state — just shipped, next up, on deck. `/next` and `/close` keep it current. |
 | [`../CLAUDE.md`](../CLAUDE.md) | Already loaded every session. Lists invariants and points here. |
 | [`../README.md`](../README.md) | Running the dev server, deploy notes. |
 | [`../.env.local.example`](../.env.local.example) | Setting up environment variables. Source of truth for the full list. |
@@ -23,18 +24,10 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 | Doc | Read when |
 |---|---|
 | [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) | Any UI change. Paper Ledger is the live system — components, tokens, filters, voice. |
-| [`ROADMAP.md`](ROADMAP.md) | Planning or executing a Paper Ledger phase; checking what ships when. |
-| [`DASHBOARD_REDESIGN.md`](DASHBOARD_REDESIGN.md) | Touching `/dashboard` layout/chrome to match the desk-blotter spread reference. Chunked refactor plan. |
-| [`DASHBOARD_NARRATOR.md`](DASHBOARD_NARRATOR.md) | Adding / changing the handwritten commentary on `/dashboard` (margin notes, delta lines, peak callouts). Placeholder for the narrator module. |
-| [`PAGE_FLIP.md`](PAGE_FLIP.md) | Implementing or touching the WebGL page-turn navigation between major sections (ROADMAP Phase 8.2). Full spec + quality bar. |
+| [`ROADMAP.md`](ROADMAP.md) | Planning future Paper Ledger work — only un-shipped phases remain (10 accessibility, 11 portfolio polish, deferred bits). |
+| [`DASHBOARD_NARRATOR.md`](DASHBOARD_NARRATOR.md) | Building the (not-yet-built) narrator module — handwritten commentary on `/dashboard`. Forward-looking stub. |
 | [`DECISION_LOG.md`](DECISION_LOG.md) | Recording a non-trivial trade-off or spike verdict. |
 | [`swiss-design-system-archive.md`](swiss-design-system-archive.md) | Historical only — the retired Swiss dashboard system. Portfolio reference. |
-
-## Historical / planning
-
-| Doc | Read when |
-|---|---|
-| [`nextauth-plan.md`](nextauth-plan.md) | Reference for the original Auth.js v5 rollout (already shipped). |
 
 ---
 

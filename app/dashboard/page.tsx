@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { format as formatDate } from 'date-fns';
 import { auth } from '@/lib/auth-config';
 import {
@@ -31,6 +30,7 @@ import { Page } from '@/app/_components/paper/Page';
 import { Stamp } from '@/app/_components/paper/Stamp';
 import { SummaryBox } from '@/app/_components/paper/SummaryBox';
 import { MarginNote } from '@/app/_components/paper/MarginNote';
+import { YearLink } from '@/app/_components/paper/YearLink';
 import { formatPrintedDate } from '@/lib/paper-format';
 import { DateRangeTabs } from './_components/_date-range';
 import { DailyChart } from './_components/_daily-chart';
@@ -267,12 +267,9 @@ export default async function DashboardPage({
                   The books are settled through last month.
                 </span>
               )}
-              <Link
-                href="/dashboard/year"
-                className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink"
-              >
+              <YearLink className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute hover:text-ink">
                 The year &rarr;
-              </Link>
+              </YearLink>
             </section>
           </div>
 

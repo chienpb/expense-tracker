@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Stamp } from '@/app/_components/paper/Stamp';
+import { PaperClip } from '@/app/_components/paper/PaperClip';
 import type { MonthStatus } from '@/lib/dashboard/sealing';
 
 /**
@@ -50,13 +52,38 @@ export function MonthCell({
   const base =
     'relative flex min-h-[7.5rem] flex-col justify-between border border-ink/30 px-4 py-3';
 
-  // Sealed (or freshly re-settled): clean gold wax seal + the date.
-  if (status === 'sealed' || thump) {
+  // Freshly re-settled in place: thump the seal, then `router.refresh()`
+  // re-reads it as the linked, slip-tucked sealed cell below.
+  if (thump) {
     return (
       <div className={base} data-ledger-tilt>
         <MonthName label={label} />
         <div className="mt-2 flex items-end justify-between gap-2">
-          <span className={thump ? 'paper-stamp-thump inline-flex' : 'inline-flex'}>
+          <span className="paper-stamp-thump inline-flex">
+            <Stamp text="Settled" color="gold" wear={0} id={`seal-${month}`} />
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Sealed: the books are closed and a Monthly Wrapped slip is tucked behind
+  // the seal (paper-clip affordance). The whole cell links to `?slip=<month>`,
+  // which opens that month's slip flat — the read path reduced-motion users
+  // (who skip the ceremony) take to see their Wrapped (spec AC#5/#6).
+  if (status === 'sealed') {
+    const year = month.slice(0, 4);
+    return (
+      <Link
+        href={`/dashboard/year?year=${year}&slip=${month}`}
+        scroll={false}
+        className={`${base} paper-focusable paper-pressable block hover:bg-paper-2`}
+        data-ledger-tilt
+      >
+        <PaperClip corner="tr" size={26} />
+        <MonthName label={label} />
+        <div className="mt-2 flex items-end justify-between gap-2">
+          <span className="inline-flex">
             <Stamp text="Settled" color="gold" wear={0} id={`seal-${month}`} />
           </span>
           {sealedLabel && (
@@ -65,7 +92,7 @@ export function MonthCell({
             </span>
           )}
         </div>
-      </div>
+      </Link>
     );
   }
 

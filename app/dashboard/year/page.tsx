@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { format as formatDate } from 'date-fns';
 import { auth } from '@/lib/auth-config';
 import { Page } from '@/app/_components/paper/Page';
+import { MonthSlip } from '@/app/_components/paper/MonthSlip';
 import { formatPrintedDate } from '@/lib/paper-format';
 import {
   getSealedMonths,
@@ -10,6 +11,7 @@ import {
   monthStatus,
   monthKey,
 } from '@/lib/dashboard/sealing';
+import { computeMonthBundle, getWrappedText } from '@/lib/dashboard/wrapped';
 import { MonthCell } from './_month-cell';
 
 export const metadata: Metadata = {
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
 export default async function YearPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string }>;
+  searchParams: Promise<{ year?: string; slip?: string }>;
 }) {
   const params = await searchParams;
   const today = new Date();
@@ -51,6 +53,22 @@ export default async function YearPage({
       isCurrent: month === currentMonth,
     };
   });
+
+  // Deep-link: `?slip=YYYY-MM-01` opens that month's Monthly Wrapped flat,
+  // but only for a genuinely sealed month. The verdict is read from storage
+  // (zero AI calls, spec AC#4); the aggregates are recomputed deterministically.
+  const slipMonth = params.slip;
+  const slip =
+    slipMonth &&
+    /^\d{4}-\d{2}-01$/.test(slipMonth) &&
+    monthStatus(slipMonth, currentMonth, sealed, lastEntries) === 'sealed'
+      ? {
+          month: slipMonth,
+          label: formatDate(new Date(`${slipMonth}T00:00:00`), 'MMMM yyyy'),
+          bundle: await computeMonthBundle(slipMonth),
+          verdict: await getWrappedText(userId, slipMonth),
+        }
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -104,6 +122,30 @@ export default async function YearPage({
           ))}
         </div>
       </Page>
+
+      {/* Deep-link / re-read overlay: the finished slip placed on the desk
+          (no backdrop blur, §11 — a paper slip on top, dismissed by the scrim
+          or the close link). Flat render, no reveal, no AI call. */}
+      {slip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <Link
+            href={`/dashboard/year?year=${year}`}
+            scroll={false}
+            aria-label="Close the slip"
+            className="absolute inset-0 bg-ink/45"
+          />
+          <div className="relative flex flex-col items-end gap-2">
+            <Link
+              href={`/dashboard/year?year=${year}`}
+              scroll={false}
+              className="paper-focusable font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-paper hover:text-paper-2"
+            >
+              × close
+            </Link>
+            <MonthSlip bundle={slip.bundle} verdict={slip.verdict} label={slip.label} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -37,6 +37,7 @@ The "Closing the Books" ceremony persists a per-user closed flag per calendar mo
 | `user_id` | `UUID` | FK → `users(id)`, `ON DELETE CASCADE` |
 | `month` | `DATE` | First-of-month key, e.g. `2026-06-01` |
 | `sealed_at` | `TIMESTAMPTZ` | When the books were closed; bumped on re-settle |
+| `wrapped_text` | `TEXT` | Monthly Wrapped verdict — the Ledger-keeper's one-line month statement, generated once at seal time. Nullable: failed generation or a pre-Wrapped seal falls back to the deterministic aggregates. The numbers are recomputed on read, never stored. |
 
 UNIQUE `(user_id, month)`. Scope every query by `user_id` in app code (no RLS).
 
@@ -53,6 +54,7 @@ DDL statements (`CREATE`, `DROP`, `ALTER`, etc.) are blocked at the application 
 - `001_init.sql` — `expenses` table + `execute_sql` function.
 - `004_users.sql` — `users` table.
 - `005_sealed_months.sql` — `sealed_months` table (Closing the Books).
+- `006_wrapped_text.sql` — `sealed_months.wrapped_text` column (Monthly Wrapped).
 
 Either apply via the Supabase SQL editor, or run from the CLI (below). Seed the admin user manually after running `004_users.sql`.
 

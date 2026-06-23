@@ -13,6 +13,13 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-23 · Monthly Wrapped — reveal-not-streaming, generate-once-store, computed-numbers/AI-prose split
+
+  Context:   Spec'd the Wrapped insert that fills the seam left open by Closing the Books. A 4-member Opus council (editorial restraint / interaction-motion / lazy-engineer / portfolio-wow) brainstormed format, content, streaming, and persistence. Three forks surfaced; the user resolved the entrance-spectacle fork.
+  Decision:  (1) **One loose-leaf slip, not a card deck** — a swipeable deck is the Spotify gimmick reskinned and reintroduces the slideshow engine we refuse. (2) **Generate once at seal time, store on `sealed_months.wrapped_text`; never regenerate** — re-reads and the portfolio-link visitor read the stored string. (3) **Reveal, not live streaming** — the verdict is generated whole, stored, then *revealed* with an ink animation; visually identical to streaming but one render path shared by first-seal and re-read, deterministic, and compatible with generate-once-store. `streamText` rejected. (4) **Numbers computed, prose-only AI** — totals/net/largest-line/per-category come from SQL/JS as given facts; the AI's only job is one (max two) sentence "shape of the month" observation closing `— LK`. The AI never emits a number it computed nor decides the numbers. (5) **Content = one foregrounded verdict line + quiet aggregates** (spent/returned/net + largest entry named). (6) **Entrance (user's call): the wax "Settled" seal fractures**, the slip lifts, the verdict reveals as ink, aggregates fade in, then the existing page-turn continues — the portfolio "send this link" frame. (7) Folds into `POST /api/seal`; no new route, no new table.
+  Rationale: Generate-once-store is the textbook fit for a once-a-month irreversible event and removes nondeterminism that would be lethal in a shared link. The computed/AI split eliminates the "AI said 1.2M, total is 1.18M" failure class and slashes cost to one short prose call per seal. Restraint and wow converged: the "single valuable observation a stats dump can't give" *is* the "one screenshot-worthy verdict line" — same artifact, satisfying both lenses. The fracture is the accepted risk (a bad crack reads as a CSS bug); discipline is one fracture, one slip, one line, then stop — no physics, no multi-fold (that's the slideshow engine). Cut as spectacle: streaks, top-category-as-trophy, percentiles/leaderboards, vanity counts, superlatives. Reduce-motion and re-read both render the finished slip flat; generation failure degrades to aggregates-only, signed `— LK`, flip proceeds.
+  Reviewer:  Council (4× Opus) + Chien (entrance + content budget); Ledger-keeper (pending Chien on full spec)
+
 ## 2026-06-22 · Closing the Books — scope split, seal state model, and the summary-page seam
 
   Context:   First feature off `docs/IDEAS.md` (#1, holistic 8.6). The "after the seal, where does it land?" question opened a much bigger ambition: a Spotify-Wrapped-style month recap, AI-clerk-narrated, calculated and streamed in real time. That is non-trivial and deserves its own spec.
@@ -432,3 +439,41 @@ All six spike routes are live at `/spikes/*` in development. Visit each, run the
   Decision: Phase 1.3 stores the two overrides in a settings cookie and writes them to `<html>` from the server. All animated components gate their CSS on the combination of media query + data-attribute.
 
 ---
+
+## 2026-06-23 — Monthly Wrapped: storage & re-seal (plan)
+
+Confirms the two open questions from `work/monthly-wrapped/spec.md` (Constraints).
+
+- **Storage = one column, verdict only.** Only the AI verdict is persisted
+  (`sealed_months.wrapped_text`). The deterministic bundle (spent/returned/net/
+  per-category/largest) is **recomputed** on every read — at seal time and on `?slip`
+  re-read. Recompute is a single month-scoped aggregation over a small row set: zero
+  tokens, so "no second AI call on re-read" (AC#4) holds without a bundle JSON column,
+  a `wrapped` table, or an `/api/wrapped` route (all explicitly Out).
+- **Re-seal overwrites `wrapped_text`.** A reopened/stale month that is re-settled
+  regenerates and overwrites the verdict — no versioning. The bundle being recomputed
+  means the new verdict always matches current entries.
+- **`expenses` has no `user_id`** (single-keeper books, per `sealing.ts`): the entry
+  aggregation scopes by calendar month; only the `sealed_months` row scopes by user.
+
+---
+
+## 2026-06-23 — Monthly Wrapped: verdict reveal & year-nav consolidation
+
+The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
+
+- **Typewriter unveil, not token streaming.** The verdict is generated once at seal
+  time and stored; the "pen writing" is a char-by-char unveil of the already-present
+  string (`Typewriter.tsx`, ~19ms/char), not a streamed `streamText`. Visually identical
+  to live streaming, keeps the "generate once, re-reads cost zero tokens" design intact.
+  Stroke-path handwriting (a pen tracing glyph centerlines) was scoped and rejected:
+  needs a single-line font + runtime layout, ~1–2 days for a once-a-month moment.
+- **Note size reserved up front.** `Typewriter` grid-stacks the full verdict invisibly
+  under the revealed slice, so the slip holds its final height while writing instead of
+  reflowing line by line. Reveal scroll pins `block: 'end'`.
+- **One year-nav control.** Removed the in-reveal "To the year" button — it duplicated
+  the dashboard footer link. The footer link is now `<YearLink>` (shared `lib/go-to-year.ts`),
+  which runs the page-flip. Trade-off: the footer link, previously a plain `<Link>`, now
+  flips. Accepted — one consistent control beats two that behave differently.
+- **Nib asset is hand-authored inline SVG** (fountain nib: tine tip at origin, central
+  slit + breather hole cut in paper color so it reads at 22px). No icon library.
