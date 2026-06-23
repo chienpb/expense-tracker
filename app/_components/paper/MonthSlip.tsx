@@ -51,11 +51,7 @@ export function MonthSlip({
           animate={reveal}
           className="mt-4 whitespace-pre-line font-hand-signature text-hand-signature leading-snug text-pen-navy"
         />
-      ) : (
-        <p className="mt-4 font-serif-italic text-body text-ink-mute">
-          The figures stand for the month.
-        </p>
-      )}
+      ) : null}
 
       {/* Quiet aggregates. Computed values → serif/ink (§2.1); labels →
           typewriter (§2.2). Returns in parentheses (§4.3). */}

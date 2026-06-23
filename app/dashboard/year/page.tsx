@@ -103,12 +103,7 @@ export default async function YearPage({
           </span>
         </div>
 
-        <p className="mb-5 font-serif-italic text-body text-ink-mute">
-          The ledger, month by month. Settled months carry the wax seal and the
-          date the books were closed.
-        </p>
-
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {cells.map((c) => (
             <MonthCell
               key={c.month}

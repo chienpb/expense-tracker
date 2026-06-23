@@ -58,7 +58,7 @@ type EntrySlipProps = {
 export function EntrySlip({
   id,
   title = 'New entry',
-  lede = 'Fill every line. The clerk will file it at the end of the day.',
+  lede = '',
   submitLabel = 'File the entry',
   submittingLabel = 'Filing the entry…',
   recordedLabel = 'Recorded',
@@ -194,7 +194,9 @@ export function EntrySlip({
             </button>
           )}
         </div>
-        <p className="mt-2 font-serif text-body text-ink-mute">{lede}</p>
+        {lede && (
+          <p className="mt-2 font-serif text-body text-ink-mute">{lede}</p>
+        )}
 
         <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <SlipField

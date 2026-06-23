@@ -93,7 +93,6 @@ export function Ledger({ expenses }: { expenses: Expense[] }) {
           <EntrySlip
             id={`edit-${editing.id}`}
             title="Amend this entry"
-            lede="Correct any line. The change is recorded on the books."
             submitLabel="Save amendment"
             submittingLabel="Filing the amendment…"
             recordedLabel="Amended"

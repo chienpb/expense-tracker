@@ -106,9 +106,6 @@ export function LoginForm() {
         >
           Sign the register
         </h1>
-        <p className="mt-2 font-serif text-body text-ink-mute">
-          Your name and seal — for the day&apos;s books.
-        </p>
 
         <div className="mt-6 space-y-5">
           <Field

@@ -68,13 +68,6 @@ export default async function SettingsPage() {
           <SignOut />
         </div>
 
-        <header className="mb-10 max-w-prose">
-          <p className="font-serif text-body text-ink-mute">
-            How the ledger should be kept — for your eyes and hands. The
-            clerk records every change on the spot.
-          </p>
-        </header>
-
         <SettingsForm initial={settings} />
       </Page>
     </div>

@@ -180,7 +180,6 @@ export default async function DashboardPage({
                 id="hero-heading"
                 className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
               >
-                Line A. —{' '}
                 {selectedDay
                   ? 'Total spent, this day'
                   : `Total spent, ${rangeWord(range)} to date`}
@@ -300,7 +299,7 @@ export default async function DashboardPage({
                 id="tally-heading"
                 className="mb-3 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute"
               >
-                Line B. — By category
+                By category
               </h3>
               <ul className="flex flex-col gap-2">
                 {tallyRows.length === 0 && (

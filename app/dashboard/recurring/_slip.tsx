@@ -113,9 +113,6 @@ export function NewStandingOrderSlip() {
         <p className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-ink-mute">
           Form · Standing order
         </p>
-        <p className="mt-1 font-serif text-body text-ink-mute">
-          Fill every line. The clerk will file it at the end of the day.
-        </p>
 
         <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <SlipField
