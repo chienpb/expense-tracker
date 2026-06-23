@@ -75,10 +75,11 @@ export function DailyChart({
     router.push(buildHref(day === selectedDay ? undefined : day));
   }
 
-  const peak = Math.max(
-    ...data.map((d) => d.total + d.income),
-    1,
-  );
+  // Cap the axis at the 90th percentile of daily totals so everyday bars stay
+  // readable; outlier days (rent, big purchases) clamp to the ceiling and get a
+  // torn-top marker + their true value label. ponytail: p90 is a fine heuristic,
+  // swap for a configurable knob only if someone asks.
+  const peak = Math.max(percentile(data.map((d) => d.total + d.income), 0.9), 1);
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const baselineY = PAD.top + innerH;
@@ -95,6 +96,10 @@ export function DailyChart({
 
   const useWeekdayLabels =
     (range === '7d' || range === 'this_week') && data.length <= 7;
+
+  // ponytail: ~44px per label in viewBox units → thin labels so they never
+  // overlap. Bump the divisor if labels still touch on very long fonts.
+  const labelStep = Math.max(1, Math.ceil(data.length / (innerW / 44)));
 
   return (
     <figure className="flex flex-col gap-3">
@@ -118,16 +123,20 @@ export function DailyChart({
 
         <g style={{ filter: 'url(#hand-wobble)' }}>
           {data.map((d, i) => {
-            const totalH = (d.total / peak) * innerH;
-            const incomeH = (d.income / peak) * innerH;
             const x = xFor(i) - barW / 2;
-            const spendY = baselineY - totalH;
-            const incomeY = spendY - incomeH;
+            // Clamp the stack top to the chart ceiling so outliers don't blow
+            // out the everyday bars; the value label still shows the truth.
+            const spendY = Math.max(baselineY - (d.total / peak) * innerH, PAD.top);
+            const totalH = baselineY - spendY;
+            const incomeY = Math.max(spendY - (d.income / peak) * innerH, PAD.top);
+            const incomeH = spendY - incomeY;
+            const clipped = d.total + d.income > peak;
             const isSelected = d.date === selectedDay;
             const isDimmed = !!selectedDay && !isSelected;
             const fillOpacity = isDimmed ? 0.08 : 0.22;
             const strokeOpacity = isDimmed ? 0.35 : 1;
-            const labelY = Math.min(spendY, incomeY) - 8;
+            const topY = Math.min(spendY, incomeY);
+            const labelY = topY - 8;
             return (
               <g key={d.date}>
                 {(d.total > 0 || d.income > 0) && !isDimmed && (
@@ -144,6 +153,8 @@ export function DailyChart({
                     {formatVNDShort(d.total + d.income)}
                   </text>
                 )}
+                {/* Fills. Clamped bars drop the top stroke (the red zigzag is
+                    the top edge); the navy sides are drawn as a path below. */}
                 {d.total > 0 && (
                   <rect
                     x={x}
@@ -152,7 +163,7 @@ export function DailyChart({
                     height={totalH}
                     fill="var(--color-pen-navy)"
                     fillOpacity={fillOpacity}
-                    stroke="var(--color-pen-navy)"
+                    stroke={clipped ? 'none' : 'var(--color-pen-navy)'}
                     strokeWidth={isSelected ? 2 : 1.4}
                     strokeOpacity={strokeOpacity}
                     strokeLinejoin="round"
@@ -166,11 +177,31 @@ export function DailyChart({
                     height={incomeH}
                     fill="var(--color-stamp-red)"
                     fillOpacity={fillOpacity}
-                    stroke="var(--color-stamp-red)"
+                    stroke={clipped ? 'none' : 'var(--color-stamp-red)'}
                     strokeWidth="1.4"
                     strokeOpacity={strokeOpacity}
                     strokeLinejoin="round"
                   />
+                )}
+                {clipped && (
+                  <>
+                    <path
+                      d={`M ${x} ${baselineY} L ${x} ${topY} M ${x + barW} ${baselineY} L ${x + barW} ${topY}`}
+                      fill="none"
+                      stroke="var(--color-pen-navy)"
+                      strokeWidth="1.4"
+                      strokeOpacity={strokeOpacity}
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={zigzagTop(x, topY, barW)}
+                      fill="none"
+                      stroke="var(--color-stamp-red)"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </>
                 )}
               </g>
             );
@@ -189,8 +220,10 @@ export function DailyChart({
           style={{ filter: 'url(#hand-wobble)' }}
         />
 
-        {/* X-axis labels */}
-        {data.map((d, i) => (
+        {/* X-axis labels — thinned so they never overlap (always keep last) */}
+        {data.map((d, i) => {
+          if (i % labelStep !== 0 && i !== data.length - 1) return null;
+          return (
           <text
             key={`x-${i}`}
             x={xFor(i)}
@@ -206,7 +239,8 @@ export function DailyChart({
           >
             {useWeekdayLabels ? weekdayLabel(d.date) : shortDate(d.date)}
           </text>
-        ))}
+          );
+        })}
 
         {/* Hit targets — transparent rects so the whole slot is clickable,
             not just the drawn bar. */}
@@ -306,6 +340,28 @@ function DailyBreakdown({
       </ul>
     </div>
   );
+}
+
+/** Red zigzag cap for off-scale bars — a triangle wave across the bar top. */
+function zigzagTop(x: number, y: number, w: number): string {
+  const teeth = Math.max(3, Math.round(w / 5));
+  const seg = w / (teeth * 2);
+  const amp = 3;
+  let d = `M ${x} ${y}`;
+  for (let k = 1; k <= teeth * 2; k++) {
+    d += ` L ${x + seg * k} ${k % 2 === 1 ? y - amp : y}`;
+  }
+  return d;
+}
+
+/** Linear-interpolated percentile (p in 0..1). Empty → 0. */
+function percentile(values: number[], p: number): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = (sorted.length - 1) * p;
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
 }
 
 function formatDateLabel(dateStr: string): string {
