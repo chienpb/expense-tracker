@@ -9,6 +9,10 @@ export interface Expense {
   type: 'expense' | 'income';
   date: string;
   created_at: string;
+  /** Rubber-Stamp Auditor verdict; null = unaudited. `select('*')` returns it. */
+  audit_verdict: 'APPROVED' | 'SUSPICIOUS' | null;
+  /** Auditor's one-line margin note; null = unaudited. */
+  audit_note: string | null;
 }
 
 export interface DailySpending {

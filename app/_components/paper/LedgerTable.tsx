@@ -3,6 +3,7 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 import { formatSignedVND, isRefund } from '@/lib/paper-format';
 import { tiltFor } from '@/lib/seed-rotation';
+import { AnnotationArrow } from './AnnotationArrow';
 import { EraserMarks } from './EraserMarks';
 import { RedStringCorrection } from './RedStringCorrection';
 import { Stamp, type StampColor } from './Stamp';
@@ -62,6 +63,10 @@ export type LedgerRow = {
   previousAmount?: number;
   /** Inline stamp (e.g. `RECORDED`, `DRAFT`) rendered in the amount column. */
   stamp?: { text: string; subtext?: string; color?: StampColor };
+  /** Margin note in the keeper's hand, rendered under the description. */
+  note?: ReactNode;
+  /** Draw an `<AnnotationArrow>` pointing at the amount (e.g. a flagged figure). */
+  noteArrow?: boolean;
 };
 
 export type LedgerColumn = 'date' | 'time' | 'description' | 'category' | 'amount';
@@ -113,8 +118,14 @@ export function LedgerTable({
   return (
     <div className={`paper-ledger-table w-full ${className ?? ''}`}>
       {/* Desktop / tablet — the ruled five-column table (≥640px). */}
-      <table className="hidden w-full border-collapse nums-oldstyle-tabular sm:table">
+      <table className="hidden w-full table-fixed border-collapse nums-oldstyle-tabular sm:table">
         {caption && <caption className="sr-only">{caption}</caption>}
+
+        <colgroup>
+          {columns.map((col) => (
+            <col key={col} style={COL_WIDTH[col] ? { width: COL_WIDTH[col] } : undefined} />
+          ))}
+        </colgroup>
 
         {!hideHeader && (
           <thead>
@@ -253,7 +264,20 @@ function ReceiptCard({
           {showTime && row.time}
         </span>
       )}
-      {showCategory && <span className="text-right">{row.category}</span>}
+      {(showCategory || row.stamp) && (
+        <span className="flex items-center gap-2 text-right">
+          {row.stamp && (
+            <Stamp
+              text={row.stamp.text}
+              subtext={row.stamp.subtext}
+              color={row.stamp.color ?? 'red'}
+              id={`${row.id}-stamp-m`}
+              className="text-[9px]"
+            />
+          )}
+          {showCategory && row.category}
+        </span>
+      )}
     </div>
   );
 
@@ -381,8 +405,8 @@ function Cell({
       );
     case 'description':
       return <Description row={row} />;
-    case 'category':
-      return row.category ? (
+    case 'category': {
+      const label = row.category ? (
         <span className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-s)] text-ink-mute">
           {row.category}
         </span>
@@ -391,6 +415,24 @@ function Cell({
           —
         </span>
       );
+      if (!row.stamp) return label;
+      // Stamp rides here as an absolute overlay (not in the amount column) so
+      // it never reflows the figure. The td is `relative`; the stamp floats.
+      return (
+        <>
+          {label}
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+            <Stamp
+              text={row.stamp.text}
+              subtext={row.stamp.subtext}
+              color={row.stamp.color ?? 'red'}
+              id={`${row.id}-stamp`}
+              className="text-[10px]"
+            />
+          </span>
+        </>
+      );
+    }
     case 'amount':
       return <Amount row={row} refund={refund} />;
   }
@@ -398,19 +440,33 @@ function Cell({
 
 function Description({ row }: { row: LedgerRow }) {
   const kind = row.descriptionKind ?? 'hand';
-  if (kind === 'print') {
-    return (
+  const body =
+    kind === 'print' ? (
       <span className="font-serif text-body text-ink">{row.description}</span>
+    ) : (
+      <span
+        data-ledger-tilt
+        className="inline-block origin-left font-hand text-hand text-pen-navy"
+        style={{ transform: `rotate(${tiltFor(`${row.id}-desc`, 1.2)}deg)` }}
+      >
+        {row.description}
+      </span>
     );
-  }
-  const tilt = tiltFor(`${row.id}-desc`, 1.2);
+
+  if (!row.note) return body;
+
+  // Audited row: the keeper's margin note rides a second line under the
+  // description (the row spans ~2 ruled lines — the note is the point).
   return (
-    <span
-      data-ledger-tilt
-      className="inline-block origin-left font-hand text-hand text-pen-navy"
-      style={{ transform: `rotate(${tilt}deg)` }}
-    >
-      {row.description}
+    <span className="flex flex-col gap-0.5">
+      {body}
+      <span
+        data-ledger-tilt
+        className="inline-block origin-left font-hand text-hand-s text-pen-navy"
+        style={{ transform: `rotate(${tiltFor(`${row.id}-note`, 1)}deg)` }}
+      >
+        {row.note}
+      </span>
     </span>
   );
 }
@@ -438,21 +494,25 @@ function Amount({ row, refund }: { row: LedgerRow; refund: boolean }) {
       amount
     );
 
-  if (!row.stamp) return withHistory;
+  if (!row.noteArrow) return withHistory;
 
   return (
     <span className="inline-flex items-center justify-end gap-3">
+      {/* Arrow drawn from the margin in at the flagged figure. */}
+      <AnnotationArrow seed={`${row.id}-flag`} rotation={108} size={40} />
       {withHistory}
-      <Stamp
-        text={row.stamp.text}
-        subtext={row.stamp.subtext}
-        color={row.stamp.color ?? 'red'}
-        id={`${row.id}-stamp`}
-        className="text-[10px]"
-      />
     </span>
   );
 }
+
+// Fixed column widths (`table-fixed`). `description` is intentionally absent —
+// it absorbs the remaining width so the numeric columns stay aligned.
+const COL_WIDTH: Partial<Record<LedgerColumn, string>> = {
+  date: '6rem',
+  time: '4.5rem',
+  category: '15rem',
+  amount: '9rem',
+};
 
 const HEADER_LABEL: Record<LedgerColumn, string> = {
   date: 'Date',

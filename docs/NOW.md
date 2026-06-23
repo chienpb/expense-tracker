@@ -6,13 +6,13 @@
 > "Just shipped" and trims. Keep "Just shipped" to the last 1–2 entries.
 
 ## Just shipped
+- **Rubber-Stamp Auditor** (2026-06-23) — per-entry AI verdict (generate-once/store/replay
+  on `expenses.audit_verdict/note`). Shipped quiet: APPROVED is the silent default (no
+  stamp, no note); only SUSPICIOUS stamps — red overlay on the category cell so it never
+  reflows the amount. Notes generated only for SUSPICIOUS. Table locked to fixed column
+  widths (`table-fixed` + colgroup). See `DECISION_LOG.md` 2026-06-23.
 - **Monthly Wrapped** (2026-06-23) — AI-clerk verdict slip fills the Closing-the-Books
-  seam: wax fractures, slip lifts, the verdict writes on char-by-char under a hand-drawn
-  fountain nib (typewriter unveil, not token streaming). Note size reserved up front so
-  it doesn't reflow; year nav consolidated to one flip-driving control. See
-  `DECISION_LOG.md` 2026-06-23.
-- **Closing the Books** (2026-06-22) — rule-off → wax-seal ceremony + year calendar.
-  Seam left open between the seal-thump and the calendar; now filled by Monthly Wrapped.
+  seam: wax fractures, slip lifts, verdict writes on char-by-char under a hand-drawn nib.
 
 ## Next up
 _(none chosen — run `/next`)_
@@ -20,4 +20,8 @@ _(none chosen — run `/next`)_
 ## On deck
 Top unbuilt candidates from `IDEAS.md` (argue with the scores):
 - **#2 Wet Ink** — GPU ink-diffusion as a new entry bleeds onto the page.
-- **#5 Pressed-Ink Sparklines** — hand-penned charts, not Chart.js.
+- **#3 The Loupe** — brass magnifier reveals fine-print that only exists under glass.
+
+> ~~#5 Pressed-Ink Sparklines~~ — already shipped. Charts have been raw hand-drawn
+> SVG (`HandDrawnChart`, `filter: url(#hand-wobble)`) since Phase 4 (DECISION_LOG
+> 2026-04-21, "charts ship on raw SVG, not Recharts"). Backlog entry was stale.

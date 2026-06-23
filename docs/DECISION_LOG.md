@@ -477,3 +477,49 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   flips. Accepted — one consistent control beats two that behave differently.
 - **Nib asset is hand-authored inline SVG** (fountain nib: tine tip at origin, central
   slit + breather hole cut in paper color so it reads at 22px). No icon library.
+
+## 2026-06-23 — Rubber-Stamp Auditor: verdicts on `expenses`, stale-on-edit accepted
+- Per-entry audit verdict + margin note stored as two nullable columns on `expenses`
+  (`audit_verdict`, `audit_note`), not a separate audit table. One keeper, no per-user
+  scoping needed; a table would add a migration, joins, and scoping for no gain (YAGNI).
+- Verdict is generate-once/store/replay (mirrors `sealed_months.wrapped_text`). Editing
+  an already-stamped entry does **not** re-audit — stale-on-edit is accepted as a known
+  ceiling, since entries are near append-only via Shortcuts. Upgrade path if it bites:
+  clear the verdict on edit (or hash the content) so the next month-view re-stamps.
+- AI is final judge: JS computes duplicate/anomaly candidate flags, one model call per
+  month-view batch returns verdict + note and may clear/raise. No SQL tool loop — facts
+  passed in, same escape-hatch-not-default stance as `wrapped.ts`.
+- **/plan-stage choices (spec deferred these):**
+  - **Stamp colors:** APPROVED → `navy`, SUSPICIOUS → `red`. Keeps stamp-red on the
+    flagged minority only, under the ~3% budget. Reuses `LedgerRow.stamp`.
+  - **Arrow scope:** the amount arrow renders on SUSPICIOUS rows only — the spec intro
+    says "arrow pointing at the *flagged* figure"; AC#3 says "each audited row". Resolved
+    toward the intro (the arrow *is* the flag device; nothing to flag on APPROVED).
+  - **Thresholds:** duplicate window ±3 days (same category+amount, exclude self);
+    anomaly = amount > 3× the all-time category median, requiring ≥4 samples in that
+    category. Median rounded to integer (VND invariant).
+  - **Trigger:** audit runs inline in the dashboard server render when the range is
+    `this_month`/`last_month`, before reading the register — no new route/client effect.
+  - **Detector self-check:** detectors live in `lib/dashboard/detectors.mjs` (pure JS,
+    JSDoc-typed) with an inline assert `demo()` run via `node` (`test:audit`). No test
+    framework added — two pure functions don't justify vitest/tsx.
+
+## 2026-06-23 — Rubber-Stamp Auditor: shipped quiet (reverses two /plan-stage UX choices)
+- **APPROVED is the silent default — no stamp, no note.** Live review killed the planned
+  "APPROVED → navy stamp": a column where every row reads APPROVED carries zero signal and
+  reads as clutter. Only SUSPICIOUS stamps now. Reverses the 2026-06-23 plan-stage "stamp
+  colors" decision (navy APPROVED dropped; red SUSPICIOUS kept).
+- **Notes generated only for SUSPICIOUS, at the source.** `note` made `nullable` in
+  `auditSchema` (not `optional` — OpenAI strict structured-output requires every property
+  in `required`; nullable is the allowed form), and the prompt sets `note: null` for
+  APPROVED. ~50 fewer note generations per month-audit; APPROVED rows clean by construction.
+  Display still guards on `suspicious` so pre-change persisted APPROVED notes stay hidden
+  without a backfill.
+- **Stamp moved to the category cell as an absolute overlay.** Inline-in-amount pushed the
+  figure and wrapped large amounts onto two lines. The stamp now floats over the category
+  td (`pointer-events-none`, `relative` td) so it never reflows the numeric column. The
+  margin arrow (`noteArrow`) was dropped from the auditor rows — the stamp is the flag now.
+  Reverses the plan-stage "arrow scope" decision.
+- **Table locked to fixed widths.** `table-fixed` + `<colgroup>` (date 6rem, time 4.5rem,
+  category 15rem, amount 9rem; description absorbs the slack). Numeric columns now align
+  across all rows regardless of content. Reviewer: chien.

@@ -16,6 +16,8 @@ Postgres on Supabase. Access from the app goes through `lib/supabase.ts`, which 
 | `type` | `TEXT` | `'expense'` \| `'income'` |
 | `date` | `DATE` | Defaults to today |
 | `created_at` | `TIMESTAMPTZ` | |
+| `audit_verdict` | `TEXT` | Rubber-Stamp Auditor — `'APPROVED'` \| `'SUSPICIOUS'`. Nullable: `null` = unaudited. Generated once on first month-view, replayed after. |
+| `audit_note` | `TEXT` | Auditor's one-line margin note (Ledger-keeper voice). Nullable; stale-on-edit accepted (DECISION_LOG 2026-06-23). |
 
 ### `users`
 
@@ -55,6 +57,7 @@ DDL statements (`CREATE`, `DROP`, `ALTER`, etc.) are blocked at the application 
 - `004_users.sql` — `users` table.
 - `005_sealed_months.sql` — `sealed_months` table (Closing the Books).
 - `006_wrapped_text.sql` — `sealed_months.wrapped_text` column (Monthly Wrapped).
+- `007_audit.sql` — `expenses.audit_verdict` + `expenses.audit_note` columns (Rubber-Stamp Auditor).
 
 Either apply via the Supabase SQL editor, or run from the CLI (below). Seed the admin user manually after running `004_users.sql`.
 

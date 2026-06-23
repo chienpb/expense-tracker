@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "bake:assets": "node scripts/bake-assets.mjs",
-    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs"
+    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "test:audit": "node lib/dashboard/detectors.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",

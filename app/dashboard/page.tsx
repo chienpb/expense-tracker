@@ -65,6 +65,14 @@ export default async function DashboardPage({
   const effTo = selectedDay ?? to;
   const effDayCount = selectedDay ? 1 : dayCount;
 
+  // Rubber-Stamp Auditor trigger: the register renders un-stamped immediately,
+  // then `<Ledger>` streams the verdicts in for this month (rows stamp one by
+  // one). Only the two calendar-month ranges audit — `from` is the
+  // first-of-month key there. ponytail: older months audit only if reselected
+  // as this_month/last_month.
+  const auditMonthKey =
+    range === 'this_month' || range === 'last_month' ? from : undefined;
+
   const [
     expenses,
     dailySpending,
@@ -249,7 +257,7 @@ export default async function DashboardPage({
                 </h3>
                 <DateRangeTabs current={range} from={from} to={to} />
               </div>
-              <Ledger expenses={expenses} />
+              <Ledger expenses={expenses} auditMonth={auditMonthKey} />
             </section>
 
             <section
