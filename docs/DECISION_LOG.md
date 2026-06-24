@@ -595,3 +595,42 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   trip and `notFound()`s for private-and-not-owner, renders for owner-or-public. The
   public bucket (UUID paths) already serves images without auth, so no signed-URL work
   is needed — the prior storage entry's access model still holds. Reviewer: chien.
+
+## 2026-06-24 — Trips Phase 2 (Atlas): marker storage + agent-drawn map
+- **Marker position stored as `atlas_x` / `atlas_y` floats in `[0,1]` on `trips`** (nullable
+  = unplaced), as fractions of the base map's intrinsic size — not pixels and not real
+  coordinates. Survives map re-sizing/re-arting and keeps "fantasy over fidelity": no
+  geocoding ever. Drag-to-place; unplaced trips sit in a tray. Reuse the existing trip
+  PATCH path to persist, no new endpoint.
+- **Base world map is one committed static SVG drawn by a delegated Claude Opus agent**
+  that screenshots and eyeballs its own output until the art reads as hand-drawn — not a
+  sourced/public-domain image and not a code-generated placeholder. SVG must be
+  self-contained (no external fonts/refs) for identical SSR/CSR rendering. The drawing is
+  a `/plan` build step, not runtime code.
+- **Atlas is owner-only in Phase 2.** A public/shareable whole-map view is deferred;
+  per-trip public sharing (Phase 1) already covers sharing. Reviewer: chien.
+
+## 2026-06-24 — Trips "Cartographer's Hand" design system (sibling to Paper Ledger)
+- **A dedicated Trips design system** (`docs/trips-design-system.md`) was cooked before
+  building Phase 2, as the durable reference for all Trips phases. It is a **sibling, shared
+  hand**: own tokens/components, but built on Paper Ledger's bones (the 5 fonts, the SVG filter
+  library, `tiltFor` seeds, "nothing floats", no-emoji, written-vs-printed layers). Register =
+  **brand/experiential** (Trips-scoped; the parent expense app stays `product`).
+- **The parchment-slop trap, resolved by a 4-lens design council** (cartography historian,
+  anti-slop critic, SVG/CSS pragmatist, diarist). Parchment is the metaphor but `tan + burnt
+  edges + wax + centered compass + dotted-red route` is THE 2026 AI default. Resolution:
+  **parchment is the substrate, not the look** — ink, handwriting, and asymmetric *handled*
+  damage carry identity. Banned: symmetric edge-burn/vignette, flat tan fill, centered/3D
+  compass, even-dot routes, glossy wax, X-marks-spot.
+- **Fork 1 (owner): sea-dominant Atlas + parchment trip pages.** The Atlas ground is an uneven
+  dilute iron-gall green-grey wash with parchment islands (kills the flat-tan tell on the loud
+  surface, same build cost as a rectangle); trip maps stay parchment sheets, always foxed.
+- **Fork 2 (owner): route is ink-brown; red (`stamp-red`) reserved for "you are here / today"**
+  only — preserves Paper Ledger's "red always means something" DNA and dodges the dotted-red
+  cliché.
+- **v1 primitives** (`app/trips/_components/carto/`): `HandPath`, `WaxSeal`, `Cartouche`,
+  `CompassRose`, `Sea`, `Island`, `Foxing`, `TerrainGlyph` (×3), + `lib/trips-carto.ts`
+  (normalize/decimate/toPath, runnable check). **Deferred:** sea monsters/marginalia, bespoke
+  3D motion, procedural/generated assets, graticules. **Fog-of-war specced (one SVG mask), not
+  built.** Live preview gallery at `/spikes/trips` (a literal `/trips/_preview` can't route —
+  `_`-folders are private and `/trips/<x>` collides with the public `[id]` hole). Reviewer: chien.

@@ -189,6 +189,27 @@
   --coffee-stain: #a07a4a;
   --seal-gold: #a68a3b;
 
+  /* -------------------------------------------------------------------
+   * Trips — "Cartographer's Hand" palette (sibling system).
+   * See docs/trips-design-system.md §2. Ink + sea carry identity;
+   * parchment recedes. Warmth comes from accent + handwriting, never a
+   * flat warm body fill. Red is rationed to "you are here / today".
+   * ------------------------------------------------------------------- */
+  --trips-sea: #97a08b;       /* Atlas ground — dilute iron-gall wash (apply unevenly) */
+  --trips-sea-deep: #6f7a69;  /* deeper sea / fog substrate */
+  --trips-land: #e6d2a4;      /* parchment landmass / sheet base */
+  --trips-land-hi: #ecdab0;   /* coastal rim (land is two-tone) */
+  --trips-land-lo: #dcc896;   /* interior */
+  --trips-ink: #3a2a14;       /* coastlines, labels — oxidized brown-black, never #000 */
+  --trips-route: #43321e;     /* the traveller's route — iron-gall brown */
+  --trips-stipple: #6b5638;   /* coastal feathering */
+  --trips-rhumb: #8a6d3f;     /* faint rhumb lines */
+  --trips-fox: #9a7b46;       /* foxing blotches (low alpha, asymmetric) */
+  --trips-frame: #7a5c33;     /* borders, cartouche strokes */
+  --trips-red: #b02a2a;       /* SCARCE — you-are-here / today only */
+  --trips-gold: #a68a3b;      /* wax-seal gold (matte) */
+  --trips-wax-red: #8c3a2e;   /* matte wax red (recesses darker) */
+
   /* Layout constants */
   --rule-spacing: 32px;
   --margin-rule-offset: 60px;
