@@ -523,3 +523,49 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
 - **Table locked to fixed widths.** `table-fixed` + `<colgroup>` (date 6rem, time 4.5rem,
   category 15rem, amount 9rem; description absorbs the slack). Numeric columns now align
   across all rows regardless of content. Reviewer: chien.
+
+## 2026-06-24 — The Loupe: spec trade-offs (WebGL refraction over CSS lens)
+- **WebGL refraction chosen over the lazy CSS lens**, despite the council flagging
+  `html-to-image` fidelity as the gating risk. Mitigation: the page-turn rig already
+  ships that exact capture path (`lib/page-flip/capture.ts` → `toCanvas`) in production,
+  so the risk is retired, not speculative. The loupe mirrors the page-turn's
+  create-overlay → ShaderMaterial → dispose lifecycle (`renderer.ts`/`leaf.ts`).
+- **Two-layer reveal, not one magnified texture.** Content is provenance that does NOT
+  exist in the normal DOM, so the shader composites a refracted base-page texture
+  (everywhere) plus a *separate* hidden fine-print texture (only inside the lens). A
+  pure "magnify what's on screen" lens was rejected as it can't reveal hidden detail.
+- **Desktop-pointer only, no fallback surface.** Touch / no-WebGL / reduce-motion → the
+  loupe doesn't render and provenance stays hidden. Reuses the page-turn's existing
+  `<1024px` + reduce-motion gate, so "desktop only" adds no new branch. CSS-lens and
+  tap-to-expand fallbacks both rejected as scope the single user doesn't need.
+- **No new DB columns.** Provenance limited to what `queries.ts` already returns
+  (`created_at` time, full `id`, `subcategory`, `type`, `audit_verdict/note`). The
+  mockup's edit-history / device / source lines were dropped — those columns don't exist
+  and entries are near-append-only via Shortcuts (DECISION_LOG 2026-06-23).
+- **Open fidelity risk for /plan:** magnified micro-type must be captured at ~2×DPR to
+  stay crisp under glass; if `html-to-image` can't hold it, draw that one layer directly
+  to the texture canvas. Reviewer: chien.
+
+## 2026-06-24 — The Loupe: fine-print drawn with Canvas 2D, not html-to-image
+- **The hidden fine-print layer is drawn directly with Canvas 2D** (`ctx.fillText` per row
+  onto a 2×-DPR canvas keyed off each `[data-row-id]` rect), not captured via
+  `html-to-image`. The spec listed direct-draw as the *fallback* for the micro-type
+  fidelity risk; promoting it to the **primary** path because it's both crisper (no
+  upscale, no foreignObject rendering) and *less* code than cloning hidden DOM —
+  `html-to-image` would also need the `var()`-inlining workaround `capture.ts` carries.
+  The base page layer still reuses `capturePage()`/`toCanvas` unchanged. Reviewer: chien.
+
+## 2026-06-24 — The Loupe: restore per-entry audit notes (reverses SUSPICIOUS-only)
+- **`audit_note` is now generated for EVERY entry again** (APPROVED included), reversing
+  the Rubber-Stamp Auditor's "notes only on SUSPICIOUS" decision (DECISION_LOG 2026-06-23).
+  The loupe's provenance fine-print reveals the clerk's reasoning per row, so an APPROVED
+  entry with a null note shows `verdict APPROVED` and nothing else under the glass — the
+  reasoning the loupe exists to surface was missing.
+- **Schema `note` went `z.string().nullable()` → `z.string()`** (required) and the
+  `auditTask` prompt now asks for a one-line note on every entry (reason-for-hold on
+  SUSPICIOUS, brief reason-it-passed on APPROVED). The *visible* ledger is unchanged —
+  it still renders stamp+note on SUSPICIOUS rows only (`_ledger.tsx`), so the quiet-UI
+  intent of the Auditor holds; the note now lives in the data for the loupe to read.
+- **Back-fill not done.** Existing APPROVED rows keep `audit_note = null` and show no
+  reasoning under the glass until re-audited; new entries get notes automatically.
+  Reviewer: chien.

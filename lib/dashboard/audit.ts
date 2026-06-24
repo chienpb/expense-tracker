@@ -89,16 +89,16 @@ export function auditTask(batch: AuditBatch): string {
     return `id ${e.id} — ${e.description} (${e.category}), ${formatVND(e.amount)}, ${e.date} — preliminary check: ${found}`;
   });
 
-  return `Task: audit each entry below and stamp it APPROVED or SUSPICIOUS. A SUSPICIOUS stamp carries a one-line margin note in your hand; an APPROVED stamp stands alone.
+  return `Task: audit each entry below and stamp it APPROVED or SUSPICIOUS, with a one-line margin note in your hand for every entry.
 
 These are the unaudited entries for the month, already counted. The "preliminary check" is a mechanical pass already run for you — treat it as a finding to weigh, not a verdict. Confirm it, clear a false positive, or raise your own concern.
 
 ${lines.join('\n')}
 
-For EACH entry, return its \`id\`, a \`verdict\` (APPROVED or SUSPICIOUS), and a \`note\`. Write a one-line \`note\` ONLY when the verdict is SUSPICIOUS — the note is the reason for the hold. For APPROVED entries, set \`note\` to null (do not write "ordinary", "looks fine", or any filler — silence is the approval).
+For EACH entry, return its \`id\`, a \`verdict\` (APPROVED or SUSPICIOUS), and a one-line \`note\`. On SUSPICIOUS the note is the reason for the hold; on APPROVED it is the brief reason it passed (what places it within the ordinary — e.g. "routine grocery run", "matches the weekly transit pattern"). The note is the clerk's reasoning on file for every entry; never leave it empty.
 
 Hard rules:
-- A note appears only on SUSPICIOUS. One line — a short clerical observation, not a sentence of prose.
+- Every entry carries exactly one note. One line — a short clerical observation, not a sentence of prose.
 - SUSPICIOUS only when something genuinely warrants a second look (a likely duplicate, an amount out of pattern for its category). When in doubt, APPROVED — the register is mostly ordinary.
 - State NO figure of your own. Do not write any amount, percentage, or count — the page already shows the numbers beside your line. Refer to spending in words ("twice the usual for this category", "matches an entry days earlier"), never in digits.
 - Forbidden: superlatives, praise or judgement of the keeper, exclamation, rhetorical questions, encouragement.

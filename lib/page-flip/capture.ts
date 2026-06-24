@@ -111,6 +111,9 @@ async function captureNow(
       height,
       pixelRatio,
       backgroundColor: paper,
+      // Never clone a WebGL overlay into its own capture (loupe/page-flip).
+      filter: (node) =>
+        !(node instanceof HTMLElement) || node.dataset.captureSkip === undefined,
       style: {
         transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
         transformOrigin: 'top left',

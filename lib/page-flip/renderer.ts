@@ -39,6 +39,9 @@ export function createOverlay(onContextLost: () => void): FlipOverlay {
 
   const container = document.createElement('div');
   container.setAttribute('aria-hidden', 'true');
+  // Skipped by capturePage's html-to-image clone so a live overlay (e.g. the
+  // loupe recapturing under its own glass) never snapshots itself.
+  container.dataset.captureSkip = '';
   container.style.cssText =
     'position:fixed;inset:0;z-index:9999;pointer-events:none;';
 

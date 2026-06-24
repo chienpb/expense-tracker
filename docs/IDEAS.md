@@ -73,4 +73,35 @@
 
 ---
 
+## Inbox — unscored, full spec TBD
+
+### Daily reconciliation nudge + merchant-learning AI
+
+**The nag (Phase 1):** 9pm Vercel cron → if 0 entries logged today, push a reminder to phone.
+Push via **ntfy.sh** (free, random topic name as the only secret) or **Pushover** ($5, account-bound, private). No PWA/Web Push — over-engineered for one user.
+
+**Teeth (Phase 2):** read today's bank-transaction emails via **Gmail API + a stored refresh token**
+(single-user, one-time OAuth consent, scope `gmail.readonly`, reuse my existing bank-email filter).
+Richer nudge: *"0 logged, but 3 bank emails today."*
+
+**Brains (Phase 3):** gpt-5.4 parses bank emails → notification lists merchant + amount, or
+pre-creates draft entries to confirm with one tap.
+
+**Merchant learning** — the ambitious part:
+- **Reframe:** this is a *lookup table*, not "AI memory." Data is structured (`account_number → label`).
+- **Storage:** a Postgres table `merchant_map (account_number, nickname, label, category)`, **not** a
+  markdown file — Vercel's FS is ephemeral/read-only at runtime; markdown would also bloat the prompt.
+- **Reactive learning first** (I'm the teacher): in the existing chat page I say e.g. *"số tài khoản 0192923
+  nickname ABCXYZ là quán bún bò"* → AI extracts `{account, nickname, label}` → upserts one row.
+  AI is used only to *write* rows.
+- **Applying is deterministic:** matching a bank email to a label is a plain DB join — no AI, no token cost,
+  no re-guessing. System gets smarter by accumulating rows.
+- **Proactive learning later:** once the table has enough rows, cluster recurring unknown accounts and
+  *suggest* mappings to confirm in chat. Never auto-invent. Layer on top of the same table.
+
+**Sequencing:** ship the bare nag first (most of the value), add Gmail when it feels dumb, add AI when
+counting isn't enough. The one real cost is Gmail OAuth; everything else is cheap.
+
+---
+
 *Scores are one synthesizer's calibration of five council members' arguments — argue with them.*

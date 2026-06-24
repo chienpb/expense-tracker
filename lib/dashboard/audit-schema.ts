@@ -11,8 +11,13 @@ export const auditSchema = z.object({
     z.object({
       id: z.string(),
       verdict: z.enum(['APPROVED', 'SUSPICIOUS']),
-      /** Only on SUSPICIOUS — the reason for the hold. `null` for APPROVED. */
-      note: z.string().nullable(),
+      /**
+       * One-line clerical reasoning for EVERY entry — the reason for the hold
+       * (SUSPICIOUS) or the reason it passed (APPROVED). The visible ledger
+       * shows it only on SUSPICIOUS rows; the loupe reveals it for all rows as
+       * hidden provenance fine-print (the-loupe spec).
+       */
+      note: z.string(),
     }),
   ),
 });
@@ -20,5 +25,5 @@ export const auditSchema = z.object({
 export type AuditStamp = {
   id: string;
   verdict: 'APPROVED' | 'SUSPICIOUS';
-  note: string | null;
+  note: string;
 };

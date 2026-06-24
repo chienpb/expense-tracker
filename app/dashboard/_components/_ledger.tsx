@@ -9,6 +9,7 @@ import { formatPrintedTime } from '@/lib/paper-format';
 import type { Expense } from '@/lib/dashboard/queries';
 import { auditSchema } from '@/lib/dashboard/audit-schema';
 import { EntrySlip, type EntryValues } from './_entry-slip';
+import { Loupe } from './_loupe';
 
 /**
  * `<Ledger>` — Phase 5.4 transactions table + drill-in editor.
@@ -130,7 +131,8 @@ export function Ledger({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      <Loupe expenses={expenses} />
       {editing && (
         <div className="relative">
           <PaperClip corner="tr" size={44} />
