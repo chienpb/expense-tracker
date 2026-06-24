@@ -15,6 +15,15 @@ export default auth((req) => {
     return;
   }
 
+  // Trips Phase 1 — the ONE sanctioned auth hole (DECISION_LOG 2026-06-24):
+  // an unauthenticated GET may reach the public viewer at `/trips/[id]` only.
+  // The page server-component is the access control — it `notFound()`s unless
+  // the trip is public or owned by the session. Matches `/trips/abc` but NOT
+  // `/trips` (list), `/trips/abc/edit`, nor any `/api/trips/*` mutation.
+  if (req.method === 'GET' && /^\/trips\/[^/]+$/.test(pathname)) {
+    return;
+  }
+
   // Cron routes — use their own CRON_SECRET
   if (pathname.startsWith('/api/cron/')) {
     const bearer = req.headers.get('authorization')?.replace('Bearer ', '');

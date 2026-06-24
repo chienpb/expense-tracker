@@ -569,3 +569,29 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
 - **Back-fill not done.** Existing APPROVED rows keep `audit_note = null` and show no
   reasoning under the glass until re-audited; new entries get notes automatically.
   Reviewer: chien.
+
+## 2026-06-24 — Trips Phase 1: Supabase Storage, single public bucket
+- **Scene images go to a single public Supabase Storage bucket `trips`** (migration
+  `010_trips_bucket.sql`), served via plain public URLs — VISION calls for manual photo
+  upload and Supabase is already the platform, so no new dependency. Uploads run through
+  the service-role key in `lib/trips.ts`; objects live at `${tripId}/${uuid}.${ext}`.
+- **`public`/`private` is metadata only in Phase 1, not a CDN-access control.** Private
+  trips' images sit in the same public bucket behind unguessable UUID paths; the flag
+  governs visibility in the (Phase 2) Atlas, not link secrecy. Acceptable for a personal
+  journal; revisit with signed URLs + a private bucket if real secrecy is ever needed.
+- **Image rendering uses plain `<img>`, not `next/image`** — skips remote-pattern config
+  for a personal app. **Scene reorder is up/down swap, not drag-and-drop** — no DnD lib.
+  Reviewer: chien.
+
+## 2026-06-24 — Trips Phase 1: public viewer carves one middleware auth hole
+- **Phase 1 ships a working public viewer** (`/spec trips-p1-scenes`), revising the
+  earlier "public/private is metadata only" stance above: `/trips/[id]` is readable
+  **unauthenticated when the trip is public**, 404 otherwise.
+- **The exception lives in `middleware.ts`.** The centralized-auth invariant says routes
+  don't re-check auth, so the only sanctioned hole is an unauthenticated GET to
+  `/trips/[id]` (single-trip view). `/trips` (list), `/trips/[id]/edit`, and all
+  `/api/trips/*` mutations stay session-gated.
+- **The page server-component is the access control**, not its absence: it loads the
+  trip and `notFound()`s for private-and-not-owner, renders for owner-or-public. The
+  public bucket (UUID paths) already serves images without auth, so no signed-URL work
+  is needed — the prior storage entry's access model still holds. Reviewer: chien.
