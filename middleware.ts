@@ -20,7 +20,13 @@ export default auth((req) => {
   // The page server-component is the access control — it `notFound()`s unless
   // the trip is public or owned by the session. Matches `/trips/abc` but NOT
   // `/trips` (list), `/trips/abc/edit`, nor any `/api/trips/*` mutation.
-  if (req.method === 'GET' && /^\/trips\/[^/]+$/.test(pathname)) {
+  // `/trips/atlas` is NOT a public trip — it's the owner-only world map, so it
+  // must fall through to the session check below, not slip through this hole.
+  if (
+    req.method === 'GET' &&
+    pathname !== '/trips/atlas' &&
+    /^\/trips\/[^/]+$/.test(pathname)
+  ) {
     return;
   }
 

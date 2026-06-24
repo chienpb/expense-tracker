@@ -20,7 +20,7 @@ export function Parchment({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-full bg-[#d8c096] px-4 py-8 sm:px-8 sm:py-12">
+    <div className="min-h-dvh bg-[#d8c096] px-4 py-8 sm:px-8 sm:py-12">
       <main className="mx-auto max-w-5xl border-2 border-[#7a5c33] bg-[#e6d2a4] px-5 py-8 sm:px-10 sm:py-12">
         <header className="mb-8 flex flex-col gap-3 border-b-2 border-[#7a5c33] pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>

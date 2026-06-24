@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { listTrips } from '@/lib/trips';
@@ -17,7 +18,18 @@ export default async function TripsPage() {
   const trips = await listTrips(userId);
 
   return (
-    <Parchment title="Trips" subtitle="A chest of recorded journeys">
+    <Parchment
+      title="Trips"
+      subtitle="A chest of recorded journeys"
+      action={
+        <Link
+          href="/trips/atlas"
+          className="self-start border-2 border-[#7a5c33] bg-[#ecdab0] px-4 py-2 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[#3a2a14] hover:bg-[#e6d2a4]"
+        >
+          Open the Atlas →
+        </Link>
+      }
+    >
       <NewTripForm />
 
       {trips.length === 0 ? (

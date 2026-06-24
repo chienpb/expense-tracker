@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <!-- ===== SEA GROUND: uneven layered green-grey wash ===== -->
+  <rect x="0" y="0" width="1600" height="1000" fill="#97a08b"/>
+  <g>
+    <path d="M0,0 L760,0 Q820,180 700,360 Q560,520 720,700 Q860,880 640,1000 L0,1000 Z" fill="#8e9883" opacity="0.45"/>
+    <path d="M1600,0 L980,0 Q900,220 1060,420 Q1220,600 1040,820 Q920,960 1180,1000 L1600,1000 Z" fill="#9ba488" opacity="0.4"/>
+    <path d="M0,640 Q400,560 760,700 Q1080,820 1600,720 L1600,1000 L0,1000 Z" fill="#6f7a69" opacity="0.3"/>
+    <path d="M120,80 Q360,40 520,140 Q420,300 220,260 Q80,200 120,80 Z" fill="#9ba488" opacity="0.4"/>
+    <ellipse cx="1280" cy="180" rx="280" ry="160" fill="#8e9883" opacity="0.32"/>
+    <ellipse cx="520" cy="860" rx="340" ry="150" fill="#6f7a69" opacity="0.22"/>
+    <ellipse cx="860" cy="480" rx="240" ry="180" fill="#8e9883" opacity="0.2"/>
+  </g>
+
+  <!-- ===== FAINT RHUMB LINES (portolan, two crisscrossing hubs) ===== -->
+  <g stroke="#8a6d3f" stroke-width="1" fill="none" opacity="0.16">
+    <line x1="1300" y1="800" x2="-200" y2="200"/>
+    <line x1="1300" y1="800" x2="0" y2="-100"/>
+    <line x1="1300" y1="800" x2="500" y2="-100"/>
+    <line x1="1300" y1="800" x2="1000" y2="-100"/>
+    <line x1="1300" y1="800" x2="1700" y2="100"/>
+    <line x1="1300" y1="800" x2="1800" y2="700"/>
+    <line x1="1300" y1="800" x2="1700" y2="1100"/>
+    <line x1="1300" y1="800" x2="900" y2="1100"/>
+    <line x1="1300" y1="800" x2="300" y2="1100"/>
+    <line x1="1300" y1="800" x2="-200" y2="900"/>
+    <line x1="1300" y1="800" x2="-200" y2="500"/>
+    <line x1="380" y1="300" x2="1800" y2="700"/>
+    <line x1="380" y1="300" x2="1700" y2="100"/>
+    <line x1="380" y1="300" x2="-200" y2="600"/>
+    <line x1="380" y1="300" x2="900" y2="1100"/>
+    <line x1="380" y1="300" x2="-100" y2="-100"/>
+  </g>
+
+  <!-- ===== LANDMASSES =====
+       Coastlines = cubic beziers: long gentle arcs broken by a few sharp headlands,
+       deep bays and one peninsula. Irregular amplitude = hand-inked feel. -->
+
+  <!-- MAIN CONTINENT (left-center) -->
+  <g>
+    <path id="cont1" d="M250,210
+      C300,176 352,184 388,206
+      C404,170 444,162 470,196
+      C540,180 600,196 612,236
+      C660,250 700,288 690,332
+      C748,338 770,400 716,420
+      C772,450 760,508 700,506
+      C744,548 720,600 668,592
+      C660,668 560,704 520,652
+      C470,712 386,706 372,652
+      C300,732 226,710 232,648
+      C170,682 130,648 158,606
+      C108,616 92,576 128,560
+      C100,550 106,516 142,518
+      C124,486 150,452 192,464
+      C176,420 210,392 248,408
+      C236,360 280,330 318,348
+      C300,300 224,262 250,210 Z" fill="#dcc896"/>
+    <use href="#cont1" fill="none" stroke="#ecdab0" stroke-width="9" opacity="0.8" stroke-linejoin="round"/>
+    <use href="#cont1" fill="none" stroke="#3a2a14" stroke-width="2.2" stroke-linejoin="round"/>
+  </g>
+
+  <!-- EASTERN LANDMASS: elongated, a fjord notch on west flank -->
+  <g>
+    <path id="cont2" d="M1150,156
+      C1210,128 1290,142 1300,186
+      C1356,170 1410,196 1410,240
+      C1464,256 1478,316 1432,338
+      C1480,366 1466,420 1416,420
+      C1452,452 1430,500 1388,494
+      C1404,540 1356,562 1322,536
+      C1314,588 1256,600 1234,560
+      C1216,604 1166,604 1150,562
+      C1128,612 1072,602 1072,556
+      C1028,560 1010,514 1048,494
+      C1014,470 1030,426 1074,434
+      C1058,396 1086,366 1122,380
+      C1112,340 1146,316 1180,332
+      C1166,290 1196,262 1230,278
+      C1212,238 1132,196 1150,156 Z" fill="#dcc896"/>
+    <use href="#cont2" fill="none" stroke="#ecdab0" stroke-width="8" opacity="0.8" stroke-linejoin="round"/>
+    <use href="#cont2" fill="none" stroke="#3a2a14" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+
+  <!-- SOUTHERN ISLAND: craggy, with a small lagoon bite -->
+  <g>
+    <path id="isle1" d="M806,796
+      C880,760 972,776 984,814
+      C1034,806 1060,852 1026,880
+      C1060,906 1034,946 992,932
+      C980,972 906,972 888,936
+      C850,966 798,956 802,916
+      C756,912 744,862 790,850
+      C766,816 800,788 838,808
+      C826,790 800,798 806,796 Z" fill="#dcc896"/>
+    <use href="#isle1" fill="none" stroke="#ecdab0" stroke-width="7" opacity="0.8" stroke-linejoin="round"/>
+    <use href="#isle1" fill="none" stroke="#3a2a14" stroke-width="1.9" stroke-linejoin="round"/>
+  </g>
+
+  <!-- SCATTER OF SMALL ISLES (irregular curved blobs) -->
+  <g stroke="#3a2a14" stroke-width="1.6" fill="#dcc896" stroke-linejoin="round">
+    <path d="M978,116 C994,106 1018,110 1024,124 C1034,128 1030,146 1014,148 C998,156 980,148 978,134 C972,128 970,122 978,116 Z"/>
+    <path d="M150,836 C166,828 188,832 194,846 C202,852 196,868 180,870 C164,876 148,866 148,852 Z"/>
+    <path d="M700,156 C716,148 734,154 736,168 C740,180 726,188 712,184 C698,184 692,170 700,156 Z"/>
+    <path d="M1490,634 C1506,626 1526,632 1528,646 C1532,658 1518,668 1504,664 C1490,662 1484,646 1490,634 Z"/>
+    <path d="M560,556 C574,550 590,554 592,566 C594,576 582,584 570,580 C558,580 552,564 560,556 Z"/>
+    <path d="M886,640 C900,634 916,638 918,650 C920,660 908,668 896,664 C884,662 880,648 886,640 Z"/>
+  </g>
+
+  <!-- ===== COASTAL HACHURE: short ink ticks hugging coasts ===== -->
+  <g stroke="#6b5638" stroke-width="1.3" opacity="0.55" stroke-linecap="round">
+    <!-- main continent: ticks sit ON the new coast, point seaward -->
+    <line x1="270" y1="200" x2="258" y2="182"/><line x1="388" y1="200" x2="388" y2="178"/>
+    <line x1="470" y1="190" x2="470" y2="168"/><line x1="560" y1="226" x2="576" y2="214"/>
+    <line x1="612" y1="276" x2="632" y2="268"/><line x1="700" y1="372" x2="722" y2="372"/>
+    <line x1="716" y1="420" x2="738" y2="420"/><line x1="700" y1="506" x2="722" y2="510"/>
+    <line x1="668" y1="592" x2="682" y2="612"/><line x1="560" y1="690" x2="562" y2="714"/>
+    <line x1="470" y1="690" x2="468" y2="714"/><line x1="372" y1="690" x2="368" y2="714"/>
+    <line x1="296" y1="700" x2="290" y2="724"/><line x1="232" y1="690" x2="222" y2="712"/>
+    <line x1="158" y1="606" x2="136" y2="610"/><line x1="128" y1="560" x2="106" y2="556"/>
+    <line x1="142" y1="518" x2="120" y2="512"/><line x1="192" y1="464" x2="172" y2="454"/>
+    <line x1="248" y1="408" x2="230" y2="394"/><line x1="318" y1="348" x2="304" y2="330"/>
+    <!-- eastern -->
+    <line x1="1150" y1="156" x2="1142" y2="134"/><line x1="1300" y1="186" x2="1302" y2="164"/>
+    <line x1="1410" y1="240" x2="1432" y2="232"/><line x1="1432" y1="338" x2="1456" y2="336"/>
+    <line x1="1416" y1="420" x2="1438" y2="424"/><line x1="1388" y1="494" x2="1406" y2="512"/>
+    <line x1="1322" y1="536" x2="1324" y2="560"/><line x1="1234" y1="560" x2="1232" y2="584"/>
+    <line x1="1150" y1="562" x2="1146" y2="586"/><line x1="1072" y1="556" x2="1050" y2="560"/>
+    <line x1="1048" y1="494" x2="1026" y2="490"/><line x1="1074" y1="434" x2="1054" y2="424"/>
+    <!-- southern island -->
+    <line x1="980" y1="814" x2="1000" y2="808"/><line x1="1024" y1="878" x2="1046" y2="882"/>
+    <line x1="994" y1="932" x2="998" y2="954"/><line x1="906" y1="936" x2="902" y2="958"/>
+    <line x1="800" y1="918" x2="780" y2="926"/><line x1="788" y1="852" x2="766" y2="846"/>
+  </g>
+
+  <!-- ===== TERRAIN GLYPHS: mountains (chevrons) & trees ===== -->
+  <g stroke="#3a2a14" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M300,420 l28,-46 l28,46 M340,420 l30,-52 l30,52 M390,425 l26,-44 l26,44"/>
+    <path d="M330,470 l26,-42 l26,42 M380,468 l28,-46 l28,46"/>
+    <path d="M1200,360 l26,-44 l26,44 M1242,362 l28,-48 l28,48 M1288,366 l24,-40 l24,40"/>
+    <path d="M1230,408 l26,-42 l26,42"/>
+  </g>
+  <g stroke="#3a2a14" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M470,560 l0,-18 M463,548 l7,-10 l7,10 M460,556 l10,-12 l10,12"/>
+    <path d="M510,580 l0,-16 M504,570 l6,-9 l6,9 M501,578 l9,-11 l9,11"/>
+    <path d="M430,600 l0,-16 M424,590 l6,-9 l6,9"/>
+    <path d="M1140,470 l0,-16 M1134,460 l6,-9 l6,9 M1131,468 l9,-11 l9,11"/>
+    <path d="M1180,490 l0,-16 M1174,480 l6,-9 l6,9"/>
+    <path d="M880,860 l0,-14 M875,852 l5,-8 l5,8"/>
+    <path d="M920,880 l0,-14 M915,872 l5,-8 l5,8"/>
+  </g>
+
+  <!-- ===== COMPASS ROSE: corner, flat 2-color 16-point portolan, hand-wobbled ===== -->
+  <g transform="translate(1400,810)">
+    <g fill="none" stroke="#3a2a14" stroke-width="1.3">
+      <path d="M0,0 L24,-54 L0,-68 Z" transform="rotate(45)"/>
+      <path d="M0,0 L-24,-54 L0,-68 Z" transform="rotate(45)"/>
+      <path d="M0,0 L24,-54 L0,-68 Z" transform="rotate(135)"/>
+      <path d="M0,0 L-24,-54 L0,-68 Z" transform="rotate(135)"/>
+      <path d="M0,0 L24,-54 L0,-68 Z" transform="rotate(225)"/>
+      <path d="M0,0 L-24,-54 L0,-68 Z" transform="rotate(225)"/>
+      <path d="M0,0 L24,-54 L0,-68 Z" transform="rotate(315)"/>
+      <path d="M0,0 L-24,-54 L0,-68 Z" transform="rotate(315)"/>
+    </g>
+    <g stroke="#3a2a14" stroke-width="1">
+      <path d="M0,0 L12,-70 L0,-92 Z" fill="#3a2a14"/><path d="M0,0 L-12,-70 L0,-92 Z" fill="none"/>
+      <path d="M0,0 L70,12 L92,0 Z" fill="#3a2a14"/><path d="M0,0 L70,-12 L92,0 Z" fill="none"/>
+      <path d="M0,0 L12,70 L0,92 Z" fill="#3a2a14"/><path d="M0,0 L-12,70 L0,92 Z" fill="none"/>
+      <path d="M0,0 L-70,12 L-92,0 Z" fill="#3a2a14"/><path d="M0,0 L-70,-12 L-92,0 Z" fill="none"/>
+    </g>
+    <g stroke="#3a2a14" stroke-width="1.1">
+      <path d="M0,0 L36,-40 L48,-48 Z" fill="#3a2a14"/><path d="M0,0 L40,-36 L48,-48 Z" fill="none"/>
+      <path d="M0,0 L40,36 L48,48 Z" fill="#3a2a14"/><path d="M0,0 L36,40 L48,48 Z" fill="none"/>
+      <path d="M0,0 L-36,40 L-48,48 Z" fill="#3a2a14"/><path d="M0,0 L-40,36 L-48,48 Z" fill="none"/>
+      <path d="M0,0 L-40,-36 L-48,-48 Z" fill="#3a2a14"/><path d="M0,0 L-36,-40 L-48,-48 Z" fill="none"/>
+    </g>
+    <circle cx="0" cy="0" r="14" fill="none" stroke="#3a2a14" stroke-width="1.3"/>
+    <circle cx="0" cy="0" r="5.5" fill="none" stroke="#3a2a14" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="2.2" fill="#3a2a14"/>
+    <path d="M0,-92 C-6,-104 -3,-116 0,-122 C3,-116 6,-104 0,-92 Z" fill="#3a2a14" stroke="#3a2a14" stroke-width="1"/>
+    <path d="M-7,-106 C-13,-110 -12,-100 -5,-99 M7,-106 C13,-110 12,-100 5,-99" fill="none" stroke="#3a2a14" stroke-width="1.4"/>
+  </g>
+
+  <!-- ===== ASYMMETRIC FOXING / STAINS ===== -->
+  <g fill="#9a7b46">
+    <ellipse cx="300" cy="118" rx="66" ry="42" opacity="0.10"/>
+    <ellipse cx="262" cy="150" rx="24" ry="17" opacity="0.12"/>
+    <ellipse cx="346" cy="96" rx="18" ry="13" opacity="0.10"/>
+    <ellipse cx="1150" cy="880" rx="92" ry="56" opacity="0.09"/>
+    <ellipse cx="1212" cy="912" rx="32" ry="21" opacity="0.11"/>
+    <ellipse cx="900" cy="296" rx="42" ry="29" opacity="0.07"/>
+    <ellipse cx="58" cy="500" rx="50" ry="84" opacity="0.07"/>
+    <ellipse cx="1546" cy="430" rx="36" ry="58" opacity="0.07"/>
+    <ellipse cx="650" cy="908" rx="46" ry="27" opacity="0.08"/>
+    <circle cx="320" cy="132" r="4" opacity="0.18"/>
+    <circle cx="1182" cy="896" r="5" opacity="0.16"/>
+    <circle cx="930" cy="286" r="3" opacity="0.2"/>
+    <circle cx="1218" cy="918" r="3.4" opacity="0.18"/>
+  </g>
+
+  <!-- one off-center fold crease -->
+  <line x1="1040" y1="0" x2="1006" y2="1000" stroke="#7a5c33" stroke-width="1.1" opacity="0.12"/>
+</svg>

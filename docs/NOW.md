@@ -6,28 +6,28 @@
 > "Just shipped" and trims. Keep "Just shipped" to the last 1–2 entries.
 
 ## Just shipped
+- **Trips Phase 2 — Atlas** (2026-06-24) — `/trips/atlas`: owner-only world map; each placed
+  trip is a gold `<WaxSeal>` at `atlas_x/atlas_y` (`[0,1]` fractions, nullable = tray).
+  Drag tray→map to place, marker→map to move, marker→off-map to un-place; one pointer
+  handler w/ 5px threshold (tap = sail into trip), optimistic PATCH. Base map is one
+  committed self-contained SVG drawn by a delegated Opus agent. Middleware excludes
+  `/trips/atlas` from the public `[id]` hole. See `DECISION_LOG.md` 2026-06-24. Seams:
+  SVG coastlines lean puffy/scalloped (anti-slop soft miss, redraw candidate); live
+  drag ACs (AC1, AC3–AC7) confirmed by eyeball, no formal `/verify` run yet.
 - **Trips Phase 1 — Scenes** (2026-06-24) — `/trips`: record a journey as ordered
   image+caption scenes, wander back as a slideshow (prev/next + filmstrip, stops at ends).
   Treasure Parchment surface; `trips`/`scenes` tables + public `trips` storage bucket;
   one carved middleware hole (unauth `GET /trips/[id]`, page is the access control).
-  See `DECISION_LOG.md` 2026-06-24 (×2). Seams left open: maps/Atlas are Phases 2–4;
-  orphaned blobs leak on delete (rows cascade, images don't); shipped on an eyeball —
-  no formal `/code-review` + `/verify` pass.
-- **The Loupe** (2026-06-24) — brass margin magnifier; WebGL lens composites a refracted
-  base-page texture + a separate hidden fine-print texture (Canvas 2D per-row provenance:
-  log time, full id, subcategory, type, audit verdict/note) revealed only inside the glass.
-  Desktop-pointer/WebGL only, no fallback surface. Restored the Auditor's per-entry
-  `audit_note` (now on APPROVED too) so the loupe has reasoning for every row; visible
-  ledger still shows it on SUSPICIOUS only. See `DECISION_LOG.md` 2026-06-24.
+  See `DECISION_LOG.md` 2026-06-24 (×2). Seams: orphaned blobs leak on delete (rows
+  cascade, images don't).
 
 ## Next up
 _(none chosen — run `/next`)_
 
 ## On deck
 Top unbuilt candidates from `IDEAS.md` (argue with the scores):
-- **Trips Phase 2 — Atlas** — the natural continuation now that Scenes ships: parchment
-  map, real coordinates/placement, the wax-seal-on-map. Phase 1 left the seam (`public`
-  flag already governs Atlas visibility).
+- **Trips Atlas polish** — redraw `trips-atlas.svg` coastlines (less scalloped), and/or
+  Phase 2.5 public/shareable whole-map Atlas (deferred from Phase 2).
 - **#2 Wet Ink** — GPU ink-diffusion as a new entry bleeds onto the page.
 
 > ~~#5 Pressed-Ink Sparklines~~ — already shipped. Charts have been raw hand-drawn

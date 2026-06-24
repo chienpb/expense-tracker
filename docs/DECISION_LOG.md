@@ -13,6 +13,13 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-24 · Atlas (Phase 2) — float coords, one committed SVG, pointer drag, middleware auth-hole exclusion
+
+  Context:   Planning `/trips/atlas`: a world map where each trip is a draggable marker. Four trade-offs needed a record before build.
+  Decision:  (1) **`atlas_x/atlas_y` are nullable `DOUBLE PRECISION`** — `[0,1]` fractions, `NULL` = unplaced. The amounts-are-integers invariant is money-only; x/y are floats by design (spec). (2) **The base map is ONE committed self-contained `public/trips-atlas.svg`**, drawn by a delegated Opus agent — NOT composed from `<Sea>`/`<Island>`/`<CompassRose>` at runtime. Spec demands a single re-art-able asset with no external fonts/refs so it renders identically SSR/client; primitives only inform the look. Cartouche title stays a React overlay (needs fonts). (3) **Drag = pointer events with a ~5px threshold**, no HTML5 DnD, no library; drop outside the map (over the tray) is the unplace affordance — no separate remove button. (4) **`/trips/atlas` is excluded from the `middleware.ts` GET public-viewer hole** (`^/trips/[^/]+$`) so it requires a session — owner-only stays enforced in middleware, not the page. Reuse the existing `PATCH /api/trips`; no new endpoint.
+  Rationale: Smallest diff that meets every acceptance criterion while honoring both invariants (integers=money-only, auth-in-middleware) and the Cartographer's-Hand DS (gold markers, red rationed). Pointer events cover touch for free. One SVG keeps markers stable across re-arts.
+  Reviewer:  Ledger-keeper (pending Chien at build)
+
 ## 2026-06-23 · Monthly Wrapped — reveal-not-streaming, generate-once-store, computed-numbers/AI-prose split
 
   Context:   Spec'd the Wrapped insert that fills the seam left open by Closing the Books. A 4-member Opus council (editorial restraint / interaction-motion / lazy-engineer / portfolio-wow) brainstormed format, content, streaming, and persistence. Three forks surfaced; the user resolved the entrance-spectacle fork.
@@ -609,6 +616,13 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   a `/plan` build step, not runtime code.
 - **Atlas is owner-only in Phase 2.** A public/shareable whole-map view is deferred;
   per-trip public sharing (Phase 1) already covers sharing. Reviewer: chien.
+- **Build outcomes (shipped):** marker drag uses one pointer handler with a 5px threshold
+  (tap → navigate, drag → place/move, drop off-map → un-place; the tray *is* the un-place
+  affordance — no button), optimistic PATCH with revert. Page surfaces use `min-h-dvh`
+  (not `min-h-full`, which collapsed to content height and showed a bg gap on short pages —
+  fixed in `<Parchment>` too). Accepted seam: the agent-drawn `trips-atlas.svg` reads as
+  uneven hand-inked but its coastlines lean *puffy/scalloped* — a soft miss on the anti-slop
+  covenant, accepted for now, redraw candidate. Reviewer: chien.
 
 ## 2026-06-24 — Trips "Cartographer's Hand" design system (sibling to Paper Ledger)
 - **A dedicated Trips design system** (`docs/trips-design-system.md`) was cooked before

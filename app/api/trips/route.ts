@@ -43,10 +43,34 @@ export async function PATCH(request: Request) {
   const id = String(body?.id ?? '').trim();
   if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
 
-  const patch: { title?: string; date?: string; public?: boolean } = {};
+  const patch: {
+    title?: string;
+    date?: string;
+    public?: boolean;
+    atlas_x?: number | null;
+    atlas_y?: number | null;
+  } = {};
   if (typeof body?.title === 'string') patch.title = body.title.trim();
   if (typeof body?.date === 'string') patch.date = body.date.trim();
   if (typeof body?.public === 'boolean') patch.public = body.public;
+
+  // Atlas placement: both coords together — two finite numbers in [0,1]
+  // (placed), or both null (unplaced/back to tray). Anything else is a 400.
+  if ('atlas_x' in (body ?? {}) || 'atlas_y' in (body ?? {})) {
+    const x = body?.atlas_x;
+    const y = body?.atlas_y;
+    const bothNull = x === null && y === null;
+    const inUnit = (v: unknown): v is number =>
+      typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
+    if (!bothNull && !(inUnit(x) && inUnit(y))) {
+      return Response.json(
+        { error: 'atlas_x/atlas_y must both be numbers in [0,1] or both null' },
+        { status: 400 },
+      );
+    }
+    patch.atlas_x = bothNull ? null : (x as number);
+    patch.atlas_y = bothNull ? null : (y as number);
+  }
 
   const trip = await updateTrip(id, uid, patch);
   if (!trip) return Response.json({ error: 'Not found' }, { status: 404 });

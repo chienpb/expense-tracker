@@ -17,6 +17,9 @@ export type Trip = {
   title: string;
   date: string;
   public: boolean;
+  /** Atlas placement: normalized [0,1] fractions of the map, or null = unplaced. */
+  atlas_x: number | null;
+  atlas_y: number | null;
   created_at: string;
 };
 
@@ -90,7 +93,7 @@ export async function createTrip(input: {
 export async function updateTrip(
   id: string,
   userId: string,
-  patch: Partial<Pick<Trip, 'title' | 'date' | 'public'>>,
+  patch: Partial<Pick<Trip, 'title' | 'date' | 'public' | 'atlas_x' | 'atlas_y'>>,
 ): Promise<Trip | null> {
   const supabase = getSupabase();
   const { data, error } = await supabase
