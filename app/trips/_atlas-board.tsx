@@ -9,7 +9,7 @@ import { NewTripForm } from './_components/NewTripForm';
 
 /**
  * The Atlas board — the Trips home (Trips Phase 4). One world map
- * (`/trips-atlas.svg`) full-screen inside a thin
+ * (`/trips-atlas.jpg`) full-screen inside a thin
  * parchment frame; each placed trip is a gold `<WaxSeal>` at its [0,1]
  * atlas_x/atlas_y.
  *
@@ -227,6 +227,9 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
           style={{
             transform: `translate(${cam.panX}px, ${cam.panY}px) scale(${cam.z})`,
             transformOrigin: '0 0',
+            // ponytail: keep the map on its own GPU layer so pan/zoom is a
+            // cheap composite, not a repaint.
+            willChange: 'transform',
           }}
           onPointerDown={onCamPointerDown}
           onPointerMove={onCamPointerMove}
@@ -235,10 +238,14 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
         >
           {/* The Azgaar map is the ground — opaque, object-cover. No <Sea>
               wash beneath it (it covered it anyway, and Sea's rhumb SVG
-              hydration-mismatched on every load). */}
+              hydration-mismatched on every load).
+              Pre-rasterized to JPEG (4× intrinsic) on purpose: the source SVG
+              carries a heavy "dingy" filter that Firefox re-rasterizes at every
+              intermediate zoom scale → janky zoom. A flat bitmap GPU-scales
+              smoothly in both browsers. Regen recipe in DECISION_LOG (2026-06-25). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/trips-atlas.svg"
+            src="/trips-atlas.jpg"
             alt=""
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"

@@ -13,6 +13,13 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-25 · Atlas base map ships as a pre-rasterized JPEG, not the live SVG
+
+  Context:   Zoom on the Atlas was smooth in Chrome but janky in Firefox. Root cause: `trips-atlas.svg` (754KB) carries a heavy `data-filter="dingy"` SVG filter; Firefox re-rasterizes the filtered vector at every intermediate zoom scale (sharp but CPU-bound → lag), while Chrome bakes it into one GPU bitmap (smooth but pixelated when upscaled). `will-change: transform` alone didn't fix Firefox — it re-rasterizes SVG `<img>` even inside a compositing layer.
+  Decision:  Pre-rasterize the filtered map once to `public/trips-atlas.jpg` at 4× intrinsic (5984×3732, JPEG q80, ~2.7MB) and point the `<img>` at it; keep `will-change: transform` on the camera layer. Both browsers now GPU-scale a flat bitmap → smooth pan/zoom everywhere. Source `trips-atlas.svg` stays committed as the regen source. Regen recipe: serve `public/` over HTTP, load an HTML wrapper sizing `<img src="/trips-atlas.svg">` to 5984×3732, screenshot via headless Chromium (`playwright-cli`), `sips -s format jpeg -s formatOptions 80`.
+  Rationale: Scaling vectors is CPU work; scaling bitmaps is GPU work — you can't get both sharp and smooth from a filtered SVG. Smoothness was the actual complaint, so trade some sharpness at extreme (6×) zoom for smoothness at every zoom. 4× keeps the worst-case upscale at ~1.5× (vs ~2× at 3×); JPEG artifacts are invisible on the already-grungy texture. +2MB over the SVG, but it loads once and is cacheable. Going further (≥6× source for pixel-perfect 6× zoom) means a ~10MB asset — not worth it; lower `ZOOM_MAX` instead if extreme zoom still bothers.
+  Reviewer:  Ponytail (pending Chien)
+
 ## 2026-06-25 · Atlas is the Trips home (Phase 4) — view-by-default, edit behind a corner popover, card list removed
 
   Context:   The Atlas was buried one click behind a `/trips` card list and permanently in edit posture (always-draggable, always-tray). `trips-atlas-home` makes the map the landing surface.
