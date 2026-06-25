@@ -16,12 +16,13 @@ import { CompassRose } from '../_components/carto/CompassRose';
  * inked and every scene is a hand-placed wax seal. A LOUD surface (Trips DS
  * §3): foxing + cartouche + compass rose + route are all welcome here.
  *
- * Owner interaction mirrors the Atlas verbatim: ONE pointer handler with a
- * ~5px threshold — a tap that never crosses it sails into that scene in the
- * slideshow (`/play?scene=<position>`); a drag places/moves the seal. Drop
- * inside the map → PATCH the fraction; drop outside (over the tray) → PATCH
- * null,null. Positions are fractions of the live map rect, so they stay
- * correct on resize. Non-owners get links only — no tray, upload, or drag.
+ * View is the default for everyone, owner included — seals are links into
+ * the slideshow, no tray/upload/drag. The owner enters edit mode explicitly
+ * via "Edit map", which mirrors the Atlas verbatim: ONE pointer handler with
+ * a ~5px threshold — a tap sails into that scene (`/play?scene=<position>`);
+ * a drag places/moves the seal. Drop inside the map → PATCH the fraction;
+ * drop outside (over the tray) → PATCH null,null. Positions are fractions of
+ * the live map rect, so they stay correct on resize.
  */
 const DRAG_THRESHOLD = 5; // px before a tap becomes a drag
 
@@ -48,6 +49,11 @@ export function TripMap({
   const [scenes, setScenes] = useState(initial);
   const [route, setRoute] = useState(trip.route);
   const [busy, setBusy] = useState(false);
+  // View is the default for everyone, owner included. Editing (drag-place
+  // seals, GPX) is an explicit owner-only mode entered via the "Edit map"
+  // toggle — so the owner sees their cover exactly as a visitor does first.
+  const [editing, setEditing] = useState(false);
+  const canEdit = isOwner && editing;
   const [drag, setDrag] = useState<{
     id: string;
     startX: number;
@@ -153,8 +159,8 @@ export function TripMap({
   return (
     <div
       className="min-h-dvh bg-[#d8c096] px-4 py-8 sm:px-8 sm:py-12"
-      onPointerMove={isOwner ? onPointerMove : undefined}
-      onPointerUp={isOwner ? onPointerUp : undefined}
+      onPointerMove={canEdit ? onPointerMove : undefined}
+      onPointerUp={canEdit ? onPointerUp : undefined}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
         {/* The sheet */}
@@ -182,7 +188,7 @@ export function TripMap({
 
             {/* placed scene seals */}
             {placed.map((s) =>
-              isOwner ? (
+              canEdit ? (
                 <button
                   key={s.id}
                   type="button"
@@ -226,18 +232,29 @@ export function TripMap({
               Play ▸
             </Link>
             {isOwner && (
-              <Link
-                href={`/trips/${trip.id}/edit`}
-                className="paper-focusable border-2 border-[var(--trips-frame)] bg-[var(--trips-land)] px-3 py-1.5 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[var(--trips-ink)] transition-colors hover:bg-[var(--trips-land-hi)]"
-              >
-                Edit ✎
-              </Link>
+              <>
+                <Link
+                  href={`/trips/${trip.id}/edit`}
+                  className="paper-focusable border-2 border-[var(--trips-frame)] bg-[var(--trips-land)] px-3 py-1.5 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[var(--trips-ink)] transition-colors hover:bg-[var(--trips-land-hi)]"
+                >
+                  Edit ✎
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setEditing((e) => !e)}
+                  aria-pressed={editing}
+                  className="paper-focusable border-2 border-[var(--trips-frame)] px-3 py-1.5 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[var(--trips-ink)] transition-colors data-[on=false]:bg-[var(--trips-land)] data-[on=false]:hover:bg-[var(--trips-land-hi)] data-[on=true]:bg-[var(--trips-land-hi)] data-[on=true]:font-bold"
+                  data-on={editing}
+                >
+                  {editing ? 'Done' : 'Edit map ✎'}
+                </button>
+              </>
             )}
           </div>
         </div>
 
-        {/* The tray + route controls — owner only */}
-        {isOwner && (
+        {/* The tray + route controls — owner, edit mode only */}
+        {canEdit && (
           <aside className="w-full shrink-0 border-2 border-[var(--trips-frame)] bg-[var(--trips-land)] p-4 lg:w-64">
             <h2 className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[var(--trips-frame)]">
               The route
