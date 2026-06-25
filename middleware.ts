@@ -22,10 +22,13 @@ export default auth((req) => {
   // `/trips` (list), `/trips/abc/edit`, nor any `/api/trips/*` mutation.
   // `/trips/atlas` is NOT a public trip — it's the owner-only world map, so it
   // must fall through to the session check below, not slip through this hole.
+  // Phase 3: the slideshow moved to `/trips/[id]/play`, so a public trip's
+  // `/play` must also be reachable signed out (`/edit` stays private — the
+  // page server-component is the access control either way).
   if (
     req.method === 'GET' &&
     pathname !== '/trips/atlas' &&
-    /^\/trips\/[^/]+$/.test(pathname)
+    (/^\/trips\/[^/]+$/.test(pathname) || /^\/trips\/[^/]+\/play$/.test(pathname))
   ) {
     return;
   }

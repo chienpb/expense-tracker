@@ -4,6 +4,7 @@ import {
   deleteScene,
   swapScenes,
   updateSceneCaption,
+  updateSceneMap,
   uploadSceneImage,
   tripOwner,
   sceneOwner,
@@ -13,7 +14,7 @@ import {
  * Scene mutations. Like `/api/trips`, auth is the session cookie; we read the
  * user id and scope every write to scenes whose parent trip the user owns.
  *  - POST   multipart: { tripId, image (File), caption? } → upload + insert
- *  - PATCH  json: { id, caption } OR { swap: [idA, idB] }
+ *  - PATCH  json: { id, caption } OR { id, map_x, map_y } OR { swap: [idA, idB] }
  *  - DELETE json: { id }
  */
 async function userId(): Promise<string | null> {
@@ -67,6 +68,26 @@ export async function PATCH(request: Request) {
   if ((await sceneOwner(id)) !== uid) {
     return Response.json({ error: 'Not found' }, { status: 404 });
   }
+
+  // Trip-map placement: both coords together — two finite numbers in [0,1]
+  // (placed), or both null (back to the tray). Mirrors the atlas_x/atlas_y
+  // both-or-null rule in PATCH /api/trips. Coords are floats by design.
+  if ('map_x' in (body ?? {}) || 'map_y' in (body ?? {})) {
+    const x = body?.map_x;
+    const y = body?.map_y;
+    const bothNull = x === null && y === null;
+    const inUnit = (v: unknown): v is number =>
+      typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
+    if (!bothNull && !(inUnit(x) && inUnit(y))) {
+      return Response.json(
+        { error: 'map_x/map_y must both be numbers in [0,1] or both null' },
+        { status: 400 },
+      );
+    }
+    await updateSceneMap(id, bothNull ? null : (x as number), bothNull ? null : (y as number));
+    return Response.json({ ok: true });
+  }
+
   const caption = typeof body?.caption === 'string' ? body.caption.trim() || null : null;
   await updateSceneCaption(id, caption);
   return Response.json({ ok: true });

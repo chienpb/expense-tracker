@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase';
+import type { Pt } from './trips-carto';
 
 /**
  * Trips data access (Phase 1 — Scenes). All access goes through the
@@ -20,6 +21,8 @@ export type Trip = {
   /** Atlas placement: normalized [0,1] fractions of the map, or null = unplaced. */
   atlas_x: number | null;
   atlas_y: number | null;
+  /** Decimated route: ~120 normalized [0,1] {x,y} points, or null = no route. */
+  route: Pt[] | null;
   created_at: string;
 };
 
@@ -29,6 +32,9 @@ export type Scene = {
   image: string;
   caption: string | null;
   position: number;
+  /** Trip-map placement: normalized [0,1] fractions, or null = in the tray. */
+  map_x: number | null;
+  map_y: number | null;
   created_at: string;
 };
 
@@ -93,7 +99,9 @@ export async function createTrip(input: {
 export async function updateTrip(
   id: string,
   userId: string,
-  patch: Partial<Pick<Trip, 'title' | 'date' | 'public' | 'atlas_x' | 'atlas_y'>>,
+  patch: Partial<
+    Pick<Trip, 'title' | 'date' | 'public' | 'atlas_x' | 'atlas_y' | 'route'>
+  >,
 ): Promise<Trip | null> {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -141,6 +149,24 @@ export async function addScene(
     .single();
   if (error) throw new Error(error.message);
   return data;
+}
+
+/**
+ * Trip-map placement: both fractions together (placed) or both null (back to
+ * the tray). Scoped by the `sceneOwner` gate in the route, like the caption
+ * write — the integer invariant is money-only, so these stay floats.
+ */
+export async function updateSceneMap(
+  id: string,
+  x: number | null,
+  y: number | null,
+): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from('scenes')
+    .update({ map_x: x, map_y: y })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
 }
 
 export async function updateSceneCaption(

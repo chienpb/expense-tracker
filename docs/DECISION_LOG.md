@@ -648,3 +648,50 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   3D motion, procedural/generated assets, graticules. **Fog-of-war specced (one SVG mask), not
   built.** Live preview gallery at `/spikes/trips` (a literal `/trips/_preview` can't route —
   `_`-folders are private and `/trips/<x>` collides with the public `[id]` hole). Reviewer: chien.
+
+## 2026-06-25 — Trips Phase 3 (maps + routes) spec
+
+- **Trip-map art engine (VISION open question, resolved): GPX-inked route + hand-placed
+  scene seals — both, not either/or.** The route is a `HandPath` inked stroke from an
+  optional GPX upload; scenes are wax seals placed by hand (drag, like the Atlas). A trip
+  with no GPX still works — hand-placed seals alone make a complete map. The `/spikes/trips`
+  "Trip-map cover" already proved this rendering, so Phase 3 is wiring + GPX parsing, not new art.
+- **`/trips/[id]` becomes the parchment map (the trip's front door); the slideshow moves to
+  `/trips/[id]/play`.** Matches VISION ("the Trip: its own parchment map where wax seals open
+  the story"). Seals deep-link into the slideshow at a specific scene. Cost: re-point existing
+  links (trips list, Atlas marker, edit page) that assumed `[id]` = slideshow.
+- **Procedural vs hand-drawn terrain (VISION open question): deferred to Phase 4.** Phase 3
+  ships route + seals + cartouche + compass rose only. No user-placed terrain glyphs (that's a
+  whole placement+storage surface); the roadmap already defers the glyph library to Phase 4.
+- **GPX parsing: server-side, no new dependency** — regex `<trkpt>` scan → project lon/lat →
+  reuse `normalize`/`decimate`/`toPath`. Store the route *decimated* (~120 normalized points)
+  as JSON on the trip, not the raw track. Reviewer: chien (spec).
+
+## 2026-06-25 — Trips Phase 3 (maps + routes) plan
+
+- **GPX endpoint is `/api/trips/gpx`, not the spec's literal `/api/trips/route`.** A `route/`
+  folder beside `app/api/trips/route.ts` reads as a footgun (file vs folder both named `route`).
+  Same auth plumbing (middleware gates `/api/trips/*`; handler gates by `tripOwner`) — no parallel
+  auth, the spec's actual constraint. POST = multipart upload (parse→normalize→decimate→store);
+  DELETE = clear route.
+- **Scene placement reuses `PATCH /api/trips/scenes`** (new `{id,map_x,map_y}` mode), mirroring the
+  Atlas `atlas_x/atlas_y` both-or-null validation — no new endpoint, no new auth.
+- **Public hole widened to `/trips/[id]/play`.** Since the slideshow moved off `[id]`, middleware
+  gains one regex clause so a public trip's `/play` is reachable signed-out. `/edit` stays private;
+  `/trips/atlas` stays excluded.
+- **No mass link rewrite for the route move.** Cards + Atlas markers already target `/trips/[id]`;
+  landing on the new map cover is the desired front door. The slideshow is reached from the cover
+  (seal click / "Play ▸" link), not by re-pointing every caller. Reviewer: chien (plan).
+
+## 2026-06-25 — Trips Phase 3 (maps + routes) build
+
+- **`parseGpx` self-check runs via `node lib/trips-carto.ts`**, guarded by
+  `(import.meta as {main?:boolean}).main` so it's a no-op when Next bundles the module. TS doesn't
+  type `import.meta.main` (Node ≥24 only), hence the cast — the alternative (a separate `.mjs` test)
+  can't import the `.ts` parser without duplicating it. One assert covers lon→x/-lat→y, dropped
+  malformed points, normalize→[0,1], and decimate→120.
+- **Migrations 012/013 applied 2026-06-25** (after owner approval — auto-mode had initially denied the
+  live `ALTER TABLE`). `information_schema` confirms `trips.route` (jsonb, nullable) and
+  `scenes.map_x`/`map_y` (double precision, nullable) — AC3 met. AC5 (parser: 4000 trkpts → 120
+  points, switchbacks preserved) verified via the `node lib/trips-carto.ts` check style. Remaining
+  browser ACs deferred to the `/verify` pass. Reviewer: chien (build).

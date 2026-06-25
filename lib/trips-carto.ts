@@ -34,10 +34,53 @@ export function decimate(points: Pt[], target = 120): Pt[] {
   return out;
 }
 
+/**
+ * Parse `<trkpt lat="" lon="">` out of a GPX file into raw map points:
+ * `x = lon` (east → right), `y = -lat` (north → up, since SVG y grows down).
+ * The result is RAW — feed it through `normalize` then `decimate`. Finite
+ * pairs only; malformed points are dropped.
+ *
+ * ponytail: regex trkpt scan; swap to an XML parser only if a real export
+ * breaks it. (Attribute order varies — match lat/lon independently.)
+ */
+export function parseGpx(xml: string): Pt[] {
+  const out: Pt[] = [];
+  const tags = xml.match(/<trkpt\b[^>]*>/gi) ?? [];
+  for (const tag of tags) {
+    const lat = Number(tag.match(/\blat\s*=\s*["']([^"']+)["']/i)?.[1]);
+    const lon = Number(tag.match(/\blon\s*=\s*["']([^"']+)["']/i)?.[1]);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+      out.push({ x: lon, y: -lat });
+    }
+  }
+  return out;
+}
+
 /** Normalized points → an SVG path `d` in a `size`×`size` viewBox. */
 export function toPath(points: Pt[], size = 100): string {
   if (points.length === 0) return '';
   return points
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${(p.x * size).toFixed(2)} ${(p.y * size).toFixed(2)}`)
     .join(' ');
+}
+
+// Self-check: `node lib/trips-carto.ts` (Node strips the types). Runs only as
+// a direct entry — bundled by Next, import.meta.main is falsy and this is dead.
+if ((import.meta as { main?: boolean }).main) {
+  const gpx = `<gpx><trk><trkseg>
+    <trkpt lat="11.50" lon="104.90"></trkpt>
+    <trkpt lon="104.95" lat="11.60" />
+    <trkpt lat="bad" lon="105.0"/>
+  </trkseg></trk></gpx>`;
+  const raw = parseGpx(gpx);
+  // two valid points (the bad lat is dropped); y = -lat, x = lon
+  console.assert(raw.length === 2, 'expected 2 valid trkpts, got', raw.length);
+  console.assert(raw[0].x === 104.9 && raw[0].y === -11.5, 'lon→x, -lat→y');
+  const norm = normalize(raw);
+  console.assert(
+    norm.every((p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1),
+    'normalize → [0,1]',
+  );
+  console.assert(decimate(Array(5000).fill({ x: 0, y: 0 }), 120).length === 120, 'decimate → 120');
+  console.log('trips-carto self-check ok');
 }

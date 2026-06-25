@@ -9,8 +9,15 @@ import { useState } from 'react';
  */
 type Slide = { id: string; url: string; caption: string | null };
 
-export function Slideshow({ slides }: { slides: Slide[] }) {
-  const [i, setI] = useState(0);
+export function Slideshow({
+  slides,
+  initial = 0,
+}: {
+  slides: Slide[];
+  /** Start index — a seal click on the trip-map deep-links to its scene. */
+  initial?: number;
+}) {
+  const [i, setI] = useState(initial);
   const current = slides[i];
   const atStart = i === 0;
   const atEnd = i === slides.length - 1;
