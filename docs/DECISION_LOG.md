@@ -716,3 +716,10 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   Decision:  Make `/trips` render the full-screen Atlas in view-by-default mode; `/trips/atlas` redirects to `/trips`. Remove the card-list page and its standalone create form — trip creation folds into an edit-mode corner popover. Drag is gated behind an explicit edit toggle (mirrors the trip-map pattern, commit edd2a65).
   Rationale: The map is the index — a second flat list is redundant maintenance, and YAGNI on search until trips outgrow the map. View-first lets the map fill the screen and read as finished; editing becomes a deliberate gesture. Corner popover (not sidebar) keeps the map full-bleed; reuses the existing 5px drag handler and `NewTripForm`, so the diff is mostly layout + a mode flag. Spec: work/trips-atlas-home/spec.md.
   Reviewer:  chien (spec).
+
+## 2026-06-25 — Atlas pan/zoom: native transform, constant-size seals
+
+  Context:   Atlas is a fixed image; seals sit at static [0,1] positions. At ~50 trips they overlap into clutter. Want Google-Maps pan/zoom as step one, before richer pins.
+  Decision:  Build it native — a CSS `translate/scale` camera with wheel/pinch zoom-to-cursor and drag-to-pan — no library. Seals stay constant pixel size (positions spread, size fixed). Pan works in both view and edit modes. Camera is view-only client state; coords stay normalized [0,1], DB untouched.
+  Rationale: react-zoom-pan-pinch is ~15kb for behavior that's ~50 lines of pointer/wheel handlers (ladder rung 4/5). Constant-size seals match standard map UX and are the real declutter lever — scaling seals with the map defeats the purpose. The one sharp edge is inverting the camera in edit-drop math (`fx = (clientX - rect.left - panX)/(rect.width*z)`); spec calls it out. Persisting the camera and inertia are deferred (YAGNI). Spec: work/trips-atlas-zoom/spec.md.
+  Reviewer:  chien (spec).

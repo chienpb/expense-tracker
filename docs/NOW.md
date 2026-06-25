@@ -6,6 +6,15 @@
 > "Just shipped" and trims. Keep "Just shipped" to the last 1–2 entries.
 
 ## Just shipped
+- **Trips — Atlas pan & zoom** (2026-06-25) — the Atlas (`app/trips/_atlas-board.tsx`) now
+  pans and zooms like a map: wheel/pinch zoom-to-cursor (clamped 1×–6×), drag-the-sea to pan
+  (both view + edit modes, clamped to no gutter), a conditional corner "Fit" reset. Wax seals
+  stay pixel-constant (counter-scaled `1/z`) so they spread instead of clustering. Native CSS
+  `translate/scale` camera — no new dep; camera is view-only client state, coords stay `[0,1]`,
+  DB/API/auth untouched. Edit-drop inverts the camera (`fx = (clientX - left - panX)/(width·z)`).
+  Wheel delta clamped + sensitivity tuned so trackpad zoom isn't sluggish. See `DECISION_LOG.md`
+  2026-06-25 ("Atlas pan/zoom"). Seam: browser ACs (pan/zoom/place-after-zoom) verified by logic,
+  not yet exercised live; pinch one-finger-on-a-seal edge case ignored (out of scope).
 - **Trips Phase 4 — Atlas is the Trips home** (2026-06-25) — `/trips` now renders the
   full-screen Atlas in view-by-default mode (placed seals are `<Link>`s; tap → sail into
   the trip). Editing moved behind an explicit corner "Edit ✎" toggle that gates the drag
@@ -16,22 +25,14 @@
   2026-06-25 ("Atlas is the Trips home"). Seams: drag-place/un-place verified by logic +
   reused handler, not exercised live (every trip was already placed); `NewTripForm`'s
   `sm:flex-row` dropped (popover was its only caller).
-- **Trips Phase 3 — maps + routes** (2026-06-25) — `/trips/[id]` is now the parchment
-  trip-map (cover); the slideshow moved to `/trips/[id]/play` (seal tap deep-links via
-  `?scene=<pos>`). Owner uploads a `.gpx` → `parseGpx`→`normalize`→`decimate` to ~120 pts,
-  stored as `trips.route` (jsonb) and inked as a `HandPath`; scenes drag between a tray and
-  the map, persisted as `scenes.map_x/map_y` (reuses the Atlas pointer handler + PATCH
-  `/api/trips/scenes`). GPX endpoint is `/api/trips/gpx`. Middleware hole widened to
-  `/trips/[id]/play`. Migrations 012/013. `/verify` PASS 2026-06-25 (route up/render/remove,
-  all 3 drag directions persisted, deep-links, signed-out/private access). See
-  `DECISION_LOG.md` 2026-06-25 (×3). Seams: coord-range 400 confirmed by read only (UI never
-  sends out-of-range); Phase 1's orphaned-blob leak still open.
 
 ## Next up
 _(none chosen — run `/next`)_
 
 ## On deck
 Top unbuilt candidates from `IDEAS.md` (argue with the scores):
+- **Trips — richer Atlas pins** — now unblocked by pan/zoom: pin types, clustering/grouping,
+  fog-of-war. The declutter follow-on the zoom spec was the first step toward.
 - **Trips — terrain glyphs** — user-placed hand-drawn glyphs (mountains, trees,
   waves) on the trip-map; deferred out of Phase 3 (a whole placement+storage surface).
 - **Trips Atlas polish** — redraw `trips-atlas.svg` coastlines (less scalloped), and/or

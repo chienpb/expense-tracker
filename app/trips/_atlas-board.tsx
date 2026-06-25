@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Trip } from '@/lib/trips';
@@ -28,12 +28,38 @@ import { NewTripForm } from './_components/NewTripForm';
  * are gold.
  */
 const DRAG_THRESHOLD = 5; // px before a tap becomes a drag
+const ZOOM_MIN = 1; // fit — the whole map fills the frame
+const ZOOM_MAX = 6;
+
+type Camera = { z: number; panX: number; panY: number };
+
+const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+
+/** Clamp pan so the scaled map edge can never cross into the frame interior. */
+function clampPan(panX: number, panY: number, z: number, rect: DOMRect): [number, number] {
+  const minX = rect.width * (1 - z); // at z=1 this is 0 → pan forced to 0
+  const minY = rect.height * (1 - z);
+  return [Math.min(0, Math.max(minX, panX)), Math.min(0, Math.max(minY, panY))];
+}
+
+/** Zoom to a new level keeping the frame point (px,py) pinned under the cursor. */
+function applyZoom(cam: Camera, newZ: number, px: number, py: number, rect: DOMRect): Camera {
+  const z = clampZoom(newZ);
+  const lx = (px - cam.panX) / cam.z; // the layer point currently under (px,py)
+  const ly = (py - cam.panY) / cam.z;
+  const [panX, panY] = clampPan(px - z * lx, py - z * ly, z, rect);
+  return { z, panX, panY };
+}
 
 export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [trips, setTrips] = useState(initial);
+  // View-only camera (pan/zoom). Never persisted, never touches the PATCH payload.
+  const [cam, setCam] = useState<Camera>({ z: 1, panX: 0, panY: 0 });
+  // Active pointers for pan (1) / pinch (2), keyed by pointerId → client coords.
+  const ptrs = useRef<Map<number, { x: number; y: number }>>(new Map());
   // View is the default; editing (drag-place seals + create) is an explicit
   // mode so the Atlas reads as a finished thing first.
   const [editing, setEditing] = useState(false);
@@ -66,6 +92,7 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
 
   function onPointerDown(e: React.PointerEvent, id: string) {
     e.preventDefault();
+    e.stopPropagation(); // pressing a seal must never start a camera pan
     (e.target as Element).setPointerCapture?.(e.pointerId);
     setDrag({ id, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, moved: false });
   }
@@ -94,8 +121,9 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
     }
     const rect = mapRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const fx = (e.clientX - rect.left) / rect.width;
-    const fy = (e.clientY - rect.top) / rect.height;
+    // Invert the camera: screen → frame → layer fraction.
+    const fx = (e.clientX - rect.left - cam.panX) / (rect.width * cam.z);
+    const fy = (e.clientY - rect.top - cam.panY) / (rect.height * cam.z);
     if (fx >= 0 && fx <= 1 && fy >= 0 && fy <= 1) {
       persist(d.id, fx, fy); // dropped on the map → place at the fraction
     } else {
@@ -103,7 +131,74 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
     }
   }
 
+  // --- Camera gestures: drag-to-pan (1 pointer), pinch-to-zoom (2 pointers).
+  // These live on the camera layer; seals stopPropagation so they never start a
+  // pan. Move/up no-op when no pointer is tracked, leaving the edit-mode seal
+  // drag (its own capture + outer move/up) untouched.
+  function onCamPointerDown(e: React.PointerEvent) {
+    ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onCamPointerMove(e: React.PointerEvent) {
+    const prev = ptrs.current.get(e.pointerId);
+    if (!prev) return; // no gesture in flight
+    const rect = mapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    if (ptrs.current.size >= 2) {
+      // Pinch: scale by the distance ratio toward the two-finger midpoint.
+      const pts = [...ptrs.current.entries()];
+      const [, p1] = pts[0];
+      const [, p2] = pts[1];
+      const before = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const [, q1] = [...ptrs.current.entries()][0];
+      const [, q2] = [...ptrs.current.entries()][1];
+      const after = Math.hypot(q1.x - q2.x, q1.y - q2.y);
+      if (before > 0) {
+        const mx = (q1.x + q2.x) / 2 - rect.left;
+        const my = (q1.y + q2.y) / 2 - rect.top;
+        setCam((c) => applyZoom(c, c.z * (after / before), mx, my, rect));
+      }
+      return;
+    }
+
+    // Pan: translate by the pointer delta, clamped.
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setCam((c) => {
+      const [panX, panY] = clampPan(c.panX + dx, c.panY + dy, c.z, rect);
+      return { ...c, panX, panY };
+    });
+  }
+
+  function onCamPointerUp(e: React.PointerEvent) {
+    ptrs.current.delete(e.pointerId);
+  }
+
+  // Wheel/trackpad zoom-to-cursor. Attached natively so preventDefault() works
+  // (React's onWheel can be passive). Mac trackpad pinch arrives as ctrlKey+wheel.
+  useEffect(() => {
+    const frame = mapRef.current;
+    if (!frame) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = frame.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      // Clamp the per-event delta so a mouse wheel's big jumps stay tame, then
+      // a higher sensitivity makes the trackpad's tiny deltas actually move.
+      const d = Math.max(-33, Math.min(33, e.deltaY));
+      setCam((c) => applyZoom(c, c.z * Math.exp(-d * 0.006), px, py, rect));
+    };
+    frame.addEventListener('wheel', onWheel, { passive: false });
+    return () => frame.removeEventListener('wheel', onWheel);
+  }, []);
+
   const dragged = drag?.moved ? trips.find((t) => t.id === drag.id) : null;
+  const camMoved = cam.z !== 1 || cam.panX !== 0 || cam.panY !== 0;
 
   /** Seal + hover label — shared by the view (link) and edit (drag) seals. */
   const sealFace = (t: Trip) => (
@@ -126,42 +221,65 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
         className="relative h-full w-full overflow-hidden border-2 border-[var(--trips-frame)]"
         style={{ touchAction: 'none' }}
       >
-        <Sea className="absolute inset-0 h-full w-full">
-          {/* terrain only — title/markers are React overlays */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/trips-atlas.svg"
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-            draggable={false}
-          />
-        </Sea>
+        {/* Camera layer — pan/zoom transform; seals counter-scale to stay
+            pixel-constant. Chrome below stays a sibling, screen-fixed. */}
+        <div
+          className="absolute inset-0 h-full w-full"
+          style={{
+            transform: `translate(${cam.panX}px, ${cam.panY}px) scale(${cam.z})`,
+            transformOrigin: '0 0',
+          }}
+          onPointerDown={onCamPointerDown}
+          onPointerMove={onCamPointerMove}
+          onPointerUp={onCamPointerUp}
+          onPointerCancel={onCamPointerUp}
+        >
+          <Sea className="absolute inset-0 h-full w-full">
+            {/* terrain only — title/markers are React overlays */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/trips-atlas.svg"
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+              draggable={false}
+            />
+          </Sea>
 
-        {placed.map((t) =>
-          editing ? (
-            <button
-              key={t.id}
-              type="button"
-              onPointerDown={(e) => onPointerDown(e, t.id)}
-              aria-label={t.title}
-              className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none active:cursor-grabbing"
-              style={{ left: `${t.atlas_x! * 100}%`, top: `${t.atlas_y! * 100}%` }}
-            >
-              {sealFace(t)}
-            </button>
-          ) : (
-            <Link
-              key={t.id}
-              href={`/trips/${t.id}`}
-              aria-label={t.title}
-              className="group absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${t.atlas_x! * 100}%`, top: `${t.atlas_y! * 100}%` }}
-            >
-              {sealFace(t)}
-            </Link>
-          ),
-        )}
+          {placed.map((t) =>
+            editing ? (
+              <button
+                key={t.id}
+                type="button"
+                onPointerDown={(e) => onPointerDown(e, t.id)}
+                aria-label={t.title}
+                className="group absolute cursor-grab touch-none active:cursor-grabbing"
+                style={{
+                  left: `${t.atlas_x! * 100}%`,
+                  top: `${t.atlas_y! * 100}%`,
+                  transform: `translate(-50%, -50%) scale(${1 / cam.z})`,
+                }}
+              >
+                {sealFace(t)}
+              </button>
+            ) : (
+              <Link
+                key={t.id}
+                href={`/trips/${t.id}`}
+                aria-label={t.title}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="group absolute"
+                style={{
+                  left: `${t.atlas_x! * 100}%`,
+                  top: `${t.atlas_y! * 100}%`,
+                  transform: `translate(-50%, -50%) scale(${1 / cam.z})`,
+                }}
+              >
+                {sealFace(t)}
+              </Link>
+            ),
+          )}
+        </div>
 
         {/* Edit toggle — corner affordance, mirrors the trip-map's data-on button */}
         <button
@@ -173,6 +291,19 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
         >
           {editing ? 'Done' : 'Edit ✎'}
         </button>
+
+        {/* Fit — reset the camera to 1× centered. Top-left so it clears Edit
+            (top-right) and the popover (bottom-right). Hidden at the fit view
+            so the default Atlas reads finished. */}
+        {camMoved && (
+          <button
+            type="button"
+            onClick={() => setCam({ z: 1, panX: 0, panY: 0 })}
+            className="paper-focusable absolute left-4 top-4 border-2 border-[var(--trips-frame)] bg-[var(--trips-land)] px-3 py-1.5 font-stamp text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[var(--trips-ink)] transition-colors hover:bg-[var(--trips-land-hi)]"
+          >
+            Fit
+          </button>
+        )}
 
         {/* The edit popover — drag a journey onto the map to place it; drop a
             placed seal back here to un-place. Rendered only in edit mode. */}
