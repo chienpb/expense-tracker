@@ -695,3 +695,10 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   `scenes.map_x`/`map_y` (double precision, nullable) — AC3 met. AC5 (parser: 4000 trkpts → 120
   points, switchbacks preserved) verified via the `node lib/trips-carto.ts` check style. Remaining
   browser ACs deferred to the `/verify` pass. Reviewer: chien (build).
+
+## 2026-06-25 — Atlas base map: adopt Azgaar export; filter must leave the root `<svg>`
+
+  Context:   Replaced the agent-drawn `public/trips-atlas.svg` with an Azgaar Fantasy Map Generator export (a fantasy world reads more "wandered" than the generated blob). In-app the colors were wrong — saturated, not the muted `dingy` cast of the raw file.
+  Decision:  Keep the Azgaar SVG as the single committed asset (the Phase-2 "one re-art-able file" decision still holds — swapping the map is one `cp`). Move its `dingy` `feColorMatrix` from the root `<svg filter=...>` onto the `#viewbox` content group.
+  Rationale: Chromium drops a `filter` set on the OUTERMOST `<svg>` when the file is loaded via an `<img>` tag (as the atlas board does). On a child group it applies normally. One-attribute move, no app code touched. Aspect 1496×933 ≈ the board's 16/10, no distortion; no `<text>` labels to fight the theme; existing seal placements are map-relative fractions so they survive (just re-drag).
+  Reviewer:  chien.

@@ -18,6 +18,7 @@ Table of contents for all project docs. Read the doc whose trigger matches what 
 | [`api.md`](api.md) | Touching any `/api/*` route or the Apple Shortcuts contract. |
 | [`database.md`](database.md) | Schema changes, migrations, or writing SQL against `expenses` / `users`. |
 | [`auth.md`](auth.md) | Auth flows, `middleware.ts`, RBAC, session/JWT shape. |
+| [`trips/`](trips/README.md) | Working on the Trips feature (scenes, maps, Atlas). Start at the folder README — splits into data-model / api / ui. |
 
 ## Design system
 
