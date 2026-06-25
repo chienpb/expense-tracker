@@ -49,7 +49,7 @@ export function NewTripForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 border-2 border-dashed border-[#7a5c33] bg-[#ecdcb5] px-5 py-5 sm:flex-row sm:items-end"
+      className="flex flex-col gap-4 border-2 border-dashed border-[#7a5c33] bg-[#ecdcb5] px-5 py-5"
     >
       <label className="flex flex-1 flex-col gap-1">
         <span className="font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-m)] text-[#7a5c33]">

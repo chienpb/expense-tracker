@@ -13,6 +13,13 @@ YYYY-MM-DD · one-line decision
 
 ---
 
+## 2026-06-25 · Atlas is the Trips home (Phase 4) — view-by-default, edit behind a corner popover, card list removed
+
+  Context:   The Atlas was buried one click behind a `/trips` card list and permanently in edit posture (always-draggable, always-tray). `trips-atlas-home` makes the map the landing surface.
+  Decision:  (1) **`/trips` renders the full-screen Atlas**; the old card-list page + standalone `NewTripForm` page are deleted, `TripCard` removed. (2) **View is the default** (placed seals are `<Link>`s, no drag/popover); editing is an explicit `editing` toggle gating the pointer handlers + draggable `<button>` seals — copied verbatim from the trip-map (`edd2a65`). No `isOwner` prop: the page is already owner-gated. (3) **The tray becomes a corner popover** rendered only in edit mode, holding the unplaced-trips list + reused `NewTripForm`. Since full-screen leaves no off-map margin to drop onto, a drop inside the `popoverRef` rect = un-place (the popover IS the un-place affordance, mirroring the old "tray IS the affordance"). (4) **`/trips/atlas` → `/trips` via native `redirects()` (308)** in `next.config.ts`, so the `atlas/` route is deleted outright.
+  Rationale: Mostly relocation — the board already was the feature. Reuses the shared 5px drag handler and `NewTripForm` as-is; the only new logic is the popover-rect un-place check. No data-model/API/auth changes.
+  Reviewer:  Ledger-keeper (pending Chien at review)
+
 ## 2026-06-24 · Atlas (Phase 2) — float coords, one committed SVG, pointer drag, middleware auth-hole exclusion
 
   Context:   Planning `/trips/atlas`: a world map where each trip is a draggable marker. Four trade-offs needed a record before build.
@@ -702,3 +709,10 @@ The reveal build (`Typewriter`, `MonthSlip`, `WrappedReveal`).
   Decision:  Keep the Azgaar SVG as the single committed asset (the Phase-2 "one re-art-able file" decision still holds — swapping the map is one `cp`). Move its `dingy` `feColorMatrix` from the root `<svg filter=...>` onto the `#viewbox` content group.
   Rationale: Chromium drops a `filter` set on the OUTERMOST `<svg>` when the file is loaded via an `<img>` tag (as the atlas board does). On a child group it applies normally. One-attribute move, no app code touched. Aspect 1496×933 ≈ the board's 16/10, no distortion; no `<text>` labels to fight the theme; existing seal placements are map-relative fractions so they survive (just re-drag).
   Reviewer:  chien.
+
+## 2026-06-25 — Trips home is the Atlas; drop the card-list page
+
+  Context:   `/trips` landed on a card list with a "Open the Atlas →" button; the Atlas lived at `/trips/atlas` and was always in edit posture (always-draggable seals + permanent tray). Owner wants the Atlas to BE the home, view-first.
+  Decision:  Make `/trips` render the full-screen Atlas in view-by-default mode; `/trips/atlas` redirects to `/trips`. Remove the card-list page and its standalone create form — trip creation folds into an edit-mode corner popover. Drag is gated behind an explicit edit toggle (mirrors the trip-map pattern, commit edd2a65).
+  Rationale: The map is the index — a second flat list is redundant maintenance, and YAGNI on search until trips outgrow the map. View-first lets the map fill the screen and read as finished; editing becomes a deliberate gesture. Corner popover (not sidebar) keeps the map full-bleed; reuses the existing 5px drag handler and `NewTripForm`, so the diff is mostly layout + a mode flag. Spec: work/trips-atlas-home/spec.md.
+  Reviewer:  chien (spec).

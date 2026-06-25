@@ -6,6 +6,16 @@
 > "Just shipped" and trims. Keep "Just shipped" to the last 1–2 entries.
 
 ## Just shipped
+- **Trips Phase 4 — Atlas is the Trips home** (2026-06-25) — `/trips` now renders the
+  full-screen Atlas in view-by-default mode (placed seals are `<Link>`s; tap → sail into
+  the trip). Editing moved behind an explicit corner "Edit ✎" toggle that gates the drag
+  handlers + draggable seals and opens a corner popover (unplaced-trips list + reused
+  `NewTripForm`). Drop a seal over the popover/off-map → un-place. Old `/trips` card list,
+  `TripCard`, and the standalone `atlas/` route are deleted; `/trips/atlas` → `/trips`
+  via native `redirects()` (308). No data-model/API/auth changes. See `DECISION_LOG.md`
+  2026-06-25 ("Atlas is the Trips home"). Seams: drag-place/un-place verified by logic +
+  reused handler, not exercised live (every trip was already placed); `NewTripForm`'s
+  `sm:flex-row` dropped (popover was its only caller).
 - **Trips Phase 3 — maps + routes** (2026-06-25) — `/trips/[id]` is now the parchment
   trip-map (cover); the slideshow moved to `/trips/[id]/play` (seal tap deep-links via
   `?scene=<pos>`). Owner uploads a `.gpx` → `parseGpx`→`normalize`→`decimate` to ~120 pts,
@@ -15,25 +25,17 @@
   `/trips/[id]/play`. Migrations 012/013. `/verify` PASS 2026-06-25 (route up/render/remove,
   all 3 drag directions persisted, deep-links, signed-out/private access). See
   `DECISION_LOG.md` 2026-06-25 (×3). Seams: coord-range 400 confirmed by read only (UI never
-  sends out-of-range); terrain glyphs deferred to Phase 4; Phase 1's orphaned-blob leak still open.
-- **Trips Phase 2 — Atlas** (2026-06-24) — `/trips/atlas`: owner-only world map; each placed
-  trip is a gold `<WaxSeal>` at `atlas_x/atlas_y` (`[0,1]` fractions, nullable = tray).
-  Drag tray→map to place, marker→map to move, marker→off-map to un-place; one pointer
-  handler w/ 5px threshold (tap = sail into trip), optimistic PATCH. Base map is one
-  committed self-contained SVG drawn by a delegated Opus agent. Middleware excludes
-  `/trips/atlas` from the public `[id]` hole. See `DECISION_LOG.md` 2026-06-24. Seams:
-  SVG coastlines lean puffy/scalloped (anti-slop soft miss, redraw candidate); live
-  drag ACs (AC1, AC3–AC7) confirmed by eyeball, no formal `/verify` run yet.
+  sends out-of-range); Phase 1's orphaned-blob leak still open.
 
 ## Next up
 _(none chosen — run `/next`)_
 
 ## On deck
 Top unbuilt candidates from `IDEAS.md` (argue with the scores):
-- **Trips Phase 4 — terrain glyphs** — user-placed hand-drawn glyphs (mountains, trees,
+- **Trips — terrain glyphs** — user-placed hand-drawn glyphs (mountains, trees,
   waves) on the trip-map; deferred out of Phase 3 (a whole placement+storage surface).
 - **Trips Atlas polish** — redraw `trips-atlas.svg` coastlines (less scalloped), and/or
-  Phase 2.5 public/shareable whole-map Atlas (deferred from Phase 2).
+  a public/shareable whole-map Atlas (deferred from Phase 2).
 - **#2 Wet Ink** — GPU ink-diffusion as a new entry bleeds onto the page.
 
 > ~~#5 Pressed-Ink Sparklines~~ — already shipped. Charts have been raw hand-drawn
