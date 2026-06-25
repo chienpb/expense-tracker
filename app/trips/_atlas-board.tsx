@@ -4,13 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Trip } from '@/lib/trips';
-import { Sea } from './_components/carto/Sea';
 import { WaxSeal } from './_components/carto/WaxSeal';
 import { NewTripForm } from './_components/NewTripForm';
 
 /**
  * The Atlas board — the Trips home (Trips Phase 4). One world map
- * (`/trips-atlas.svg`) on the `<Sea>` ground, full-screen inside a thin
+ * (`/trips-atlas.svg`) full-screen inside a thin
  * parchment frame; each placed trip is a gold `<WaxSeal>` at its [0,1]
  * atlas_x/atlas_y.
  *
@@ -234,17 +233,17 @@ export function AtlasBoard({ trips: initial }: { trips: Trip[] }) {
           onPointerUp={onCamPointerUp}
           onPointerCancel={onCamPointerUp}
         >
-          <Sea className="absolute inset-0 h-full w-full">
-            {/* terrain only — title/markers are React overlays */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/trips-atlas.svg"
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-              draggable={false}
-            />
-          </Sea>
+          {/* The Azgaar map is the ground — opaque, object-cover. No <Sea>
+              wash beneath it (it covered it anyway, and Sea's rhumb SVG
+              hydration-mismatched on every load). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/trips-atlas.svg"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+            draggable={false}
+          />
 
           {placed.map((t) =>
             editing ? (

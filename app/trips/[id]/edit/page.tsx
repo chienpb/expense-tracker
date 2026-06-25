@@ -25,7 +25,7 @@ export default async function EditTripPage({
   return (
     <Parchment title={trip.title} subtitle="Editing">
       <TripEditor
-        trip={{ id: trip.id, title: trip.title, public: trip.public }}
+        trip={{ id: trip.id, title: trip.title, date: trip.date, public: trip.public }}
         scenes={scenes.map((s) => ({
           id: s.id,
           url: sceneImageUrl(s.image),

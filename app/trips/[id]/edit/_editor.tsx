@@ -11,7 +11,7 @@ import Link from 'next/link';
  * (swap is by id pair, the server reorders). No DnD (DECISION_LOG 2026-06-24).
  */
 type Scene = { id: string; url: string; caption: string | null };
-type Trip = { id: string; title: string; public: boolean };
+type Trip = { id: string; title: string; date: string; public: boolean };
 
 export function TripEditor({ trip, scenes }: { trip: Trip; scenes: Scene[] }) {
   const router = useRouter();
@@ -81,11 +81,11 @@ export function TripEditor({ trip, scenes }: { trip: Trip; scenes: Scene[] }) {
     )) refresh();
   }
 
-  async function togglePublic(next: boolean) {
+  async function saveTrip(patch: { title?: string; date?: string; public?: boolean }) {
     if (await send(
       '/api/trips',
       'PATCH',
-      JSON.stringify({ id: trip.id, public: next }),
+      JSON.stringify({ id: trip.id, ...patch }),
       { 'Content-Type': 'application/json' },
     )) refresh();
   }
@@ -104,13 +104,31 @@ export function TripEditor({ trip, scenes }: { trip: Trip; scenes: Scene[] }) {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Title & date — server re-renders the Parchment heading on save */}
+      <div className="flex flex-col gap-3">
+        <DraftField
+          label="Title"
+          type="text"
+          initial={trip.title}
+          disabled={busy}
+          onSave={(v) => saveTrip({ title: v })}
+        />
+        <DraftField
+          label="Date"
+          type="date"
+          initial={trip.date}
+          disabled={busy}
+          onSave={(v) => saveTrip({ date: v })}
+        />
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={trip.public}
             disabled={busy}
-            onChange={(e) => togglePublic(e.target.checked)}
+            onChange={(e) => saveTrip({ public: e.target.checked })}
             className="paper-focusable accent-[#a68a3b]"
           />
           <span className="font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[#7a5c33]">
@@ -224,6 +242,50 @@ export function TripEditor({ trip, scenes }: { trip: Trip; scenes: Scene[] }) {
           × Delete trip
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Labelled trip field (title/date) — local draft, saves on the button or
+ *  Enter. Empty is never saved (both columns are NOT NULL). */
+function DraftField({
+  label,
+  type,
+  initial,
+  disabled,
+  onSave,
+}: {
+  label: string;
+  type: 'text' | 'date';
+  initial: string;
+  disabled: boolean;
+  onSave: (v: string) => void;
+}) {
+  const [value, setValue] = useState(initial);
+  const dirty = value !== initial && value.trim() !== '';
+  return (
+    <div className="flex items-end gap-2">
+      <span className="w-12 shrink-0 pb-1 font-typewriter text-[11px] uppercase tracking-[var(--letter-spacing-label-m)] text-[#7a5c33]">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && dirty) onSave(value);
+        }}
+        className="paper-focusable w-full border-0 border-b border-solid border-[#7a5c33] bg-transparent pb-1 font-hand text-hand text-pen-navy focus:outline-none"
+      />
+      <button
+        type="button"
+        disabled={disabled || !dirty}
+        onClick={() => onSave(value)}
+        className="paper-focusable shrink-0 border border-[#7a5c33] px-2 py-1 font-typewriter text-[10px] uppercase tracking-[var(--letter-spacing-label-s)] text-[#3a2a14] disabled:opacity-30"
+      >
+        Save
+      </button>
     </div>
   );
 }
